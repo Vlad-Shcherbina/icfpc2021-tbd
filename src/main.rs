@@ -1,4 +1,5 @@
 mod example;
+mod util;
 
 #[linkme::distributed_slice]
 static ENTRY_POINTS: [(&str, fn())] = [..];
