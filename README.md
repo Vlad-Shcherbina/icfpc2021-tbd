@@ -40,6 +40,44 @@ Which one to run is decided by the first command line argument:
 cargo run hello
 ```
 
+You can also compile and run in release mode:
+```
+cargo run --release hello
+```
+
+### How to test
+
+All tests:
+```
+cargo test
+```
+
+To run individual test:
+```
+cargo test -- --nocapture test_name
+```
+
+In addition, try to fix or silence compiler warnings.
+Also please run `cargo clippy` from time to time,
+and fix or silence its warnings too (most Clippy lints
+are good, but not all, so use common sense).
+
+### Git workflow
+
+We push everything to the main branch.
+There are no mandatory code reviews.
+
+Prefer fast-forward or rebase to merge.
+Though infrequent merge commits are fine.
+
+Push as often as possible while
+avoiding breaking compilation or tests.
+
+Pre-push hook that runs `cargo test` helps with that:
+```
+cp git_hooks/pre-push .git/hooks/
+```
+
 ### Data directories
 
 * `data/` is for stuff like example inputs from the problem statement.
