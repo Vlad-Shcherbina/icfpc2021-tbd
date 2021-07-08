@@ -46,7 +46,7 @@ pub fn stov(s: &str) -> Vec<u8> {
 fn http() {
     eprintln!("Hello from scratch");
 
-    let host = "localhost";
+    let host = "127.0.0.1";
     let port_string = format!("{}", diagonal_encode("icfp"));
     let port = port_string.as_str();
 
@@ -63,7 +63,7 @@ fn http() {
         }
     });
 
-    eprintln!("Serving at http://127.0.0.1:{} ...", port);
+    eprintln!("Serving at http://{}:{} ...", host, port);
     server.listen(host, port);
 }
 
