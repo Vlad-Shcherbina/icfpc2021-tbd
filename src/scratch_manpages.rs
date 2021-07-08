@@ -56,9 +56,9 @@ fn http() {
         match (req.method(), req.uri().path()) {
             (&Method::GET, "/hello") => Ok(resp.body(stov(r#"{"greeting": "hello, world!"}"#))?),
             (_, _) => {
-                resp.header(header::CONTENT_TYPE, "text/html".as_bytes());
+                resp.header(header::CONTENT_TYPE, "text/html; charset=utf8".as_bytes());
                 resp.status(StatusCode::NOT_FOUND);
-                Ok(resp.body(stov("<h1>🤷 ЧОЧ</h1><p>404: Unicode not found</p>"))?)
+                Ok(resp.body(stov("<h1>🤷 ЧОЧ</h1><p>Unicode (UTF-8, really) is fine.</p>"))?)
             }
         }
     });
