@@ -1,0 +1,43 @@
+<html>
+
+<head>
+    <meta content="text/html;charset=utf-8" http-equiv="Content-Type">
+    <meta content="utf-8" http-equiv="encoding">
+</head>
+
+<body>
+    <div id="app_root"></div>
+    <script>
+        window.onload = () => {
+            // Helpers and configuration
+            maybePort = () => {
+                if (window.location.port) {
+                    return ':' + window.location.port;
+                } else {
+                    return '';
+                }
+            }
+            window.config = {
+                server: window.location.protocol + "//" + window.location.hostname + maybePort(),
+            }
+
+            // Modules
+            window.dashboard = {};
+            window.dashboard.fetchTimers = () => {
+                return fetch(config.server + "/dashboard/timer").then(resp => resp.json());
+            }
+
+            // Entry point
+            window.main = async () => {
+                app = document.getElementById('app_root');
+                timers = await dashboard.fetchTimers();
+                console.log(timers);
+            }
+
+            main()
+        }
+    </script>
+
+</body>
+
+</html>

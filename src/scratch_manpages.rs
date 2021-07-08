@@ -1,14 +1,15 @@
 crate::entry_point!("manpages/http", http);
 
-use std::sync::Arc;
-use std::sync::Mutex;
-
 use chrono::prelude::*;
 use http::header;
 use simple_server::{Method, Server, StatusCode};
 use std::collections::BTreeMap;
 use std::collections::HashMap;
 use std::convert::TryFrom;
+use std::iter::FromIterator;
+use std::path::Path;
+use std::sync::Arc;
+use std::sync::Mutex;
 
 #[allow(dead_code)]
 pub fn int_div_round_up_i128(dividend: i128, divisor: i128) -> i128 {
@@ -108,10 +109,21 @@ pub fn with_q_map_mk_naivedatetime(q_string_map: HashMap<String, String>) -> Nai
 
 type State = BTreeMap<NaiveDateTime, String>;
 
+pub fn state0() -> State {
+    let start = NaiveDate::from_ymd(2021, 7, 9).and_hms(12, 00, 00);
+    let lightning_end = NaiveDate::from_ymd(2021, 7, 10).and_hms(12, 00, 00);
+    let contest_end = NaiveDate::from_ymd(2021, 7, 12).and_hms(12, 00, 00);
+    BTreeMap::from_iter([
+        (start, "ICFPC 2021 Starts".to_string()),
+        (lightning_end, "End of Lightning Round".to_string()),
+        (contest_end, "End of Contest".to_string()),
+    ])
+}
+
 fn http() {
     eprintln!("Hello from scratch");
 
-    let state = Arc::new(Mutex::new(State::new()));
+    let state = Arc::new(Mutex::new(state0()));
     let server = Server::new(move |req, mut resp| {
         //resp.header(header::CONTENT_TYPE, "application/json".as_bytes());
         resp.header(header::CONTENT_TYPE, "text/html; charset=utf8".as_bytes());
