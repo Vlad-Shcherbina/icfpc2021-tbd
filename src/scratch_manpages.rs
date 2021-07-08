@@ -2,12 +2,13 @@ crate::entry_point!("manpages/http", http);
 
 use std::sync::Arc;
 use std::sync::Mutex;
-use std::thread;
 
 use chrono::prelude::*;
 use http::header;
 use simple_server::{Method, Server, StatusCode};
 use std::collections::BTreeMap;
+use std::collections::HashMap;
+use std::convert::TryFrom;
 
 #[allow(dead_code)]
 pub fn int_div_round_up_i128(dividend: i128, divisor: i128) -> i128 {
@@ -48,6 +49,40 @@ pub fn stov(s: &str) -> Vec<u8> {
     s.as_bytes().to_vec()
 }
 
+pub fn qstom(query_string: &str) -> HashMap<String, String> {
+    let kvs = query_string.split('&');
+    let mut res = HashMap::new();
+    for kv_str in kvs {
+        let mut kv = kv_str.split('=');
+        let k = kv.next().unwrap().to_string();
+        let v = kv.next().unwrap().to_string();
+        res.insert(k, v);
+    }
+    res
+}
+
+#[allow(clippy::or_fun_call)]
+pub fn with_q_map_mk_naivedatetime(q_string_map: HashMap<String, String>) -> NaiveDateTime {
+    let defaults = Utc::now();
+    let default_day = defaults.day() + 1;
+    let q_map: HashMap<String, u32> = q_string_map
+        .iter()
+        .map(|(k, v)| (k.clone(), v.parse::<u32>().unwrap_or(0)))
+        .collect();
+    let year_u32: u32 = *q_map
+        .get("y")
+        .unwrap_or(&u32::try_from(defaults.year()).unwrap());
+    let year = i32::try_from(year_u32).unwrap_or(defaults.year());
+    let month = *q_map.get("m").unwrap_or(&defaults.month());
+    let month = if month > 0 { month } else { defaults.month() };
+    let day = *q_map.get("d").unwrap_or(&default_day);
+    let day = if day > 0 { day } else { default_day };
+    let hour = *q_map.get("H").unwrap_or(&defaults.month());
+    let min = *q_map.get("M").unwrap_or(&defaults.month());
+    let sec = 0;
+    NaiveDate::from_ymd(year, month, day).and_hms(hour, min, sec)
+}
+
 type State = BTreeMap<NaiveDateTime, String>;
 
 fn http() {
@@ -55,14 +90,58 @@ fn http() {
 
     let state = Arc::new(Mutex::new(State::new()));
     let server = Server::new(move |req, mut resp| {
+        //resp.header(header::CONTENT_TYPE, "application/json".as_bytes());
+        resp.header(header::CONTENT_TYPE, "text/html; charset=utf8".as_bytes());
         {
             let state_ref = state.clone();
-            let mut state_contents = state_ref.lock().unwrap();
-            state_contents.insert(Utc::now().naive_utc(), "four oh four".to_string());
-            eprintln!("Req {} {} {:#?}", req.method(), req.uri(), *state_contents);
+            let state_contents = state_ref.lock().unwrap();
+            eprintln!(
+                "Req {} {} {} {:#?}",
+                req.method(),
+                req.uri().path(),
+                req.uri(),
+                *state_contents
+            );
         }
-        resp.header(header::CONTENT_TYPE, "application/json".as_bytes());
         match (req.method(), req.uri().path()) {
+            // Observe how we aren't locked into this pattern of just matching the whole path.
+            // We can achieve greater flexibility here by splitting, parsing prefix ["dashboard", "timer"] and then matching over the verb!
+            // I can't be bothered now, too much stuff to figure out, sorry.
+            (&Method::GET, "/dashboard/timer/insert") => {
+                if let Some(qs) = req.uri().query() {
+                    let q_map = qstom(qs);
+                    let target = with_q_map_mk_naivedatetime(q_map.clone());
+                    let label = q_map.get("label").unwrap_or(&"a timer".to_string()).clone();
+                    {
+                        let state_ref = state.clone();
+                        let mut state_contents = state_ref.lock().unwrap();
+                        state_contents.insert(target, label);
+                        eprintln!("State1 {:#?}", *state_contents);
+                    }
+                    Ok(resp.body(stov(format!(r##"Adding {:#?}"##, target).as_str()))?)
+                } else {
+                    resp.header(header::CONTENT_TYPE, "text/html; charset=utf8".as_bytes());
+                    resp.status(StatusCode::UNPROCESSABLE_ENTITY);
+                    Ok(resp.body(stov("<h1>🤷 Ч22</h1><p>Query string is missing.</p>"))?)
+                }
+            }
+            (&Method::GET, "/dashboard/timer/remove") => {
+                if let Some(qs) = req.uri().query() {
+                    let q_map = qstom(qs);
+                    let target = with_q_map_mk_naivedatetime(q_map);
+                    {
+                        let state_ref = state.clone();
+                        let mut state_contents = state_ref.lock().unwrap();
+                        state_contents.remove(&target);
+                        eprintln!("State1 {:#?}", *state_contents);
+                    }
+                    Ok(resp.body(stov(format!(r##"Adding {:#?}"##, target).as_str()))?)
+                } else {
+                    resp.header(header::CONTENT_TYPE, "text/html; charset=utf8".as_bytes());
+                    resp.status(StatusCode::UNPROCESSABLE_ENTITY);
+                    Ok(resp.body(stov("<h1>🤷 Ч22</h1><p>Query string is missing.</p>"))?)
+                }
+            }
             (&Method::GET, "/hello") => Ok(resp.body(stov(r#"{"greeting": "добрый вечер!"}"#))?),
             (_, _) => {
                 resp.header(header::CONTENT_TYPE, "text/html; charset=utf8".as_bytes());

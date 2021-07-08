@@ -8,5 +8,6 @@ edition = "2018"
 [dependencies]
 linkme = "*"
 http = "*"
+serde = "*"
 simple-server = "0.4.0"
 chrono = "0.4"
