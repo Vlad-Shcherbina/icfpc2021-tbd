@@ -1,8 +1,9 @@
 mod example;
+mod scratch_manpages;
 mod util;
 
 #[linkme::distributed_slice]
-static ENTRY_POINTS: [(&str, fn())] = [..];
+static ENTRY_POINTS: [(&'static str, fn())] = [..];
 
 /**
 Entry points can be defined like this:
