@@ -63,6 +63,7 @@ fn http() {
         }
     });
 
+    eprintln!("Serving at http://127.0.0.1:{} ...", port);
     server.listen(host, port);
 }
 
