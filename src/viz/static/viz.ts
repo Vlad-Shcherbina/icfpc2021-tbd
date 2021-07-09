@@ -39,6 +39,9 @@ async function main() {
     draw_grid(frame);
     draw_init_figure(problem.figure, frame);
 
+    let solution = document.getElementById('solution') as HTMLTextAreaElement;
+    solution.textContent = JSON.stringify({vertices: problem.figure.vertices}, null, 2);
+
     document.onmouseup = (e: MouseEvent) => { select_point([e.x, e.y]); }
     document.onkeydown = (e: KeyboardEvent) => {
         let dx = 0;
@@ -50,6 +53,7 @@ async function main() {
         else return;
         e.preventDefault();
         move_selected([dx, dy]);
+        solution.textContent = JSON.stringify({vertices: problem.figure.vertices}, null, 2);
     };
 
     // let MOUSE_COORD: MouseEvent | null = null;

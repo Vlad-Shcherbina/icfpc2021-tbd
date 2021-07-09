@@ -15,15 +15,19 @@
         };
         </script>
 
-        <div style="position: relative">
+        <div style="position: relative; width: 600px; height: 600px; display: inline-block">
             <canvas height="600" width="600" style="position: absolute" id="hole"></canvas>
             <canvas height="600" width="600" style="position: absolute" id="f_init"></canvas>
             <canvas height="600" width="600" style="position: absolute" id="figure"></canvas>
         </div>
-        <div style="position: relative; left: 630px">
+        <div style="display: inline-block">
+            <p>Click on vertices to select/deselect.</p>
             <p>Use keyboard arrows to move selected vertices.</p>
             <p><a href="javascript:void(0)" id="select_all">select all</a></p>
             <p><a href="javascript:void(0)" id="deselect_all">deselect all</a></p>
+
+            Solution:
+            <textarea id="solution"></textarea>
         </div>
 
         <script type="module" src="../../../public/js/spec.js"></script>
