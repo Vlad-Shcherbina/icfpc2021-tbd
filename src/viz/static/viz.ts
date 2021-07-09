@@ -48,8 +48,8 @@ function get_frame(h: hole, f: figure) : Frame {
     }
     frame.min_x -= 1;
     frame.min_y -= 1;
-    frame.max_x += 1;
-    frame.max_y += 1;
+    frame.max_x += 2;
+    frame.max_y += 2;
     return frame;
 }
 
@@ -91,10 +91,24 @@ function draw_init_human(f: figure, frame: Frame) {
     }
 }
 
+function draw_grid(frame: Frame) {
+    let ctx = ctx_hole;
+    ctx.fillStyle = "#BBBBBB";
+    for (let x = frame.min_x; x < frame.max_x; x++) {
+        for (let y = frame.min_y; y < frame.max_y; y++) {
+            let p = rescale([x, y], frame);
+            ctx.beginPath();
+            ctx.arc(p[0], p[1], 1, 0, 2 * Math.PI);
+            ctx.fill();
+        }
+    }
+}
+
 let h: hole = JSON.parse('{ "hole": [[55, 80], [65, 95], [95, 95], [35, 5], [5, 5],[35, 50], [5, 95], [35, 95], [45, 80]] }');
 let f: figure = JSON.parse('{"edges": [[2, 5], [5, 4], [4, 1], [1, 0], [0, 8], [8, 3], [3, 7],[7, 11], [11, 13], [13, 12], [12, 18], [18, 19], [19, 14],[14, 15], [15, 17], [17, 16], [16, 10], [10, 6], [6, 2],[8, 12], [7, 9], [9, 3], [8, 9], [9, 12], [13, 9], [9, 11],[4, 8], [12, 14], [5, 10], [10, 15]],"vertices": [[20, 30], [20, 40], [30, 95], [40, 15], [40, 35], [40, 65],[40, 95], [45, 5], [45, 25], [50, 15], [50, 70], [55, 5],[55, 25], [60, 15], [60, 35], [60, 65], [60, 95], [70, 95],[80, 30], [80, 40]]}')
 let frame = get_frame(h, f);
 draw_hole(h, frame);
+draw_grid(frame);
 draw_init_human(f, frame);
 
 canvas_human.onmousedown = () => { draw_hole(h, frame); };
