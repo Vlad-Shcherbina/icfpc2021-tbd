@@ -206,9 +206,9 @@ function get_edge_limits(i: number): [number, number, number] {
     let d2 = edge_sq_len(figure.vertices[start], figure.vertices[end]);
     [start, end] = figure.edges[i];
     let d1 = edge_sq_len(problem.figure.vertices[start], problem.figure.vertices[end]);
-    return [Math.floor(d1 * (1 - problem.epsilon / 1e6)), 
+    return [Math.ceil(d1 * (1 - problem.epsilon / 1e6)), 
             d2, 
-            Math.ceil(d1 * (1 + problem.epsilon / 1e6))];
+            Math.floor(d1 * (1 + problem.epsilon / 1e6))];
 }
 
 
