@@ -32,14 +32,23 @@ let selected: boolean[] = [];
 
 
 async function main() {
-    problem = await get_problem(1);
+    window.addEventListener('hashchange', () => location.reload());
+    let problem_no = 1;
+    let {hash} = window.location;
+    if (hash.startsWith('#')) {
+        hash = hash.slice(1);
+        problem_no = parseInt(hash);
+    }
+
+    problem = await get_problem(problem_no);
     selected = problem.figure.vertices.map(_ => false);
     frame = get_frame(problem);
     draw_hole(problem.hole, frame);
     draw_grid(frame);
     draw_init_figure(problem.figure, frame);
 
-    document.getElementById('problem-stats')!.innerText = `
+    document.getElementById('problem-stats')!.innerHTML = `
+    Problem #${problem_no}: <br>
     ${problem.figure.vertices.length} vertices,
     ${problem.figure.edges.length} edges,
     epsilon = ${problem.epsilon}
