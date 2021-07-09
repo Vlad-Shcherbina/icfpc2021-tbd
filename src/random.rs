@@ -1,25 +1,12 @@
 use rand::prelude::*;
 use crate::prelude::*;
 use crate::geom::segment_in_poly;
+use crate::util::{load_problem, store_solution};
 
-crate::entry_point!("random_solver", random_solver);
-fn random_solver() {
-    let problem_no = match std::env::args().nth(2) {
-        Some(p) => p,
-        None => {
-            eprintln!("Usage:");
-            eprintln!("    cargo run random_solver 11");
-            std::process::exit(1);
-        }
-    };
-
+fn solve(problem: &Problem) -> Pose {
     let mut rng = StdRng::seed_from_u64(42);
 
-    let path = project_path(format!("data/problems/{}.problem", problem_no));
-    let data = std::fs::read(path).unwrap();
-    let problem: Problem = serde_json::from_slice(&data).unwrap();
     dbg!(problem.figure.vertices.len());
-
     let vertices = &problem.figure.vertices;
     let x1 = vertices.iter().map(|pt| pt.x).min().unwrap();
     let y1 = vertices.iter().map(|pt| pt.y).min().unwrap();
@@ -29,6 +16,7 @@ fn random_solver() {
     dbg!((x1, y1, x2, y2));
     dbg!(problem.epsilon);
     let mut cnt = 0;
+    let mut solution = None;
     loop {
         cnt += 1;
         if cnt % 10000000 == 0 {
@@ -64,12 +52,24 @@ fn random_solver() {
 
         dbg!(cnt);
         dbg!(&pose);
-
-        let pose = Pose { vertices: pose };
-        let data = serde_json::to_vec(&pose).unwrap();
-        let path = format!("outputs/sol_{}.json", problem_no);
-        std::fs::write(project_path(&path), data).unwrap();
-        eprintln!("solution saved to {}", path);
+        solution = Some(Pose { vertices: pose });
         break;
     }
+    return solution.unwrap();
+}
+
+crate::entry_point!("random_solver", random_solver);
+fn random_solver() {
+    let problem_no = match std::env::args().nth(2) {
+        Some(p) => p,
+        None => {
+            eprintln!("Usage:");
+            eprintln!("    cargo run random_solver 11");
+            std::process::exit(1);
+        }
+    };
+
+    let problem: Problem = load_problem(&problem_no);
+    let pose = solve(&problem);
+    store_solution(&problem_no, &pose);
 }

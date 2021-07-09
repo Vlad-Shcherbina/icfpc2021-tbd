@@ -1,6 +1,7 @@
 #![allow(dead_code)]
 
 use std::path::{Path, PathBuf};
+use crate::prelude::{Problem, Pose};
 
 pub fn project_root() -> PathBuf {
     let exe = std::fs::canonicalize(std::env::args().next().unwrap()).unwrap();
@@ -24,4 +25,18 @@ pub fn project_path(rel: impl AsRef<Path>) -> PathBuf {
 #[test]
 fn project_path_test() {
     assert!(project_path("src/util.rs").exists());
+}
+
+pub fn load_problem<S: AsRef<str>>(problem_id: S) -> Problem {
+    let path = project_path(format!("data/problems/{}.problem", problem_id.as_ref()));
+    let data = std::fs::read(path).unwrap();
+    let problem: Problem = serde_json::from_slice(&data).unwrap();
+    return problem;
+}
+
+pub fn store_solution<S: AsRef<str>>(problem_id: S, solution: &Pose) {
+    let path = format!("outputs/sol_{}.json", problem_id.as_ref());
+    let data = serde_json::to_vec(&solution).unwrap();
+    std::fs::write(project_path(&path), data).unwrap();
+    eprintln!("solution saved to {}", path);
 }
