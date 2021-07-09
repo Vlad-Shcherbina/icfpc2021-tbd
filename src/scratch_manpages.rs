@@ -194,7 +194,8 @@ fn http() {
                 resp.header(header::CONTENT_TYPE, "text/html; charset=utf8".as_bytes());
                 resp.status(StatusCode::NOT_FOUND);
                 Ok(resp.body(stov(
-                    "<h1>🤷 ЧОЧ</h1><p>Unicode (UTF-8, really) is fine.</p>",
+                    "<h1>🤷 ЧОЧ</h1><p>Unicode (UTF-8, really) is fine.</p>
+                    <a href='/dashboard.html'>countdown</a>",
                 ))?)
             }
         }
