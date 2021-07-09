@@ -68,7 +68,6 @@ async function main() {
         assert(figure.vertices.length == problem.figure.vertices.length);
         console.dir(figure.vertices);
         draw_figure();
-        draw_selected();
     };
 
     document.onmouseup = (e: MouseEvent) => { select_point([e.x, e.y]); }
@@ -220,6 +219,8 @@ function draw_figure() {
                   color_by_edge_len(i),
                   ctx);
     }
+    draw_selected();
+    calculate_dislikes();
 }
 
 // function draw_shadow_figure() {
@@ -269,7 +270,6 @@ function move_selected([dx, dy]: Pt) {
         figure.vertices[i][1] += dy;
     }
     draw_figure();
-    draw_selected();
 }
 
 
@@ -300,9 +300,16 @@ function select_point(mouse_coord: Pt) {
     draw_selected();
 }
 
-// function redraw_figure() {
-    canvas_figure.width = canvas_figure.width;
-//     draw_figure(figure, ctx_figure, CLR_OK_EDGE, 2);
-//     draw_selected();
-// }
-
+function calculate_dislikes() {
+    let sum = 0;
+    for (let h of problem.hole) {
+        let min = edge_sq_len([frame.min_x, frame.min_y], [frame.max_x, frame.max_y]);
+        for (let v of figure.vertices) {
+            let d = edge_sq_len(h, v);
+            if (d < min) min = d;
+        }
+        sum += min;
+    }
+    let txt = document.getElementById("score")! as HTMLParagraphElement;
+    txt.innerHTML = `Dislikes: ${sum}`;
+}
