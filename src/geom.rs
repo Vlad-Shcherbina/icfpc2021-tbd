@@ -4,7 +4,7 @@
 #[derive(Clone, Copy, Debug)]
 pub struct Pt {
     pub x: i64,
-    pub y: i64,
+    pub y: i64,  // y axis points down
 }
 
 impl From<Pt> for (i64, i64) {
