@@ -60,7 +60,16 @@ async function main() {
     `;
 
     let solution = document.getElementById('solution') as HTMLTextAreaElement;
-    solution.textContent = JSON.stringify({vertices: problem.figure.vertices}, null, 2);
+    solution.value = JSON.stringify({vertices: problem.figure.vertices}, null, 2);
+    solution.onkeyup = () => {
+        console.log(solution.value);
+        figure.vertices = JSON.parse(solution.value!).vertices;
+        console.log(figure.vertices.length, problem.figure.vertices.length);
+        assert(figure.vertices.length == problem.figure.vertices.length);
+        console.dir(figure.vertices);
+        draw_figure();
+        draw_selected();
+    };
 
     document.onmouseup = (e: MouseEvent) => { select_point([e.x, e.y]); }
     document.onkeydown = (e: KeyboardEvent) => {
@@ -73,7 +82,7 @@ async function main() {
         else return;
         e.preventDefault();
         move_selected([dx, dy]);
-        solution.textContent = JSON.stringify({vertices: figure.vertices}, null, 2);
+        solution.value = JSON.stringify({vertices: figure.vertices}, null, 2);
     };
 
     // let MOUSE_COORD: MouseEvent | null = null;
