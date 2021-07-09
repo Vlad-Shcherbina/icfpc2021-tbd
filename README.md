@@ -94,3 +94,22 @@ cp git_hooks/pre-push .git/hooks/
 
 By the way, there is an utility to get paths relative to the project root:
 `project_path("data/example.txt")`.
+
+### How to run visualizer
+
+1. Install TypeScript:
+   ```
+   npm install -g typescript@latest
+   ```
+2. Start `tsc` in the watch mode and let it run
+   (it will generate js files from ts files as they change):
+   ```
+   cd icfpc2021-tbd
+   tsc --watch
+   ```
+3. Start the Web server:
+   ```
+   cd icfpc2021-tdb
+   python3 -m http.server
+   ```
+4. Navigate to http://127.0.0.1:8000/src/viz/static/viz.html
