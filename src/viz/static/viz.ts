@@ -280,7 +280,7 @@ function mouse_coords_to_canvas(mouse_coord: Pt): number[] {
 
 const VERTEX_CHOOSE_SENSE = 10;
 
-function closest(mouse_coord: Pt): number | null {
+function get_nearby_vertex_index(mouse_coord: Pt): number | null {
     let mp = mouse_coords_to_canvas(mouse_coord);
     for (let i = 0; i < figure.vertices.length; i++) {
         let p = grid_to_screen(figure.vertices[i]);
@@ -294,9 +294,9 @@ function closest(mouse_coord: Pt): number | null {
 let marked: number[] = []
 
 function select_point(mouse_coord: Pt) {
-    let p = closest(mouse_coord);
-    if (p == null) return;
-    selected[p] = !selected[p];
+    let i = get_nearby_vertex_index(mouse_coord);
+    if (i == null) return;
+    selected[i] = !selected[i];
     draw_selected();
 }
 
