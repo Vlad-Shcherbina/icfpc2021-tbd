@@ -1,6 +1,7 @@
 mod example;
 mod scratch_manpages;
 mod util;
+mod scratches;
 
 #[linkme::distributed_slice]
 static ENTRY_POINTS: [(&'static str, fn())] = [..];

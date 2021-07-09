@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Life</title>
+    </head>
+    <body>
+        <div id="error-message" style="background-color: red; position: fixed; display: none">
+            unhandled error, see console logs
+        </div>
+        <script>
+        window.onerror = window.onunhandledrejection = () => {
+            document.getElementById('error-message').style.display = 'block';
+        };
+        </script>
+        
+          
+        
+        <div style="height: 600px; width: 600px; position: absolute; margin: 10px;">
+            <canvas id="life_bg" height="600" width="600" style="position: absolute"></canvas>
+            <canvas id="life_fg" height="600" width="600" style="position: absolute"></canvas>
+        </div>
+        <div style="position: absolute; left: 630px; margin: 10px">
+            <p>Press <code>-></code> on a keyboard to make one step.</p>
+            <p><a href="javascript:void(0)" title="One step" id="step">one step</a></p>
+            <p><a href="javascript:void(0)" title="Run/Stop" id="run">run / pause</a></p>
+            <!-- <p><a href="html/404.html" title="Run/Stop" id="run">run / pause</a></p> -->
+        </div>
+        
+        <script type="module" src="lifescript.js"></script>
+    </body>
+</html>

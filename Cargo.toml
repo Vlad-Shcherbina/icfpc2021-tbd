@@ -8,7 +8,8 @@ edition = "2018"
 [dependencies]
 linkme = "*"
 http = "*"
-serde = "*"
+serde = { version = "*", features = ["derive"] }
 serde_json = "*"
+rand = "*"
 simple-server = "0.4.0"
 chrono = { version = "0.4", features = ["serde"] }
