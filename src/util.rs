@@ -5,7 +5,7 @@ use std::path::{Path, PathBuf};
 pub fn project_root() -> PathBuf {
     let exe = std::fs::canonicalize(std::env::args().next().unwrap()).unwrap();
     let mut path: &Path = &exe;
-    while path.file_name().unwrap() != "icfpc2021-tbd" {
+    while !(path.file_name().unwrap() == "icfpc2021-tbd" && path.is_dir()) {
         path = path.parent().unwrap();
     }
     path.to_owned()
