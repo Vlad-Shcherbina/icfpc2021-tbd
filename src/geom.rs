@@ -125,3 +125,107 @@ fn test_intersection() {
         (Pt::new(5, 10), Pt::new(30, 60)),
         Intersection::No);
 }
+
+pub fn poly_edges<'a>(poly: &'a [Pt]) -> impl Iterator<Item=(Pt, Pt)> + 'a {
+    poly.iter().copied().zip(
+        poly.iter().copied().skip(1).chain(std::iter::once(poly[0])))
+}
+
+// boundary included
+pub fn pt_in_poly(pt: Pt, poly: &[Pt]) -> bool {
+    let mut odd = false;
+    for (pt1, pt2) in poly_edges(poly) {
+        if pt == pt1 {
+            return true;
+        }
+        if pt1.y == pt2.y {
+            if pt.y == pt1.y &&
+               pt1.x.min(pt2.x) <= pt.x && pt.x <= pt1.x.max(pt2.x) {
+                return true;
+            }
+            continue;
+        }
+        if pt1.y.min(pt2.y) <= pt.y && pt.y < pt1.y.max(pt2.y) {
+            let t_numer = pt.y - pt1.y;
+            let mut denom = pt2.y - pt1.y;
+            assert_ne!(denom, 0);
+            let mut x_numer = pt1.x * denom + t_numer * (pt2.x - pt1.x);
+            if denom < 0 {
+                denom = -denom;
+                x_numer = -x_numer;
+            }
+            match x_numer.cmp(&(pt.x * denom)) {
+                std::cmp::Ordering::Equal => return true,
+                std::cmp::Ordering::Less => {}
+                std::cmp::Ordering::Greater => odd = !odd,
+            }
+        }
+    }
+    odd
+}
+
+fn check_pt_in_poly(pt: Pt, poly: &[Pt], expected: bool) {
+    let mut poly = poly.to_owned();
+    for _ in 0..2 {
+        for _ in 0..poly.len() {
+            assert_eq!(pt_in_poly(pt, &poly), expected);
+            poly.rotate_left(1);
+        }
+        poly.reverse();
+    }
+}
+
+#[test]
+fn test_pt_in_poly() {
+    let quad = &[
+        Pt::new(100, 200),
+        Pt::new(110, 200),
+        Pt::new(110, 210),
+        Pt::new(100, 210),
+    ];
+    for &pt in quad {
+        check_pt_in_poly(pt, quad, true);
+    }
+
+    // edges
+    check_pt_in_poly(Pt::new(105, 200), quad, true);
+    check_pt_in_poly(Pt::new(105, 210), quad, true);
+    check_pt_in_poly(Pt::new(100, 205), quad, true);
+    check_pt_in_poly(Pt::new(110, 205), quad, true);
+
+    // internal
+    check_pt_in_poly(Pt::new(105, 205), quad, true);
+
+    // outside
+    check_pt_in_poly(Pt::new(115, 205), quad, false);
+    check_pt_in_poly(Pt::new(105, 215), quad, false);
+    check_pt_in_poly(Pt::new(95, 205), quad, false);
+    check_pt_in_poly(Pt::new(105, 195), quad, false);
+
+    //////////////////////////////////////////
+
+    let triangle = &[
+        Pt::new(100, 200),
+        Pt::new(110, 200),
+        Pt::new(100, 210),
+    ];
+    for &pt in triangle {
+        check_pt_in_poly(pt, triangle, true);
+    }
+
+    // edges
+    check_pt_in_poly(Pt::new(105, 200), triangle, true);
+    check_pt_in_poly(Pt::new(100, 205), triangle, true);
+    check_pt_in_poly(Pt::new(105, 205), triangle, true);
+
+    // internal
+    check_pt_in_poly(Pt::new(102, 202), triangle, true);
+
+    // outside
+    check_pt_in_poly(Pt::new(108, 208), triangle, false);
+
+    check_pt_in_poly(Pt::new(115, 205), triangle, false);
+    check_pt_in_poly(Pt::new(105, 215), triangle, false);
+    check_pt_in_poly(Pt::new(95, 205), triangle, false);
+    check_pt_in_poly(Pt::new(105, 195), triangle, false);
+}
