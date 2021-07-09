@@ -1,3 +1,5 @@
+#![allow(dead_code)]
+
 use core::time::Duration;
 
 use crate::prelude::*;
@@ -5,6 +7,7 @@ use crate::prelude::Problem;
 use crate::random::RandomSolver;
 use crate::util::{load_problem, store_solution};
 
+#[derive(Debug)]
 pub enum SolverError {
     SolverOutOfTime(Duration),
     Other(String),
@@ -47,6 +50,6 @@ fn solver_main() {
     let problem: Problem = load_problem(&problem_no);
     match solver.solve(&problem, duration_per_task) {
         Ok(pose) => store_solution(&problem_no, &pose),
-        Err(err) => eprintln!("Error: $err"),
+        Err(err) => eprintln!("Error: {:?}", err),
     }
 }

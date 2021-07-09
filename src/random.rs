@@ -68,7 +68,7 @@ impl Solver for RandomSolver {
             solution = Some(Pose { vertices: pose });
             break;
         }
-        return Ok(solution.unwrap());
+        Ok(solution.unwrap())
     }
 }
 

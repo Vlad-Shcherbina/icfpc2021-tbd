@@ -31,7 +31,7 @@ pub fn load_problem<S: AsRef<str>>(problem_id: S) -> Problem {
     let path = project_path(format!("data/problems/{}.problem", problem_id.as_ref()));
     let data = std::fs::read(path).unwrap();
     let problem: Problem = serde_json::from_slice(&data).unwrap();
-    return problem;
+    problem
 }
 
 pub fn store_solution<S: AsRef<str>>(problem_id: S, solution: &Pose) {

@@ -1,6 +1,6 @@
 // A client library for their portal https://poses.live
 
-const API_KEY: &'static str = "81acc597-be90-418c-90aa-0dfac878aeb0";
+const API_KEY: &str = "81acc597-be90-418c-90aa-0dfac878aeb0";
 
 crate::entry_point!("poses_live_demo", poses_live_demo);
 fn poses_live_demo() {
