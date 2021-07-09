@@ -1,6 +1,8 @@
 <!DOCTYPE html>
 <html>
     <head>
+        <meta charset="utf-8">
+        <link rel="shortcut icon" href="data:image/x-icon;," type="image/x-icon">
         <title>Visualization</title>
     </head>
     <body>
@@ -16,9 +18,18 @@
 
         <div style="position: relative">
             <canvas height="600" width="600" style="position: absolute" id="hole"></canvas>
-            <canvas height="600" width="600" style="position: absolute" id="h_init"></canvas>
-            <canvas height="600" width="600" style="position: absolute" id="human"></canvas>
+            <canvas height="600" width="600" style="position: absolute" id="f_init"></canvas>
+            <canvas height="600" width="600" style="position: absolute" id="figure"></canvas>
         </div>
+        <script type="module" src="../../../public/js/spec.js"></script>
         <script type="module" src="viz.js"></script>
+
+        <script>window.onload = () => {
+            window.spec.main();
+            console.log("Welcome to ICFPC 2021, here is current problem:", window.spec.state.current_problem);
+            window.document.body.addEventListener('spec_refresh', () => {
+                console.log("Received 'spec_refresh' event, here is the new validated solution state:", window.spec.state.current_solution);
+            })
+        }</script>
     </body>
 </html>
