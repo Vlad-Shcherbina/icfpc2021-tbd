@@ -21,7 +21,11 @@ interface figure {
 function draw_hole(h: hole) {
     // TODO: scale
     let ctx = ctx_hole;
-    ctx.strokeStyle = "#777777";
+    let color = "rgb(" + Math.floor(Math.random() * 255) + "," 
+                + Math.floor(Math.random() * 255) + ","
+                + Math.floor(Math.random() * 255) + ")";  
+    ctx.strokeStyle = color;
+    // ctx.strokeStyle = "#777777";
     ctx.beginPath();
     let len = h.hole.length;
     ctx.moveTo(h.hole[len - 1][0], h.hole[len - 1][1]);
@@ -33,3 +37,5 @@ function draw_hole(h: hole) {
 
 let h: hole = JSON.parse('{ "hole": [[55, 80], [65, 95], [95, 95], [35, 5], [5, 5],[35, 50], [5, 95], [35, 95], [45, 80]] }');
 draw_hole(h);
+
+canvas_human.onmousedown = () => { console.log("hello"); draw_hole(h); };
