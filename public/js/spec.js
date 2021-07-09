@@ -22,7 +22,7 @@ window.spec.main = () => {
         }, "epsilon": 150000
     };
 
-    console.log("Loaded problem, here are vertices:", window.spec.state.current_problem.figure.vertices);
+    //console.log("Loaded problem, here are vertices:", window.spec.state.current_problem.figure.vertices);
 
     window.spec.state.current_solution = {
         "hole": [
@@ -35,6 +35,8 @@ window.spec.main = () => {
             ]
         }, "epsilon": 150000
     };
+
+    //console.log("Loaded solution, here are vertices:", window.spec.state.current_solution.figure.vertices);
 
     // Not used, just an example
     window.spec.example_edge = {
@@ -64,9 +66,9 @@ window.spec.main = () => {
         if (!problem) {
             problem = window.spec.state.current_problem;
         }
-        //console.log("Checking that second argument:", edges1, "aren't too far from the first argument:", edges0);
+        ////console.log("Checking that second argument:", edges1, "aren't too far from the first argument:", edges0);
         for (x in edges0) {
-            console.log("Checking rules for", edges0[x], "against", edges1[x]);
+            //console.log("Checking rules for", edges0[x], "against", edges1[x]);
             if (!window.spec.enforce_epsilon_rule_once(edges0[x], edges1[x], problem)) {
                 return { error_at_edge_id: x };
             }
@@ -77,19 +79,24 @@ window.spec.main = () => {
     window.spec.state.history = []
 
     window.spec.find_edges_by_vertex_id = (vertex_id, figurable) => {
-        console.log("Processing", figurable.figure);
-        return figurable.figure.edges.reduce((acc, edge) => {
+        edges = [...figurable.figure.edges];
+        vertices = [...figurable.figure.vertices];
+        return edges.reduce((acc, edge) => {
             if (edge[0] === vertex_id || edge[1] === vertex_id) {
-                console.log("Found relevant edge:", edge);
+                //console.log(edge[0], "x", edge[1]);
                 let from_id = edge[0];
                 let to_id = edge[1];
-                console.log("It spans:", figurable.figure.vertices[from_id], "to:", figurable.figure.vertices[to_id]);
-                acc.push({
+                let from_xy = [...vertices[from_id]];
+                let to_xy = [...vertices[to_id]];
+                //console.log("Relevant edge", edge, "spans", vertices[from_id], "to:", vertices[to_id]);
+                let to_push = {
                     from_id: from_id,
-                    from_xy: figurable.figure.vertices[from_id],
+                    from_xy: from_xy,
                     to_id: to_id,
-                    to_xy: figurable.figure.vertices[to_id],
-                });
+                    to_xy: to_xy
+                }
+                //console.log("Pushing", JSON.stringify(to_push));
+                acc.push(to_push);
                 return acc;
             } else {
                 return acc;
@@ -101,26 +108,25 @@ window.spec.main = () => {
         if (!problem) {
             problem = window.spec.state.current_problem;
         }
-        console.log("What the fuck!", problem);
         if (!solution) {
             solution = window.spec.state.current_solution;
         }
         if (!history) {
             history = window.spec.state.history;
         }
-        console.log("Dragging", vertex0_id, "which is currently at", solution.figure.vertices[vertex0_id], "to", vertex1);
+        //console.log("Dragging", vertex0_id, "which is currently at", solution.figure.vertices[vertex0_id], "to", vertex1);
         rollback = { ...solution };
-        console.log("Updating", vertex0_id, "in solution figure vertex list. Was:", solution.figure.vertices[vertex0_id]);
+        //console.log("Updating", vertex0_id, "in solution figure vertex list. Was:", solution.figure.vertices[vertex0_id]);
         history.push(rollback);
         solution.figure.vertices[vertex0_id] = vertex1;
-        console.log("Is", solution.figure.vertices[vertex0_id]);
-        console.log("About to yeet problem", problem);
+        //console.log("Is", solution.figure.vertices[vertex0_id]);
+        //console.log("About to yeet problem", problem);
         edges0 = window.spec.find_edges_by_vertex_id(vertex0_id, problem);
-        console.log("Edges, as specified by the problem", edges0);
+        //console.log("Edges, as specified by the problem", edges0);
         edges1 = window.spec.find_edges_by_vertex_id(vertex0_id, solution);
-        console.log("Edges, after dragging", edges1);
+        //console.log("Edges, after dragging", edges1);
         let enforce_object = window.spec.enforce_epsilon_rule(edges0, edges1, problem);
-        console.log("Enforcing rules", enforce_object, "should be", edges0.length)
+        //console.log("Enforcing rules", enforce_object, "should be", edges0.length)
         if (edges0.length === enforce_object) {
             window.document.body.dispatchEvent(window.spec.refresh);
             return;

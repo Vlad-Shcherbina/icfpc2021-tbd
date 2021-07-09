@@ -13,6 +13,7 @@
             console.log("Welcome to ICFPC 2021, here is current problem:", window.spec.state.current_problem);
             window.document.body.addEventListener('spec_refresh', () => {
                 console.log("Received 'spec_refresh' event, here is the new validated solution state:", window.spec.state.current_solution);
+                console.log("Perhaps, you're interested in vertices. Here they are:", JSON.stringify(window.spec.state.current_solution.figure.vertices));
             })
         }</script>
 </body>
