@@ -42,25 +42,34 @@
                 return fetch(config.server + "/dashboard/timer").then(resp => resp.json());
             }
 
-            countdownF = (root, target) => {
+            window.state = {
+                countdowns: [],
+            };
+            countdownF = () => {
                 var tickInterval = setInterval(() => {
-                    console.log(root, root.querySelectorAll(".hours"), target)
                     let utcNow = new Date().getTime();
-                    let utcTarget = Date.parse(target + "Z"); // https://stackoverflow.com/questions/2587345/why-does-date-parse-give-incorrect-results
-                    let delta = utcTarget - utcNow;
-                    let msectohour = 1000 * 60 * 60;
-                    var hours = Math.floor(delta / msectohour);
-                    let msectominute = 1000 * 60;
-                    var minutes = Math.floor((delta % msectohour) / msectominute);
-                    let msectosecond = 1000;
-                    var seconds = Math.floor((delta % msectominute) / msectosecond);
-                    root.querySelectorAll(".hours")[0].innerText = (hours + "").padStart(2, '0') + ":";
-                    root.querySelectorAll(".minutes")[0].innerText = (minutes + "").padStart(2, '0') + ":";
-                    root.querySelectorAll(".seconds")[0].innerText = (seconds + "").padStart(2, '0');
-                    if (delta < 0) {
-                        clearInterval(tickInterval);
-                    }
-                }, 89);
+                    window.state.countdowns = window.state.countdowns.reduce((acc, pair) => {
+                        let root = pair[0];
+                        let utcTarget = pair[1];
+                        let delta = utcTarget - utcNow;
+                        let msectohour = 1000 * 60 * 60;
+                        var hours = Math.floor(delta / msectohour);
+                        let msectominute = 1000 * 60;
+                        var minutes = Math.floor((delta % msectohour) / msectominute);
+                        let msectosecond = 1000;
+                        var seconds = Math.floor((delta % msectominute) / msectosecond);
+                        root.querySelectorAll(".hours")[0].innerText = (hours + "").padStart(2, '0') + ":";
+                        root.querySelectorAll(".minutes")[0].innerText = (minutes + "").padStart(2, '0') + ":";
+                        root.querySelectorAll(".seconds")[0].innerText = (seconds + "").padStart(2, '0');
+                        if (delta >= 0) {
+                            acc.push(pair);
+                            return acc;
+                        } else {
+                            root.parentElement.remove();
+                            return acc;
+                        }
+                    }, [])
+                }, 333);
                 return tickInterval;
             }
 
@@ -71,7 +80,9 @@
 
                 for (x in timers) {
                     var timerBox = document.createElement("div");
-                    timerBox.className = cyrb53(timers[x]);
+                    let tbcn = cyrb53(timers[x]);
+                    timerBox.className = tbcn;
+
                     var timerHeader = document.createElement("h3");
                     timerHeader.innerText = timers[x];
                     timerBox.appendChild(timerHeader);
@@ -89,9 +100,12 @@
                     timerItself.appendChild(s);
 
                     timerBox.appendChild(timerItself);
-                    countdownF(timerItself, x);
+                    let utcTarget = Date.parse(x + "Z"); // https://stackoverflow.com/questions/2587345/why-does-date-parse-give-incorrect-results
+                    window.state.countdowns.push([timerItself, utcTarget]);
                     app.appendChild(timerBox);
                 };
+
+                countdownF();
             }
 
             main()

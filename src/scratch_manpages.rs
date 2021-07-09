@@ -165,7 +165,7 @@ fn http() {
                         state_contents.insert(target, label);
                         eprintln!("State1 {:#?}", *state_contents);
                     }
-                    Ok(resp.body(stov(format!(r##"Adding {:#?}"##, target).as_str()))?)
+                    Ok(resp.body(stov(format!(r##"Inserting {:#?}"##, target).as_str()))?)
                 } else {
                     resp.header(header::CONTENT_TYPE, "text/html; charset=utf8".as_bytes());
                     resp.status(StatusCode::UNPROCESSABLE_ENTITY);
@@ -182,7 +182,7 @@ fn http() {
                         state_contents.remove(&target);
                         eprintln!("State1 {:#?}", *state_contents);
                     }
-                    Ok(resp.body(stov(format!(r##"Adding {:#?}"##, target).as_str()))?)
+                    Ok(resp.body(stov(format!(r##"Removing {:#?}"##, target).as_str()))?)
                 } else {
                     resp.header(header::CONTENT_TYPE, "text/html; charset=utf8".as_bytes());
                     resp.status(StatusCode::UNPROCESSABLE_ENTITY);
