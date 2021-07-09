@@ -2,6 +2,9 @@ mod example;
 mod scratch_manpages;
 mod util;
 mod scratches;
+mod prelude;
+mod geom;
+mod domain_model;
 
 #[linkme::distributed_slice]
 static ENTRY_POINTS: [(&'static str, fn())] = [..];
