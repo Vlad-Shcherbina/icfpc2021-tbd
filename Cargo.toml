@@ -13,3 +13,5 @@ serde_json = "*"
 rand = "*"
 simple-server = "0.4.0"
 chrono = { version = "0.4", features = ["serde"] }
+osqp = "0.6.2"
+totsu = "0.8.0"

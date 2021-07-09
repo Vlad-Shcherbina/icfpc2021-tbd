@@ -25,6 +25,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "cc"
+version = "1.0.68"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "4a72c244c1ff497a746a7e1fb3d14bd08420ecda70c8f25c7112f2781652d787"
+
+[[package]]
 name = "cfg-if"
 version = "1.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -45,10 +51,25 @@ dependencies = [
 ]
 
 [[package]]
+name = "cmake"
+version = "0.1.45"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "eb6210b637171dfba4cda12e579ac6dc73f5165ad56133e5d72ef3131f320855"
+dependencies = [
+ "cc",
+]
+
+[[package]]
 name = "fnv"
 version = "1.0.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "3f9eec918d3f24069decb9af1554cad7c880e2da24a9afd88aca000531ab82c1"
+
+[[package]]
+name = "fs_extra"
+version = "1.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "2022715d62ab30faffd124d40b76f4134a550a87792276512b18d63272333394"
 
 [[package]]
 name = "getrandom"
@@ -94,10 +115,12 @@ dependencies = [
  "chrono",
  "http",
  "linkme",
+ "osqp",
  "rand",
  "serde",
  "serde_json",
  "simple-server",
+ "totsu",
 ]
 
 [[package]]
@@ -186,6 +209,26 @@ checksum = "05499f3756671c15885fee9034446956fff3f243d6077b91e5767df161f766b3"
 dependencies = [
  "hermit-abi",
  "libc",
+]
+
+[[package]]
+name = "osqp"
+version = "0.6.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "3e075624701220e1d09157ce82af4dc1592429ce7ee300b404a5d4f27ef4271e"
+dependencies = [
+ "osqp-sys",
+]
+
+[[package]]
+name = "osqp-sys"
+version = "0.6.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "7767aa83dba70b46f4fbf9a9662c3b2710db0fc5e74cfa16c2991d049ed17faa"
+dependencies = [
+ "cc",
+ "cmake",
+ "fs_extra",
 ]
 
 [[package]]
@@ -329,6 +372,16 @@ dependencies = [
  "libc",
  "wasi",
  "winapi",
+]
+
+[[package]]
+name = "totsu"
+version = "0.8.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c09cd6722d7f797031b251cbc2bef47a969ae9c7c409a4219224909f4eff27eb"
+dependencies = [
+ "log 0.4.14",
+ "num-traits",
 ]
 
 [[package]]
