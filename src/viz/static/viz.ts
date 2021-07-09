@@ -70,8 +70,8 @@ async function main() {
         draw_figure();
     };
 
-    document.onmouseup = (e: MouseEvent) => { 
-        if (!e.ctrlKey) selected = figure.vertices.map(_ => false);
+    document.onmouseup = (e: MouseEvent) => {
+        if (!(e.ctrlKey || e.metaKey)) selected = figure.vertices.map(_ => false);
         select_point([e.x, e.y]);
     }
 
