@@ -201,6 +201,16 @@ function color_by_edge_len(i: number): string {
     return CLR_OK_EDGE;
 }
 
+function get_edge_limits(i: number): [number, number, number] {
+    let [start, end] = figure.edges[i];
+    let d2 = edge_sq_len(figure.vertices[start], figure.vertices[end]);
+    [start, end] = figure.edges[i];
+    let d1 = edge_sq_len(problem.figure.vertices[start], problem.figure.vertices[end]);
+    return [Math.floor(d1 * (1 - problem.epsilon / 1e6)), 
+            d2, 
+            Math.ceil(d1 * (1 + problem.epsilon / 1e6))];
+}
+
 
 function draw_edge(v1: Pt, v2: Pt, color: string, ctx: CanvasRenderingContext2D) {
     ctx.strokeStyle = color;
@@ -218,10 +228,15 @@ function draw_figure() {
     ctx.lineWidth = 2;
     for (let i = 0; i < figure.edges.length; i++) {
         let [start, end] = figure.edges[i];
-        draw_edge(figure.vertices[start], 
-                  figure.vertices[end],
-                  color_by_edge_len(i),
-                  ctx);
+        let p1 = figure.vertices[start];
+        let p2 = figure.vertices[end];
+        draw_edge(p1, p2, color_by_edge_len(i), ctx);
+        let [min, cur, max] = get_edge_limits(i);
+        if (min > cur || max < cur) {
+            ctx.fillStyle = "#444444";
+            let [mx, my] = grid_to_screen([(p1[0] + p2[0]) / 2, (p1[1] + p2[1]) / 2]);
+            ctx.fillText(`${cur} (${min} : ${max})`, mx, my);
+        }
     }
     draw_selected();
     calculate_dislikes();
