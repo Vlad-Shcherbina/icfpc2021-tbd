@@ -17,6 +17,16 @@ impl Pt {
     pub fn cross(self, other: Pt) -> i64 {
         self.x * other.y - self.y * other.x
     }
+
+    /// length squared
+    pub fn len2(self) -> i64 {
+        self.x * self.x + self.y * self.y
+    }
+
+    /// distance squared
+    pub fn dist2(self, other: Pt) -> i64 {
+        (self - other).len2()
+    }
 }
 
 impl From<Pt> for (i64, i64) {
@@ -228,4 +238,25 @@ fn test_pt_in_poly() {
     check_pt_in_poly(Pt::new(105, 215), triangle, false);
     check_pt_in_poly(Pt::new(95, 205), triangle, false);
     check_pt_in_poly(Pt::new(105, 195), triangle, false);
+}
+
+// including boundary
+pub fn segment_in_poly(seg: (Pt, Pt), poly: &[Pt]) -> bool {
+    // TODO: This check is incorrect in some cases.
+    // I think I know how to do the check correctly,
+    // but it's hard, this is a placeholder for now.
+
+    if !pt_in_poly(seg.0, poly) || !pt_in_poly(seg.1, poly) {
+        return false;
+    }
+
+    for edge in poly_edges(poly) {
+        match segment_intersection(seg, edge) {
+            Intersection::Internal => return false,
+            Intersection::No => {}
+            Intersection::Endpoint(_) => {}
+        }
+    }
+
+    true
 }

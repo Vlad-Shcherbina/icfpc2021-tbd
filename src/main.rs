@@ -5,6 +5,7 @@ mod scratches;
 mod prelude;
 mod geom;
 mod domain_model;
+mod random;
 
 #[linkme::distributed_slice]
 static ENTRY_POINTS: [(&'static str, fn())] = [..];

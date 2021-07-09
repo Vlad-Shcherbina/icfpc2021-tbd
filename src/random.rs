@@ -1,0 +1,75 @@
+use rand::prelude::*;
+use crate::prelude::*;
+use crate::geom::segment_in_poly;
+
+crate::entry_point!("random_solver", random_solver);
+fn random_solver() {
+    let problem_no = match std::env::args().nth(2) {
+        Some(p) => p,
+        None => {
+            eprintln!("Usage:");
+            eprintln!("    cargo run random_solver 11");
+            std::process::exit(1);
+        }
+    };
+
+    let mut rng = StdRng::seed_from_u64(42);
+
+    let path = project_path(format!("data/problems/{}.problem", problem_no));
+    let data = std::fs::read(path).unwrap();
+    let problem: Problem = serde_json::from_slice(&data).unwrap();
+    dbg!(problem.figure.vertices.len());
+
+    let vertices = &problem.figure.vertices;
+    let x1 = vertices.iter().map(|pt| pt.x).min().unwrap();
+    let y1 = vertices.iter().map(|pt| pt.y).min().unwrap();
+    let x2 = vertices.iter().map(|pt| pt.x).max().unwrap();
+    let y2 = vertices.iter().map(|pt| pt.y).max().unwrap();
+
+    dbg!((x1, y1, x2, y2));
+    dbg!(problem.epsilon);
+    let mut cnt = 0;
+    loop {
+        cnt += 1;
+        if cnt % 10000000 == 0 {
+            dbg!(cnt);
+        }
+
+        let pose: Vec<Pt> = vertices.iter()
+            .map(|_| Pt::new(rng.gen_range(x1..=x2), rng.gen_range(y1..=y2)))
+            .collect();
+
+        let mut good = true;
+        for &(start, end) in &problem.figure.edges {
+            let orig_d2 = vertices[start].dist2(vertices[end]);
+            let new_d2 = pose[start].dist2(pose[end]);
+
+            // TODO: avoid floating point arithmetic here
+            let min_d2 = orig_d2 as f64 * (1.0 - problem.epsilon / 1e6).powf(2.0);
+            let max_d2 = orig_d2 as f64 * (1.0 + problem.epsilon / 1e6).powf(2.0);
+
+            if (new_d2 as f64) < min_d2 || new_d2 as f64 > max_d2 {
+                good = false;
+                break;
+            }
+
+            if !segment_in_poly((pose[start], pose[end]), &problem.hole) {
+                good = false;
+                break;
+            }
+        }
+        if !good {
+            continue;
+        }
+
+        dbg!(cnt);
+        dbg!(&pose);
+
+        let pose = Pose { vertices: pose };
+        let data = serde_json::to_vec(&pose).unwrap();
+        let path = format!("outputs/sol_{}.json", problem_no);
+        std::fs::write(project_path(&path), data).unwrap();
+        eprintln!("solution saved to {}", path);
+        break;
+    }
+}
