@@ -1,0 +1,23 @@
+@font-face {
+    font-family: 'tbd-icfpc';
+    src: url(/fonts/regular.woff2);
+}
+
+@font-face {
+    font-family: 'tbd-icfpc';
+    src: url(/fonts/bold.woff2);
+    font-weight: bold;
+}
+
+@font-face {
+    font-family: 'tbd-icfpc-mono';
+    src: url(/fonts/monospace.woff2);
+}
+
+* {
+    font-family: 'tbd-icfpc';
+}
+
+code, pre {
+    font-family: 'tbd-icfpc-mono';
+}

@@ -3,6 +3,7 @@
 <head>
     <meta content="text/html;charset=utf-8" http-equiv="Content-Type">
     <meta content="utf-8" http-equiv="encoding">
+    <link href="/css/fonts.css" rel="stylesheet">
 </head>
 
 <body>
@@ -21,17 +22,76 @@
                 server: window.location.protocol + "//" + window.location.hostname + maybePort(),
             }
 
+            window.prelude = {};
+
+            window.cyrb53 = (str, seed = 1) => {
+                let h1 = 0x1CF9C7BD ^ seed, h2 = 0x41c6ce57 ^ seed;
+                for (let i = 0, ch; i < str.length; i++) {
+                    ch = str.charCodeAt(i);
+                    h1 = Math.imul(h1 ^ ch, 2654435761);
+                    h2 = Math.imul(h2 ^ ch, 1597334677);
+                }
+                h1 = Math.imul(h1 ^ (h1 >>> 16), 2246822507) ^ Math.imul(h2 ^ (h2 >>> 13), 3266489909);
+                h2 = Math.imul(h2 ^ (h2 >>> 16), 2246822507) ^ Math.imul(h1 ^ (h1 >>> 13), 3266489909);
+                return 4294967296 * (2097151 & h2) + (h1 >>> 0);
+            }
+
             // Modules
             window.dashboard = {};
             window.dashboard.fetchTimers = () => {
                 return fetch(config.server + "/dashboard/timer").then(resp => resp.json());
             }
 
+            countdownF = (root, target) => {
+                var tickInterval = setInterval(() => {
+                    console.log(root, root.querySelectorAll(".hours"), target)
+                    let utcNow = new Date().getTime();
+                    let utcTarget = Date.parse(target + "Z"); // https://stackoverflow.com/questions/2587345/why-does-date-parse-give-incorrect-results
+                    let delta = utcTarget - utcNow;
+                    let msectohour = 1000 * 60 * 60;
+                    var hours = Math.floor(delta / msectohour);
+                    let msectominute = 1000 * 60;
+                    var minutes = Math.floor((delta % msectohour) / msectominute);
+                    let msectosecond = 1000;
+                    var seconds = Math.floor((delta % msectominute) / msectosecond);
+                    root.querySelectorAll(".hours")[0].innerText = (hours + "").padStart(2, '0') + ":";
+                    root.querySelectorAll(".minutes")[0].innerText = (minutes + "").padStart(2, '0') + ":";
+                    root.querySelectorAll(".seconds")[0].innerText = (seconds + "").padStart(2, '0');
+                    if (delta < 0) {
+                        clearInterval(tickInterval);
+                    }
+                }, 89);
+                return tickInterval;
+            }
+
             // Entry point
             window.main = async () => {
                 app = document.getElementById('app_root');
                 timers = await dashboard.fetchTimers();
-                console.log(timers);
+
+                for (x in timers) {
+                    var timerBox = document.createElement("div");
+                    timerBox.className = cyrb53(timers[x]);
+                    var timerHeader = document.createElement("h3");
+                    timerHeader.innerText = timers[x];
+                    timerBox.appendChild(timerHeader);
+
+                    var timerItself = document.createElement("div");
+                    timerItself.className = "timer";
+                    var h = document.createElement("span");
+                    h.className = "hours";
+                    var m = document.createElement("span");
+                    m.className = "minutes";
+                    var s = document.createElement("span");
+                    s.className = "seconds";
+                    timerItself.appendChild(h);
+                    timerItself.appendChild(m);
+                    timerItself.appendChild(s);
+
+                    timerBox.appendChild(timerItself);
+                    countdownF(timerItself, x);
+                    app.appendChild(timerBox);
+                };
             }
 
             main()
