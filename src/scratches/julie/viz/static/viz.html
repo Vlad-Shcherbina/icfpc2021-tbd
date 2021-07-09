@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Visualization</title>
+    </head>
+    <body>
+        <div id="error-message" style="background-color: red; position: fixed; display: none">
+            unhandled error, see console logs
+        </div>
+        <script>
+        window.onerror = window.onunhandledrejection = () => {
+            document.getElementById('error-message').style.display = 'block';
+        };
+        </script>
+
+
+        <div style="position: relative">
+            <canvas height="600" width="600" position="absolute" id="hole"></canvas>
+            <canvas height="600" width="600" position="absolute" id="human"></canvas>
+        </div>
+        <script type="module" src="viz.js"></script>
+    </body>
+</html>
