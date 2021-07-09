@@ -54,8 +54,11 @@ window.spec.main = () => {
         if (!problem) {
             problem = window.spec.state.current_problem;
         }
-        if (edge0.from_xy[0] === edge1.from_xy[0] && edge0.from_xy[1] === edge1.from_xy[1]) {
-            return true;
+        if (window.spec.d(edge0.from_xy, edge0.to_xy) === 0) {
+            return {
+                division_by_zero_between_from_and_to_at: { from_id: edge0.from_id, to_id: edge0.to_id, from_xy: [...edge0.from_xy], to_xy: [...edge0.to_xy] },
+                comparing_to: { from_id: edge1.from_id, to_id: edge1.to_id, from_xy: [...edge1.from_xy], to_xy: [...edge1.to_xy] }
+            };
         }
         return Math.abs(
             (window.spec.d(edge1.from_xy, edge1.to_xy)) / (window.spec.d(edge0.from_xy, edge0.to_xy)) - 1
@@ -70,7 +73,10 @@ window.spec.main = () => {
         for (x in edges0) {
             //console.log("Checking rules for", edges0[x], "against", edges1[x]);
             if (!window.spec.enforce_epsilon_rule_once(edges0[x], edges1[x], problem)) {
-                return { error_at_edge_id: x };
+                return {
+                    epsilon_violation_at: [x, { from_id: edges0[x].from_id, to_id: edges0[x].to_id, from_xy: [...edges0[x].from_xy], to_xy: [...edges0[x].to_xy] }],
+                    comparing_to: { from_id: edges1[x].from_id, to_id: edges1[x].to_id, from_xy: [...edges1[x].from_xy], to_xy: [...edges1[x].to_xy] }
+                };
             }
         }
         return edges0.length;
