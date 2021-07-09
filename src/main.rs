@@ -6,6 +6,7 @@ mod prelude;
 mod geom;
 mod domain_model;
 mod random;
+mod solver;
 
 #[linkme::distributed_slice]
 static ENTRY_POINTS: [(&'static str, fn())] = [..];
