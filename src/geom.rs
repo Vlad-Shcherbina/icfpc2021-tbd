@@ -126,7 +126,7 @@ fn test_intersection() {
         Intersection::No);
 }
 
-pub fn poly_edges<'a>(poly: &'a [Pt]) -> impl Iterator<Item=(Pt, Pt)> + 'a {
+pub fn poly_edges(poly: &[Pt]) -> impl Iterator<Item=(Pt, Pt)> + '_ {
     poly.iter().copied().zip(
         poly.iter().copied().skip(1).chain(std::iter::once(poly[0])))
 }
