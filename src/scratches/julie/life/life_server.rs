@@ -12,7 +12,9 @@ type GameList = HashMap<u32, (Vec<Vec<u8>>, Vec<Vec<u8>>)>;
 crate::entry_point!("life", life_server);
 pub fn life_server() {
     let listener = TcpListener::bind("127.0.0.1:8000").unwrap();
-    eprintln!("Don't forget to run tsc --watch!\nlistening http://127.0.0.1:8000 ...");
+    eprintln!("Don't forget to run tsc --watch!");
+    eprintln!("listening http://127.0.0.1:8000 ...");
+    eprintln!("http://127.0.0.1:8000/src/scratches/julie/life/static/life.html");
     let games: GameList = HashMap::new();
     let g = Arc::new(Mutex::new(games));
     serve_forever(listener, || { 
