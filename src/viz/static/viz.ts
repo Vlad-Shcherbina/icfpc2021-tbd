@@ -27,6 +27,7 @@ async function get_problem(n: number): Promise<Problem> {
 }
 
 let problem: Problem;
+let figure: Figure;
 let frame: Frame;
 let selected: boolean[] = [];
 
@@ -41,11 +42,12 @@ async function main() {
     }
 
     problem = await get_problem(problem_no);
+    figure = JSON.parse(JSON.stringify(problem.figure));
     selected = problem.figure.vertices.map(_ => false);
     frame = get_frame(problem);
     draw_hole(problem.hole, frame);
     draw_grid(frame);
-    draw_init_figure(problem.figure, frame);
+    draw_init_figure(figure, frame);
 
     document.getElementById('problem-stats')!.innerHTML = `
     Problem #${problem_no}: <br>
@@ -95,12 +97,12 @@ async function main() {
     // };
 
     (document.getElementById("select_all") as HTMLAnchorElement).onclick = () => {
-        selected = problem.figure.vertices.map(_ => true);
+        selected = figure.vertices.map(_ => true);
         draw_selected();
     };
 
     (document.getElementById("deselect_all") as HTMLAnchorElement).onclick = () => {
-        selected = problem.figure.vertices.map(_ => false);
+        selected = figure.vertices.map(_ => false);
         draw_selected();
     };
 }
@@ -197,7 +199,7 @@ function draw_selected() {
     let ctx = ctx_figure;
     for (let i = 0; i < selected.length; i++) {
         ctx.fillStyle = selected[i] ? CLR_SELECTED : CLR_DESELECTED;
-        let p = grid_to_screen(problem.figure.vertices[i], frame);
+        let p = grid_to_screen(figure.vertices[i], frame);
         ctx.beginPath();
         ctx.arc(p[0], p[1], 3, 0, 2 * Math.PI);
         ctx.fill();
@@ -208,8 +210,8 @@ function draw_selected() {
 function move_selected([dx, dy]: Pt) {
     for (let i = 0; i < selected.length; i++) {
         if (!selected[i]) continue;
-        problem.figure.vertices[i][0] += dx;
-        problem.figure.vertices[i][1] += dy;
+        figure.vertices[i][0] += dx;
+        figure.vertices[i][1] += dy;
     }
     redraw_figure();
 }
@@ -224,8 +226,8 @@ const VERTEX_CHOOSE_SENSE = 10;
 
 function closest(mouse_coord: Pt): number | null {
     let mp = mouse_coords_to_canvas(mouse_coord);
-    for (let i = 0; i < problem.figure.vertices.length; i++) {
-        let p = grid_to_screen(problem.figure.vertices[i], frame);
+    for (let i = 0; i < figure.vertices.length; i++) {
+        let p = grid_to_screen(figure.vertices[i], frame);
         if (Math.pow(p[0] - mp[0], 2) + Math.pow(p[1] - mp[1], 2) < Math.pow(VERTEX_CHOOSE_SENSE, 2)) {
             return i;
         }
@@ -244,7 +246,7 @@ function select_point(mouse_coord: Pt) {
 
 function redraw_figure() {
     canvas_figure.width = canvas_figure.width;
-    draw_figure(problem.figure, ctx_figure, CLR_FIGURE, 2);
+    draw_figure(figure, ctx_figure, CLR_FIGURE, 2);
     draw_selected();
 }
 
