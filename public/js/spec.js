@@ -73,7 +73,7 @@ window.spec.main = () => {
                 return { error_at_edge_id: x };
             }
         }
-        return edges1.length;
+        return edges0.length;
     }
 
     window.spec.state.history = []
@@ -104,6 +104,25 @@ window.spec.main = () => {
         }, []);
     }
 
+    window.spec.clone_array_of_tuples = (xxs) => {
+        var xxs1 = [];
+        for (ixs in xxs) {
+            xxs1.push([...xxs[ixs]]);
+        }
+        return xxs1;
+    }
+
+    window.spec.clone_figurable = (figurable) => {
+        return {
+            "hole": window.spec.clone_array_of_tuples(figurable.hole),
+            "figure": {
+                "edges": window.spec.clone_array_of_tuples(figurable.figure.edges),
+                "vertices": window.spec.clone_array_of_tuples(figurable.figure.vertices)
+            },
+            "epsilon": figurable.epsilon
+        };
+    }
+
     window.spec.drag = (vertex0_id, vertex1, problem = false, solution = false, history = false) => {
         if (!problem) {
             problem = window.spec.state.current_problem;
@@ -115,10 +134,8 @@ window.spec.main = () => {
             history = window.spec.state.history;
         }
         //console.log("Dragging", vertex0_id, "which is currently at", solution.figure.vertices[vertex0_id], "to", vertex1);
-        // TODO: make deep copy !
-        rollback = { ...solution };
         //console.log("Updating", vertex0_id, "in solution figure vertex list. Was:", solution.figure.vertices[vertex0_id]);
-        history.push(rollback);
+        var vertex0_rollback = [...solution.figure.vertices[vertex0_id]];
         solution.figure.vertices[vertex0_id] = vertex1;
         //console.log("Is", solution.figure.vertices[vertex0_id]);
         //console.log("About to yeet problem", problem);
@@ -126,16 +143,17 @@ window.spec.main = () => {
         //console.log("Edges, as specified by the problem", edges0);
         edges1 = window.spec.find_edges_by_vertex_id(vertex0_id, solution);
         //console.log("Edges, after dragging", edges1);
-        let enforce_object = window.spec.enforce_epsilon_rule(edges0, edges1, problem);
+        let amount_of_edges_consumed_from_edges0 = window.spec.enforce_epsilon_rule(edges0, edges1, problem);
         //console.log("Enforcing rules", enforce_object, "should be", edges0.length)
-        // TODO: check lengths before enforce
-        if (edges0.length === enforce_object) {
+        if (edges1.length === amount_of_edges_consumed_from_edges0) {
             window.document.body.dispatchEvent(window.spec.refresh);
+            var previous_solution = window.spec.clone_figurable(solution);
+            previous_solution.figure.vertices[vertex0_id] = vertex0_rollback;
+            history.push(previous_solution);
             return true;
         }
-        solution = rollback;
-        history.pop();
-        return enforce_object;
+        solution.figure.vertices[vertex0_id] = vertex0_rollback;
+        return amount_of_edges_consumed_from_edges0;
     }
 
 }
