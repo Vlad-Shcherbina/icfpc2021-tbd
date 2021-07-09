@@ -10,6 +10,7 @@ export interface Figure {
 export interface Problem {
     hole: Pt[];
     figure: Figure;
+    epsilon: number,
 }
 
 export interface Frame {

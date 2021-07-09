@@ -39,6 +39,12 @@ async function main() {
     draw_grid(frame);
     draw_init_figure(problem.figure, frame);
 
+    document.getElementById('problem-stats')!.innerText = `
+    ${problem.figure.vertices.length} vertices,
+    ${problem.figure.edges.length} edges,
+    epsilon = ${problem.epsilon}
+    `;
+
     let solution = document.getElementById('solution') as HTMLTextAreaElement;
     solution.textContent = JSON.stringify({vertices: problem.figure.vertices}, null, 2);
 
