@@ -1,6 +1,6 @@
 #![allow(clippy::needless_range_loop)]
 
-use super::dev_server::{serve_forever, Request, ResponseBuilder, HandlerResult};
+use simple_server::{Method, Server, StatusCode, Request, ResponseBuilder, ResponseResult};
 use crate::util::project_path;
 
 use std::collections::HashMap;
@@ -9,43 +9,50 @@ use std::sync::{Arc, Mutex};
 
 type GameList = HashMap<u32, (Vec<Vec<u8>>, Vec<Vec<u8>>)>;
 
-crate::entry_point!("life", life_server);
+crate::entry_point!("life_simple", life_server);
 pub fn life_server() {
-    let listener = TcpListener::bind("127.0.0.1:8000").unwrap();
     eprintln!("Don't forget to run tsc --watch!");
     eprintln!("listening http://127.0.0.1:8000 ...");
     eprintln!("http://127.0.0.1:8000/src/scratches/julie/life/static/life.html");
     let games: GameList = HashMap::new();
     let g = Arc::new(Mutex::new(games));
-    serve_forever(listener, || { 
+
+    let listener = TcpListener::bind(("127.0.0.1", 8000)).unwrap();
+    let server = Server::new(move |request, response| {
         let m = Arc::clone(&g);
-        move |r, p| { life_handler(&m, r, p) } 
+        life_handler(&m, request, response)
     });
+    server.listen_on_socket(listener);
 }
 
 
-fn life_handler(games: &Mutex<GameList>, request: &Request, response: ResponseBuilder) -> HandlerResult {
+pub fn stov(s: &str) -> Vec<u8> {
+    s.as_bytes().to_vec()
+}
+
+fn life_handler(games: &Mutex<GameList>, request: Request<Vec<u8>>, mut response: ResponseBuilder) -> ResponseResult {
     let mut games = games.lock().unwrap();
-    if request.path == "/api/change/" {
-        let r: LifeChangeRequest = serde_json::from_slice(request.body).unwrap();
+    dbg!(request.body());
+    if request.uri().path() == "/api/change/" {
+        let r: LifeChangeRequest = serde_json::from_slice(request.body()).unwrap();
         return life_change_handler(&mut *games, r, response);
     }
-    if request.path == "/api/step/" {
-        let r: LifeStateRequest = serde_json::from_slice(request.body).unwrap();
+    if request.uri().path() == "/api/step/" {
+        let r: LifeStateRequest = serde_json::from_slice(request.body()).unwrap();
         return life_step_handler(&mut *games, r, response);
     }
-    if request.path == "/api/get/" {
-        let r: LifeStateRequest = serde_json::from_slice(request.body).unwrap();
+    if request.uri().path() == "/api/get/" {
+        let r: LifeStateRequest = serde_json::from_slice(request.body()).unwrap();
         return life_get_handler(&mut *games, r, response);
     }
     static_handler(request, response)
 }
 
 
-fn static_handler(request: &Request, response: ResponseBuilder) -> HandlerResult {
-    assert_eq!(request.method, "GET");
+fn static_handler(request: Request<Vec<u8>>, mut response: ResponseBuilder) -> ResponseResult {
+    assert_eq!(request.method(), "GET");
 
-    let pth = project_path(request.path.strip_prefix('/').unwrap());
+    let pth = project_path(request.uri().path().strip_prefix('/').unwrap());
     match std::fs::read(&pth) {
         Ok(a) => {
             let typ = match pth.extension().unwrap().to_str().unwrap() {
@@ -55,16 +62,18 @@ fn static_handler(request: &Request, response: ResponseBuilder) -> HandlerResult
                 "map" => "text/plain",
                 _ => panic!("{:?}", pth),
             };
-            response.code("200 OK")
-                    .header("Content-Type", typ)
-                    .body(a)
+            Ok(response.status(200)
+                .header("Content-Type", typ)
+                .body(a)
+                .unwrap())
         },
         Err(_) => {
             let a = std::fs::read(project_path("src/scratches/julie/life/static/404.html")).unwrap();
-            response.code("404 Not Found")
-                    .header("Content-Type", "text/html")
-                    .body(a)
-        },
+            Ok(response.status(404)
+                .header("Content-Type", "text/html")
+                .body(a)
+                .unwrap())
+     },
     }
 }
 
@@ -88,7 +97,7 @@ struct Response<'a> {
 
 
 fn life_get_handler(games: &mut GameList, LifeStateRequest { session }: LifeStateRequest, 
-        response: ResponseBuilder) -> HandlerResult {
+        response: ResponseBuilder) -> ResponseResult {
     if session == 0 || !games.contains_key(&session) {
         let s = loop {
             let s: u32 = rand::random();
@@ -103,24 +112,25 @@ fn life_get_handler(games: &mut GameList, LifeStateRequest { session }: LifeStat
 
 
 fn life_step_handler(games: &mut GameList, LifeStateRequest { session }: LifeStateRequest, 
-        response: ResponseBuilder) -> HandlerResult {
+        response: ResponseBuilder) -> ResponseResult {
     life_step(&mut games.get_mut(&session).unwrap());
     life_state_handler(&Response { field: &games[&session].0, session }, response)
 }
 
 
 fn life_change_handler(games: &mut GameList, request: LifeChangeRequest, 
-        response: ResponseBuilder) -> HandlerResult {
+        response: ResponseBuilder) -> ResponseResult {
     let field = &mut games.get_mut(&request.session).unwrap().0;
     field[request.y][request.x] = 1 - field[request.y][request.x];
     life_state_handler(&Response { field, session: request.session }, response)
 }
 
 
-fn life_state_handler(r: &Response, response: ResponseBuilder) -> HandlerResult {
-    response.code("200 Ok")
+fn life_state_handler(r: &Response, mut response: ResponseBuilder) -> ResponseResult {
+    Ok(response.status(200)
             .header("Content-type", "application/json")
-            .body(serde_json::to_string(r).unwrap())
+            .body(serde_json ::to_vec(r).unwrap())
+            .unwrap())
 }
 
 
