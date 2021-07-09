@@ -1,3 +1,4 @@
 public/fonts/
 *.js
 *.js.map
+.idea
