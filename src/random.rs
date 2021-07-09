@@ -46,8 +46,8 @@ impl Solver for RandomSolver {
                 let new_d2 = pose[start].dist2(pose[end]);
 
                 // TODO: avoid floating point arithmetic here
-                let min_d2 = orig_d2 as f64 * (1.0 - problem.epsilon / 1e6).powf(2.0);
-                let max_d2 = orig_d2 as f64 * (1.0 + problem.epsilon / 1e6).powf(2.0);
+                let min_d2 = orig_d2 as f64 * (1.0 - problem.epsilon / 1e6);
+                let max_d2 = orig_d2 as f64 * (1.0 + problem.epsilon / 1e6);
 
                 if (new_d2 as f64) < min_d2 || new_d2 as f64 > max_d2 {
                     good = false;
