@@ -11,7 +11,9 @@ let ctx_f_init = canvas_f_init.getContext("2d")!;
 
 // color scheme
 const CLR_HOLE = "#777777";
-const CLR_FIGURE = "#A83F3F";
+const CLR_OK_EDGE = "#007F0E";
+const CLR_SHORT_EDGE = "#B200FF";
+const CLR_LONG_EDGE = "#D10000";
 const CLR_SELECTED = "#0026FF";
 const CLR_DESELECTED = "#222222";
 const CLR_GRID = "#BBBBBB";
@@ -45,9 +47,10 @@ async function main() {
     figure = JSON.parse(JSON.stringify(problem.figure));
     selected = problem.figure.vertices.map(_ => false);
     frame = get_frame(problem);
-    draw_hole(problem.hole, frame);
+    draw_hole(problem.hole);
     draw_grid(frame);
-    draw_init_figure(figure, frame);
+    // draw_shadow_figure();
+    draw_figure();
 
     document.getElementById('problem-stats')!.innerHTML = `
     Problem #${problem_no}: <br>
@@ -137,57 +140,97 @@ function get_frame(p: Problem) : Frame {
 }
 
 
-function grid_to_screen(p: Pt, frame: Frame): Pt {
+function grid_to_screen(p: Pt): Pt {
     let nx = Math.floor(width / (frame.max_x - frame.min_x) * (p[0] - frame.min_x)) + 0.5;
     let ny = Math.floor(height / (frame.max_y - frame.min_y) * (p[1] - frame.min_y)) + 0.5;
     return [nx, ny];
 }
 
-function screen_to_grid(p: Pt, frame: Frame): Pt {
-    let nx = Math.floor((frame.max_x - frame.min_x) / width * (p[0] - 0.5) + frame.min_x);
-    let ny = Math.floor((frame.max_y - frame.min_y) / height * (p[1] - 0.5) + frame.min_y);
-    return [nx, ny];
-}
+// function screen_to_grid(p: Pt, frame: Frame): Pt {
+//     let nx = Math.floor((frame.max_x - frame.min_x) / width * (p[0] - 0.5) + frame.min_x);
+//     let ny = Math.floor((frame.max_y - frame.min_y) / height * (p[1] - 0.5) + frame.min_y);
+//     return [nx, ny];
+// }
 
-function draw_hole(hole: Pt[], frame: Frame) {
+function draw_hole(hole: Pt[]) {
     canvas_hole.width = canvas_hole.width;
     let ctx = ctx_hole;
     ctx.strokeStyle = CLR_HOLE;
     ctx.lineWidth = 2;
     ctx.beginPath();
-    let p = grid_to_screen(hole[hole.length - 1], frame)
+    let p = grid_to_screen(hole[hole.length - 1])
     ctx.moveTo(...p);
     for (let i = 0; i < hole.length; i++) {
-        let p = grid_to_screen(hole[i], frame);
+        let p = grid_to_screen(hole[i]);
         ctx.lineTo(...p);
     }
     ctx.stroke();
 }
 
-function draw_figure(f: Figure, ctx: CanvasRenderingContext2D, color: string, w: number) {
+function edge_sq_len([x1, y1]: Pt, [x2, y2]: Pt): number {
+    return (x1 - x2) * (x1 - x2) + (y1 - y2) * (y1 - y2);
+}
+
+
+function color_by_edge_len(i: number): string {
+    let [start, end] = figure.edges[i];
+    let d2 = edge_sq_len(figure.vertices[start], figure.vertices[end]);
+    [start, end] = figure.edges[i];
+    let d1 = edge_sq_len(problem.figure.vertices[start], problem.figure.vertices[end]);
+    if (d2 * 1e6 < (1e6 - problem.epsilon) * d1) {
+        return CLR_SHORT_EDGE;
+    }
+    if (d2 * 1e6 > (1e6 + problem.epsilon) * d1) {
+        return CLR_LONG_EDGE;
+    }
+    return CLR_OK_EDGE;
+}
+
+
+function draw_edge(v1: Pt, v2: Pt, color: string, ctx: CanvasRenderingContext2D) {
     ctx.strokeStyle = color;
-    ctx.lineWidth = w;
-    for (let i = 0; i < f.edges.length; i++) {
-        ctx.beginPath();
-        let p1 = grid_to_screen(f.vertices[f.edges[i][0]], frame)
-        let p2 = grid_to_screen(f.vertices[f.edges[i][1]], frame)
-        ctx.moveTo(p1[0], p1[1]);
-        ctx.lineTo(p2[0], p2[1]);
-        ctx.stroke();
+    ctx.beginPath();
+    let p1 = grid_to_screen(v1)
+    let p2 = grid_to_screen(v2)
+    ctx.moveTo(p1[0], p1[1]);
+    ctx.lineTo(p2[0], p2[1]);
+    ctx.stroke();
+}
+
+function draw_figure() {
+    canvas_figure.width = canvas_figure.width;
+    let ctx = ctx_figure;
+    ctx.lineWidth = 2;
+    for (let i = 0; i < figure.edges.length; i++) {
+        let [start, end] = figure.edges[i];
+        draw_edge(figure.vertices[start], 
+                  figure.vertices[end],
+                  color_by_edge_len(i),
+                  ctx);
     }
 }
 
-function draw_init_figure(f: Figure, frame: Frame) {
-    canvas_f_init.width = canvas_f_init.width;
-    draw_figure(f, ctx_f_init, CLR_SHADOW_FIGURE, 1);
-}
+// function draw_shadow_figure() {
+//     canvas_f_init.width = canvas_f_init.width;
+//     let ctx = ctx_f_init;
+//     ctx.lineWidth = 2;
+//     for (let i = 0; i < figure.edges.length; i++) {
+//         let [start, end] = figure.edges[i];
+//         draw_edge(figure.vertices[start], 
+//                   figure.vertices[end],
+//                   color_by_edge_len(i),
+//                   ctx);
+//     }
+//     canvas_f_init.width = canvas_f_init.width;
+//     draw_figure(f, ctx_f_init, CLR_SHADOW_FIGURE, 1);
+// }
 
 function draw_grid(frame: Frame) {
     let ctx = ctx_hole;
     ctx.fillStyle = CLR_GRID;
     for (let x = frame.min_x; x < frame.max_x; x++) {
         for (let y = frame.min_y; y < frame.max_y; y++) {
-            let p = grid_to_screen([x, y], frame);
+            let p = grid_to_screen([x, y]);
             ctx.beginPath();
             ctx.arc(p[0], p[1], 1, 0, 2 * Math.PI);
             ctx.fill();
@@ -199,7 +242,7 @@ function draw_selected() {
     let ctx = ctx_figure;
     for (let i = 0; i < selected.length; i++) {
         ctx.fillStyle = selected[i] ? CLR_SELECTED : CLR_DESELECTED;
-        let p = grid_to_screen(figure.vertices[i], frame);
+        let p = grid_to_screen(figure.vertices[i]);
         ctx.beginPath();
         ctx.arc(p[0], p[1], 3, 0, 2 * Math.PI);
         ctx.fill();
@@ -213,7 +256,7 @@ function move_selected([dx, dy]: Pt) {
         figure.vertices[i][0] += dx;
         figure.vertices[i][1] += dy;
     }
-    redraw_figure();
+    draw_figure();
 }
 
 
@@ -227,7 +270,7 @@ const VERTEX_CHOOSE_SENSE = 10;
 function closest(mouse_coord: Pt): number | null {
     let mp = mouse_coords_to_canvas(mouse_coord);
     for (let i = 0; i < figure.vertices.length; i++) {
-        let p = grid_to_screen(figure.vertices[i], frame);
+        let p = grid_to_screen(figure.vertices[i]);
         if (Math.pow(p[0] - mp[0], 2) + Math.pow(p[1] - mp[1], 2) < Math.pow(VERTEX_CHOOSE_SENSE, 2)) {
             return i;
         }
@@ -244,9 +287,9 @@ function select_point(mouse_coord: Pt) {
     draw_selected();
 }
 
-function redraw_figure() {
+// function redraw_figure() {
     canvas_figure.width = canvas_figure.width;
-    draw_figure(figure, ctx_figure, CLR_FIGURE, 2);
-    draw_selected();
-}
+//     draw_figure(figure, ctx_figure, CLR_OK_EDGE, 2);
+//     draw_selected();
+// }
 
