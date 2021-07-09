@@ -14,7 +14,7 @@ const CLR_HOLE = "#777777";
 const CLR_OK_EDGE = "#007F0E";
 const CLR_SHORT_EDGE = "#B200FF";
 const CLR_LONG_EDGE = "#D10000";
-const CLR_SELECTED = "#0026FF";
+const CLR_SELECTED = "#FFD800";
 const CLR_DESELECTED = "#222222";
 const CLR_GRID = "#BBBBBB";
 const CLR_SHADOW_FIGURE = "#FF9B9B";
@@ -73,7 +73,7 @@ async function main() {
         else return;
         e.preventDefault();
         move_selected([dx, dy]);
-        solution.textContent = JSON.stringify({vertices: problem.figure.vertices}, null, 2);
+        solution.textContent = JSON.stringify({vertices: figure.vertices}, null, 2);
     };
 
     // let MOUSE_COORD: MouseEvent | null = null;
@@ -98,6 +98,9 @@ async function main() {
     //     else drag_point(MOUSE_COORD, e, frame, f);
     //     MOUSE_COORD = null;
     // };
+
+    document.getElementById("edge_too_long")!.style.color = CLR_LONG_EDGE;
+    document.getElementById("edge_too_short")!.style.color = CLR_SHORT_EDGE;
 
     (document.getElementById("select_all") as HTMLAnchorElement).onclick = () => {
         selected = figure.vertices.map(_ => true);
@@ -257,6 +260,7 @@ function move_selected([dx, dy]: Pt) {
         figure.vertices[i][1] += dy;
     }
     draw_figure();
+    draw_selected();
 }
 
 
