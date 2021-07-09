@@ -115,6 +115,7 @@ window.spec.main = () => {
             history = window.spec.state.history;
         }
         //console.log("Dragging", vertex0_id, "which is currently at", solution.figure.vertices[vertex0_id], "to", vertex1);
+        // TODO: make deep copy !
         rollback = { ...solution };
         //console.log("Updating", vertex0_id, "in solution figure vertex list. Was:", solution.figure.vertices[vertex0_id]);
         history.push(rollback);
@@ -127,13 +128,14 @@ window.spec.main = () => {
         //console.log("Edges, after dragging", edges1);
         let enforce_object = window.spec.enforce_epsilon_rule(edges0, edges1, problem);
         //console.log("Enforcing rules", enforce_object, "should be", edges0.length)
+        // TODO: check lengths before enforce
         if (edges0.length === enforce_object) {
             window.document.body.dispatchEvent(window.spec.refresh);
-            return;
+            return true;
         }
         solution = rollback;
         history.pop();
-        return;
+        return enforce_object;
     }
 
 }
