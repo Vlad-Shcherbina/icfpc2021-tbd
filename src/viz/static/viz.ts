@@ -8,6 +8,15 @@ let ctx_hole = canvas_hole.getContext("2d")!;
 let ctx_figure = canvas_figure.getContext("2d")!;
 let ctx_f_init = canvas_f_init.getContext("2d")!;
 
+
+// color scheme
+const CLR_HOLE = "#777777";
+const CLR_FIGURE = "#A83F3F";
+const CLR_SELECTED = "#0026FF";
+const CLR_DESELECTED = "#222222";
+const CLR_GRID = "#BBBBBB";
+const CLR_SHADOW_FIGURE = "#FF9B9B";
+
 let width = canvas_hole.width;
 let height = canvas_figure.height;
 
@@ -19,16 +28,30 @@ async function get_problem(n: number): Promise<Problem> {
 
 let problem: Problem;
 let frame: Frame;
-const VERTEX_CHOOSE_SENSE = 10;
+let selected: boolean[] = [];
+
 
 async function main() {
     problem = await get_problem(1);
+    selected = problem.figure.vertices.map(_ => false);
     frame = get_frame(problem);
     draw_hole(problem.hole, frame);
     draw_grid(frame);
     draw_init_figure(problem.figure, frame);
 
-    document.onmouseup = (e: MouseEvent) => { mark_point([e.x, e.y]); }
+    document.onmouseup = (e: MouseEvent) => { select_point([e.x, e.y]); }
+    document.onkeydown = (e: KeyboardEvent) => {
+        let dx = 0;
+        let dy = 0;
+        if (e.code == "ArrowUp") dy = -1;
+        else if (e.code == "ArrowDown") dy = 1;
+        else if (e.code == "ArrowLeft") dx = -1;
+        else if (e.code == "ArrowRight") dx = +1;
+        else return;
+        e.preventDefault();
+        move_selected([dx, dy]);
+    };
+
     // let MOUSE_COORD: MouseEvent | null = null;
     // const MOUSE_SENSE = 5;
     // let MOUSE_CLICK: boolean = true;
@@ -47,10 +70,20 @@ async function main() {
     
     // document.onmouseup =  (e: MouseEvent) => { 
     //     assert(MOUSE_COORD != null)
-    //     if (MOUSE_CLICK) mark_point(e, f, frame, 10);
+    //     if (MOUSE_CLICK) select_point(e, f, frame, 10);
     //     else drag_point(MOUSE_COORD, e, frame, f);
     //     MOUSE_COORD = null;
     // };
+
+    (document.getElementById("select_all") as HTMLAnchorElement).onclick = () => {
+        selected = problem.figure.vertices.map(_ => true);
+        draw_selected();
+    };
+
+    (document.getElementById("deselect_all") as HTMLAnchorElement).onclick = () => {
+        selected = problem.figure.vertices.map(_ => false);
+        draw_selected();
+    };
 }
 
 main();
@@ -98,7 +131,7 @@ function screen_to_grid(p: Pt, frame: Frame): Pt {
 function draw_hole(hole: Pt[], frame: Frame) {
     canvas_hole.width = canvas_hole.width;
     let ctx = ctx_hole;
-    ctx.strokeStyle = "#777777";
+    ctx.strokeStyle = CLR_HOLE;
     ctx.lineWidth = 2;
     ctx.beginPath();
     let p = grid_to_screen(hole[hole.length - 1], frame)
@@ -125,12 +158,12 @@ function draw_figure(f: Figure, ctx: CanvasRenderingContext2D, color: string, w:
 
 function draw_init_figure(f: Figure, frame: Frame) {
     canvas_f_init.width = canvas_f_init.width;
-    draw_figure(f, ctx_f_init, "#FF9B9B", 1);
+    draw_figure(f, ctx_f_init, CLR_SHADOW_FIGURE, 1);
 }
 
 function draw_grid(frame: Frame) {
     let ctx = ctx_hole;
-    ctx.fillStyle = "#BBBBBB";
+    ctx.fillStyle = CLR_GRID;
     for (let x = frame.min_x; x < frame.max_x; x++) {
         for (let y = frame.min_y; y < frame.max_y; y++) {
             let p = grid_to_screen([x, y], frame);
@@ -141,10 +174,34 @@ function draw_grid(frame: Frame) {
     }
 }
 
+function draw_selected() {
+    let ctx = ctx_figure;
+    for (let i = 0; i < selected.length; i++) {
+        ctx.fillStyle = selected[i] ? CLR_SELECTED : CLR_DESELECTED;
+        let p = grid_to_screen(problem.figure.vertices[i], frame);
+        ctx.beginPath();
+        ctx.arc(p[0], p[1], 3, 0, 2 * Math.PI);
+        ctx.fill();
+    }
+}
+
+
+function move_selected([dx, dy]: Pt) {
+    for (let i = 0; i < selected.length; i++) {
+        if (!selected[i]) continue;
+        problem.figure.vertices[i][0] += dx;
+        problem.figure.vertices[i][1] += dy;
+    }
+    redraw_figure();
+}
+
+
 function mouse_coords_to_canvas(mouse_coord: Pt): number[] {
     let r = canvas_figure.getBoundingClientRect();
     return [mouse_coord[0] - r.left, mouse_coord[1] - r.top];
 }
+
+const VERTEX_CHOOSE_SENSE = 10;
 
 function closest(mouse_coord: Pt): number | null {
     let mp = mouse_coords_to_canvas(mouse_coord);
@@ -159,33 +216,16 @@ function closest(mouse_coord: Pt): number | null {
 
 let marked: number[] = []
 
-function mark_point(mouse_coord: Pt) {
+function select_point(mouse_coord: Pt) {
     let p = closest(mouse_coord);
     if (p == null) return;
-    let i = marked.indexOf(p);
-    if (i == -1) {
-        marked.push(p);
-    }
-    else {
-        marked.splice(i, 1);
-    }
-    redraw_figure();
-}
-
-function draw_marked_points() {
-    let ctx = ctx_figure;
-    ctx.fillStyle = "#0026FF";
-    for (let m of marked) {
-        let p = grid_to_screen(problem.figure.vertices[m], frame);
-        ctx.beginPath();
-        ctx.arc(p[0], p[1], 4, 0, 2 * Math.PI);
-        ctx.fill();
-    }
+    selected[p] = !selected[p];
+    draw_selected();
 }
 
 function redraw_figure() {
     canvas_figure.width = canvas_figure.width;
-    draw_figure(problem.figure, ctx_figure, "#A83F3F", 2);
-    draw_marked_points();
+    draw_figure(problem.figure, ctx_figure, CLR_FIGURE, 2);
+    draw_selected();
 }
 

@@ -15,12 +15,17 @@
         };
         </script>
 
-
         <div style="position: relative">
             <canvas height="600" width="600" style="position: absolute" id="hole"></canvas>
             <canvas height="600" width="600" style="position: absolute" id="f_init"></canvas>
             <canvas height="600" width="600" style="position: absolute" id="figure"></canvas>
         </div>
+        <div style="position: relative; left: 630px">
+            <p>Use keyboard arrows to move selected vertices.</p>
+            <p><a href="javascript:void(0)" id="select_all">select all</a></p>
+            <p><a href="javascript:void(0)" id="deselect_all">deselect all</a></p>
+        </div>
+
         <script type="module" src="../../../public/js/spec.js"></script>
         <script type="module" src="viz.js"></script>
 
