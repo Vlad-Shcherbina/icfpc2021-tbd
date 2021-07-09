@@ -70,7 +70,11 @@ async function main() {
         draw_figure();
     };
 
-    document.onmouseup = (e: MouseEvent) => { select_point([e.x, e.y]); }
+    document.onmouseup = (e: MouseEvent) => { 
+        if (!e.ctrlKey) selected = figure.vertices.map(_ => false);
+        select_point([e.x, e.y]);
+    }
+
     document.onkeydown = (e: KeyboardEvent) => {
         let dx = 0;
         let dy = 0;
