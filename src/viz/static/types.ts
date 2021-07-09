@@ -23,21 +23,14 @@ export interface Frame {
 export type World = Problem;
 
 export enum Law {
-    Epsilon = 1,
-    EdgeConnectivity,
-}
-
-export interface Edge {
-    from_id: number;
-    to_id: number;
-    from: Pt;
-    to: Pt;
+    TooBig = 1,
+    TooSmall,
+    EdgeCrossesWall,
 }
 
 export interface Invalid {
     violates: Law;
-    edge: Edge;
-    point: Pt;
+    edge: Pair;
 }
 
 export interface Universe {
@@ -50,4 +43,13 @@ export interface Universe {
 export interface Change {
     id: number,
     destination: Pt;
+}
+
+export interface Foci {
+    expected: number;
+    selected: Map<string, Pt>;
+}
+
+export enum Actions {
+    Rotate = 1,
 }

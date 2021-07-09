@@ -123,7 +123,7 @@ fn http() {
     eprintln!("Hello from scratch");
 
     let state = Arc::new(Mutex::new(state0()));
-    let server = Server::new(move |req, mut resp| {
+    let mut server = Server::new(move |req, mut resp| {
         //resp.header(header::CONTENT_TYPE, "application/json".as_bytes());
         resp.header(header::CONTENT_TYPE, "text/html; charset=utf8".as_bytes());
         {
@@ -138,6 +138,11 @@ fn http() {
             );
         }
         match (req.method(), req.uri().path()) {
+            (&Method::POST, "/rotate") => {
+                let data = String::from_utf8_lossy(req.body()).into_owned();
+                let body = format!("The data you posted was '{}'", data);
+                Ok(resp.body(body.into_bytes())?)
+            }
             // Observe how we aren't locked into this pattern of just matching the whole path.
             // We can achieve greater flexibility here by splitting, parsing prefix ["dashboard", "timer"] and then matching over the verb!
             // I can't be bothered now, too much stuff to figure out, sorry.
@@ -200,6 +205,7 @@ fn http() {
         }
     });
 
+    server.set_static_directory(".");
     let host = "127.0.0.1";
     let port_string = format!("{}", diagonal_encode("icfp"));
     let port = port_string.as_str();

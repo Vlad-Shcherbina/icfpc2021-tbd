@@ -1,5 +1,7 @@
+// MAGIC HAPPENS AROUND LINE 70
+
 import assert from "./assert.js"
-import {Pt, Pair, Figure, Problem, Frame} from "./types.js"
+import { Pt, Pair, Figure, Problem, Frame, Foci, Actions } from "./types.js"
 
 let canvas_hole = document.getElementById("hole") as HTMLCanvasElement;
 let canvas_figure = document.getElementById("figure") as HTMLCanvasElement;
@@ -31,13 +33,14 @@ async function get_problem(n: number): Promise<Problem> {
 let problem: Problem;
 let figure: Figure;
 let frame: Frame;
+let foci: Foci;
 let selected: boolean[] = [];
 
 
 async function main() {
     window.addEventListener('hashchange', () => location.reload());
     let problem_no = 1;
-    let {hash} = window.location;
+    let { hash } = window.location;
     if (hash.startsWith('#')) {
         hash = hash.slice(1);
         problem_no = parseInt(hash);
@@ -60,7 +63,7 @@ async function main() {
     `;
 
     let solution = document.getElementById('solution') as HTMLTextAreaElement;
-    solution.value = JSON.stringify({vertices: problem.figure.vertices}, null, 2);
+    solution.value = JSON.stringify({ vertices: problem.figure.vertices }, null, 2);
     solution.onkeyup = () => {
         console.log(solution.value);
         figure.vertices = JSON.parse(solution.value!).vertices;
@@ -70,11 +73,11 @@ async function main() {
         draw_figure();
     };
 
+    // THIS IS WHERE THE MAGIC HAPPENS
     document.onmouseup = (e: MouseEvent) => {
-        if (!(e.ctrlKey || e.metaKey)) selected = figure.vertices.map(_ => false);
+        if (!e.ctrlKey) selected = figure.vertices.map(_ => false);
         select_point([e.x, e.y]);
     }
-
     document.onkeydown = (e: KeyboardEvent) => {
         let dx = 0;
         let dy = 0;
@@ -82,29 +85,33 @@ async function main() {
         else if (e.code == "ArrowDown") dy = 1;
         else if (e.code == "ArrowLeft") dx = -1;
         else if (e.code == "ArrowRight") dx = +1;
+        else if (e.code == "r") {
+            foci.expected = 1;
+            check_for_enough_foci_and_send(Actions.Rotate);
+        }
         else return;
         e.preventDefault();
         move_selected([dx, dy]);
-        solution.value = JSON.stringify({vertices: figure.vertices}, null, 2);
+        solution.value = JSON.stringify({ vertices: figure.vertices }, null, 2);
     };
 
     // let MOUSE_COORD: MouseEvent | null = null;
     // const MOUSE_SENSE = 5;
     // let MOUSE_CLICK: boolean = true;
-    
-    // document.onmousedown = (e: MouseEvent) => { 
+
+    // document.onmousedown = (e: MouseEvent) => {
     //     MOUSE_COORD = e;
     //     MOUSE_CLICK = true;
     // };
-    
+
     // document.onmousemove = (e: MouseEvent) => {
     //     if (MOUSE_COORD == null) return;
     //     if (Math.pow(e.x - MOUSE_COORD.x, 2) + Math.pow(e.y - MOUSE_COORD.y, 2) < MOUSE_SENSE) {
     //         MOUSE_CLICK = false;
     //     }
     // };
-    
-    // document.onmouseup =  (e: MouseEvent) => { 
+
+    // document.onmouseup =  (e: MouseEvent) => {
     //     assert(MOUSE_COORD != null)
     //     if (MOUSE_CLICK) select_point(e, f, frame, 10);
     //     else drag_point(MOUSE_COORD, e, frame, f);
@@ -127,8 +134,15 @@ async function main() {
 
 main();
 
+function check_for_enough_foci_and_send(_action: Actions) {
+    if (foci.selected.size !== foci.expected) {
+        // TODO: wrong_amount_of_foci_error();
+    } else {
+        // TODO: query_server_with_action(action);
+    }
+}
 
-function get_frame(p: Problem) : Frame {
+function get_frame(p: Problem): Frame {
     let frame: Frame = {
         min_x: p.hole[0][0],
         max_x: p.hole[0][0],
@@ -206,9 +220,9 @@ function get_edge_limits(i: number): [number, number, number] {
     let d2 = edge_sq_len(figure.vertices[start], figure.vertices[end]);
     [start, end] = figure.edges[i];
     let d1 = edge_sq_len(problem.figure.vertices[start], problem.figure.vertices[end]);
-    return [Math.ceil(d1 * (1 - problem.epsilon / 1e6)), 
-            d2, 
-            Math.floor(d1 * (1 + problem.epsilon / 1e6))];
+    return [Math.ceil(d1 * (1 - problem.epsilon / 1e6)),
+        d2,
+    Math.floor(d1 * (1 + problem.epsilon / 1e6))];
 }
 
 
@@ -248,7 +262,7 @@ function draw_figure() {
 //     ctx.lineWidth = 2;
 //     for (let i = 0; i < figure.edges.length; i++) {
 //         let [start, end] = figure.edges[i];
-//         draw_edge(figure.vertices[start], 
+//         draw_edge(figure.vertices[start],
 //                   figure.vertices[end],
 //                   color_by_edge_len(i),
 //                   ctx);
@@ -312,6 +326,8 @@ function get_nearby_vertex_index(mouse_coord: Pt): number | null {
 
 let marked: number[] = []
 
+// TODO: Rename to select_vertex_id
+// TODO: Return selected vertex_id for clarity of API
 function select_point(mouse_coord: Pt) {
     let i = get_nearby_vertex_index(mouse_coord);
     if (i == null) return;
@@ -332,3 +348,32 @@ function calculate_dislikes() {
     let txt = document.getElementById("score")! as HTMLParagraphElement;
     txt.innerHTML = `Dislikes: ${sum}`;
 }
+
+// TODO: Implement for rotation
+function closest_grid_vertex(mouse_coord: Pt): Pt | null {
+    return null;
+}
+
+// TODO: Implement for rotation
+function draw_foci() {
+    return { error: "not implemented" };
+}
+
+// TODO: Implement for rotation
+function select_focus(mouse_coord: Pt) {
+    let p = closest_grid_vertex(mouse_coord);
+    if (p == null) return;
+    let key = p[0] + "," + p[1];
+    if (foci.selected.has(key)) {
+        foci.selected.delete(key);
+    } else {
+        foci.selected.set(key, p);
+    }
+    draw_foci();
+}
+
+// function redraw_figure() {
+canvas_figure.width = canvas_figure.width;
+//     draw_figure(figure, ctx_figure, CLR_OK_EDGE, 2);
+//     draw_selected();
+// }
