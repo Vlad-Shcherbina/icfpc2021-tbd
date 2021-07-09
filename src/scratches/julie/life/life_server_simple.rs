@@ -1,6 +1,7 @@
 #![allow(clippy::needless_range_loop)]
 
-use simple_server::{Method, Server, StatusCode, Request, ResponseBuilder, ResponseResult};
+
+use simple_server::{Server, Request, ResponseBuilder, ResponseResult};
 use crate::util::project_path;
 
 use std::collections::HashMap;
@@ -25,12 +26,7 @@ pub fn life_server() {
     server.listen_on_socket(listener);
 }
 
-
-pub fn stov(s: &str) -> Vec<u8> {
-    s.as_bytes().to_vec()
-}
-
-fn life_handler(games: &Mutex<GameList>, request: Request<Vec<u8>>, mut response: ResponseBuilder) -> ResponseResult {
+fn life_handler(games: &Mutex<GameList>, request: Request<Vec<u8>>, response: ResponseBuilder) -> ResponseResult {
     let mut games = games.lock().unwrap();
     dbg!(request.body());
     if request.uri().path() == "/api/change/" {
