@@ -13,7 +13,7 @@ pub struct ShakeRequest {
 pub fn shake(r: &ShakeRequest) -> Vec<Pt> {
     match r.method.as_str() {
         "random" => random_shake(r),
-        "banana" => todo!(),
+        "banana" => crate::banana::banana_shake(r),
         "ice" => todo!(),
         s => panic!("{:?}", s),
     }
