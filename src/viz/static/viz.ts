@@ -120,7 +120,7 @@ async function main() {
 
     // Mouse events
     canvas_figure.onmouseup = (e: MouseEvent) => {
-        if (!e.ctrlKey) selected = figure.vertices.map(_ => false);
+        if (!e.ctrlKey && !e.shiftKey) selected = figure.vertices.map(_ => false);
         select_point([e.x, e.y]);
     }
 
