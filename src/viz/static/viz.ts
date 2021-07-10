@@ -70,11 +70,11 @@ async function main() {
 
     let solution = document.getElementById('solution') as HTMLTextAreaElement;
     solution.onkeyup = () => {
-        console.log(solution.value);
+        // console.log(solution.value);
         figure.vertices = JSON.parse(solution.value!).vertices;
-        console.log(figure.vertices.length, problem.figure.vertices.length);
+        // console.log(figure.vertices.length, problem.figure.vertices.length);
         assert(figure.vertices.length == problem.figure.vertices.length);
-        console.dir(figure.vertices);
+        // console.dir(figure.vertices);
         on_figure_change();
     };
 
@@ -118,7 +118,7 @@ async function main() {
     // THIS IS WHERE THE MAGIC HAPPENS
 
     // Keyboard events
-    document.onkeydown = keyboard_handler;
+    document.onkeydown = keyboard_handlers;
 
     // Mouse events
     let MOUSE_COORD: MouseEvent | null = null;
@@ -137,14 +137,13 @@ async function main() {
 
     canvas_figure.onmousemove = (e: MouseEvent) => {
         if (MOUSE_COORD == null) return;
-        console.log(e.x, e.y, MOUSE_COORD.x, MOUSE_COORD.y);
         if (Math.pow(e.x - MOUSE_COORD.x, 2) + Math.pow(e.y - MOUSE_COORD.y, 2) > MOUSE_SENSE * MOUSE_SENSE) {
             MOUSE_CLICK = false;
         }
     };
 
     canvas_figure.onmouseup = (e: MouseEvent) => {
-        assert(MOUSE_COORD != null)
+        if (MOUSE_COORD == null) return;
         if (MOUSE_CLICK) {
             //console.log("Selecting vertex or focus", foci.expected, foci.selected.size);
             // if (foci.expected > foci.selected.size) {
@@ -161,6 +160,7 @@ async function main() {
     };
 
     // Other events, elements and anchors
+
     document.getElementById("edge_too_long")!.style.color = CLR_LONG_EDGE;
     document.getElementById("edge_too_short")!.style.color = CLR_SHORT_EDGE;
 
@@ -177,6 +177,15 @@ async function main() {
 
 main();
 
+// ===== HANDLERS =====
+
+// Request server for info
+function on_figure_change() {
+    static_figure_change();
+    check_solution_on_server();
+}
+
+// Redraw without server requests
 function static_figure_change() {
     draw_figure();
     draw_selected();
@@ -185,12 +194,8 @@ function static_figure_change() {
     show_dislikes();
 }
 
-function on_figure_change() {
-    static_figure_change();
-    check_solution_on_server();
-}
 
-async function keyboard_handler(e: KeyboardEvent) {
+async function keyboard_handlers(e: KeyboardEvent) {
     if (e.code == "KeyC" && !e.ctrlKey) {
         e.preventDefault();
         let circles_checkbox = document.getElementById("show_circles") as HTMLInputElement;
@@ -199,7 +204,7 @@ async function keyboard_handler(e: KeyboardEvent) {
         return;
     }
 
-    if (e.code == "KeyM" || e.code == "KeyN" && !e.ctrlKey) {
+    if ((e.code == "KeyM" || e.code == "KeyN") && !e.ctrlKey) {
         let angle = 0;
         if (e.code == "KeyM") {
             angle = 15;
@@ -221,7 +226,6 @@ async function keyboard_handler(e: KeyboardEvent) {
         figure.vertices = await r.json();
         assert(figure.vertices.length == problem.figure.vertices.length);
         on_figure_change();
-
     }
 
     let dx = 0;
@@ -247,21 +251,7 @@ async function keyboard_handler(e: KeyboardEvent) {
 }
 
 
-function drag_point(from: MouseEvent, to: MouseEvent) {
-    let index = get_nearby_vertex_index([from.x, from.y]);
-    if (index == null) return;
-    let q = closest_grid_vertex([to.x, to.y]);
-    figure.vertices[index] = q;
-    on_figure_change();
-}
-
-function check_for_enough_foci_and_send(_action: Actions) {
-    if (foci.selected.size !== foci.expected) {
-        // TODO: wrong_amount_of_foci_error();
-    } else {
-        // TODO: query_server_with_action(action);
-    }
-}
+// ===== COORD SYSTEMS AND TRANSLATION =====
 
 function get_frame(p: Problem): Frame {
     let frame: Frame = {
@@ -308,6 +298,29 @@ function canvas_to_grid(p: CanvasPt): GridPt {
     return [nx, ny];
 }
 
+
+function window_to_canvas(mouse_coord: WindowPt): CanvasPt {
+    let r = canvas_figure.getBoundingClientRect();
+    return [mouse_coord[0] - r.left, mouse_coord[1] - r.top];
+}
+
+// ===== REDRAW =====
+
+
+function draw_grid(frame: Frame) {
+    let ctx = ctx_hole;
+    ctx.fillStyle = CLR_GRID;
+    for (let x = frame.min_x; x < frame.max_x; x++) {
+        for (let y = frame.min_y; y < frame.max_y; y++) {
+            let p = grid_to_canvas([x, y]);
+            ctx.beginPath();
+            ctx.arc(p[0], p[1], 1, 0, 2 * Math.PI);
+            ctx.fill();
+        }
+    }
+}
+
+
 function draw_hole() {
     canvas_hole.width = canvas_hole.width;
     let ctx = ctx_hole;
@@ -324,80 +337,6 @@ function draw_hole() {
     ctx.stroke();
 }
 
-let version_counter = 0;
-async function check_solution_on_server() {
-    let vc = ++version_counter;
-    let req: CheckPoseRequest = {
-        problem: problem, vertices: figure.vertices
-    };
-    let r = await fetch('/api/check_pose', {
-        method: 'POST', body: new Blob([JSON.stringify(req)]),
-    });
-    assert(r.ok);
-    if (vc != version_counter) return;
-
-    server_check_result = await r.json();
-    static_figure_change();
-};
-
-
-function show_dislikes() {
-    let txt = document.getElementById("score")! as HTMLParagraphElement;
-    txt.innerHTML = "Dislikes: ";
-    if (server_check_result == null) {
-        txt.innerHTML += "waiting...";
-        return;
-    }
-    txt.innerHTML += `${server_check_result.dislikes}`;
-    if (!server_check_result.valid) {
-        txt.innerHTML += " (not valid)";
-    }
-}
-
-function draw_circles() {
-    canvas_circles.width = canvas_circles.width
-    if (server_check_result == null) return;
-    let checkbox = document.getElementById("show_circles") as HTMLInputElement;
-    if (!checkbox.checked) return;
-
-    let count = 0;
-    let p: number | null = null;
-    for (let i = 0; i <= selected.length; ++i) {
-        if (!selected[i]) continue;
-        if (p != null) return;
-        p = i;
-    }
-    if (p == null) return;
-
-    let edges = []
-    for (let i = 0; i < figure.edges.length; ++i) {
-        if (figure.edges[i][0] == p || figure.edges[i][1] == p)
-            edges.push(i);
-    }
-
-    let ctx = ctx_circles;
-    ctx.strokeStyle = CLR_CIRCLES;
-    for (let i of edges) {
-        let start = figure.edges[i][0] == p ? figure.edges[i][1] : figure.edges[i][0];
-        let c = grid_to_canvas(figure.vertices[start]);
-        let status = server_check_result.edge_statuses[i];
-        draw_circle(c, Math.sqrt(status.min_length) * dx, Math.sqrt(status.min_length) * dy, CLR_SHORT_EDGE, ctx);
-        draw_circle(c, Math.sqrt(status.max_length) * dx, Math.sqrt(status.max_length) * dy, CLR_LONG_EDGE, ctx);
-    }
-}
-
-function draw_circle(c: CanvasPt, r1: number, r2: number, color: string, ctx: CanvasRenderingContext2D) {
-    ctx.beginPath();
-    let prevStyle = ctx.strokeStyle;
-    let prevLineWidth = ctx.lineWidth
-
-    ctx.strokeStyle = color;
-    ctx.lineWidth = 0.3;
-    ctx.ellipse(c[0], c[1], r1, r2, 0, 0, Math.PI * 2);
-    ctx.stroke();
-    ctx.strokeStyle = prevStyle;
-    ctx.lineWidth = prevLineWidth;
-}
 
 function draw_figure() {
     canvas_figure.width = canvas_figure.width;
@@ -443,19 +382,6 @@ function draw_figure() {
 }
 
 
-function draw_grid(frame: Frame) {
-    let ctx = ctx_hole;
-    ctx.fillStyle = CLR_GRID;
-    for (let x = frame.min_x; x < frame.max_x; x++) {
-        for (let y = frame.min_y; y < frame.max_y; y++) {
-            let p = grid_to_canvas([x, y]);
-            ctx.beginPath();
-            ctx.arc(p[0], p[1], 1, 0, 2 * Math.PI);
-            ctx.fill();
-        }
-    }
-}
-
 function draw_selected() {
     let ctx = ctx_figure;
     for (let i = 0; i < selected.length; i++) {
@@ -469,47 +395,51 @@ function draw_selected() {
 }
 
 
-function move_selected([dx, dy]: GridPt) {
-    for (let i = 0; i < selected.length; i++) {
+function draw_circles() {
+    canvas_circles.width = canvas_circles.width
+    if (server_check_result == null) return;
+    let checkbox = document.getElementById("show_circles") as HTMLInputElement;
+    if (!checkbox.checked) return;
+
+    let count = 0;
+    let p: number | null = null;
+    for (let i = 0; i <= selected.length; ++i) {
         if (!selected[i]) continue;
-        figure.vertices[i][0] += dx;
-        figure.vertices[i][1] += dy;
+        if (p != null) return;
+        p = i;
+    }
+    if (p == null) return;
+
+    let edges = []
+    for (let i = 0; i < figure.edges.length; ++i) {
+        if (figure.edges[i][0] == p || figure.edges[i][1] == p)
+            edges.push(i);
+    }
+
+    let ctx = ctx_circles;
+    ctx.strokeStyle = CLR_CIRCLES;
+    for (let i of edges) {
+        let start = figure.edges[i][0] == p ? figure.edges[i][1] : figure.edges[i][0];
+        let c = grid_to_canvas(figure.vertices[start]);
+        let status = server_check_result.edge_statuses[i];
+        draw_one_circle(c, Math.sqrt(status.min_length) * dx, Math.sqrt(status.min_length) * dy, CLR_SHORT_EDGE, ctx);
+        draw_one_circle(c, Math.sqrt(status.max_length) * dx, Math.sqrt(status.max_length) * dy, CLR_LONG_EDGE, ctx);
     }
 }
 
+function draw_one_circle(c: CanvasPt, r1: number, r2: number, color: string, ctx: CanvasRenderingContext2D) {
+    ctx.beginPath();
+    let prevStyle = ctx.strokeStyle;
+    let prevLineWidth = ctx.lineWidth
 
-function mouse_coords_to_canvas(mouse_coord: WindowPt): CanvasPt {
-    let r = canvas_figure.getBoundingClientRect();
-    return [mouse_coord[0] - r.left, mouse_coord[1] - r.top];
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 0.3;
+    ctx.ellipse(c[0], c[1], r1, r2, 0, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.strokeStyle = prevStyle;
+    ctx.lineWidth = prevLineWidth;
 }
 
-const VERTEX_CHOOSE_SENSE = 10;
-
-function get_nearby_vertex_index(mouse_coord: WindowPt): number | null {
-    let mp = mouse_coords_to_canvas(mouse_coord);
-    for (let i = 0; i < figure.vertices.length; i++) {
-        let p = grid_to_canvas(figure.vertices[i]);
-        if (Math.pow(p[0] - mp[0], 2) + Math.pow(p[1] - mp[1], 2) < Math.pow(VERTEX_CHOOSE_SENSE, 2)) {
-            return i;
-        }
-    }
-    return null;
-}
-
-// TODO: Return selected vertex_id for clarity of API
-function select_vertex(mouse_coord: WindowPt) {
-    let i = get_nearby_vertex_index(mouse_coord);
-    if (i == null) return;
-    selected[i] = !selected[i];
-    draw_selected();
-}
-
-function closest_grid_vertex(mouse_coord: WindowPt): GridPt {
-    // for some reason using mouse_to_canvas makes it worse
-    // TODO: Check it
-    let [x, y] = canvas_to_grid(mouse_coord);
-    return [Math.floor(x + 0.5), Math.floor(y + 0.5)];
-}
 
 function draw_foci() {
     console.log("Drawing foci");
@@ -526,6 +456,83 @@ function draw_foci() {
     ctx.fillStyle = fs0;
 }
 
+
+function show_dislikes() {
+    let txt = document.getElementById("score")! as HTMLParagraphElement;
+    txt.innerHTML = "Dislikes: ";
+    if (server_check_result == null) {
+        txt.innerHTML += "waiting...";
+        return;
+    }
+    txt.innerHTML += `${server_check_result.dislikes}`;
+    if (!server_check_result.valid) {
+        txt.innerHTML += " (not valid)";
+    }
+}
+
+
+// ===== INTERACTION =====
+
+let version_counter = 0;
+async function check_solution_on_server() {
+    let vc = ++version_counter;
+    let req: CheckPoseRequest = {
+        problem: problem, vertices: figure.vertices
+    };
+    let r = await fetch('/api/check_pose', {
+        method: 'POST', body: new Blob([JSON.stringify(req)]),
+    });
+    assert(r.ok);
+    if (vc != version_counter) return;
+
+    server_check_result = await r.json();
+    static_figure_change();
+};
+
+
+// TODO: Return selected vertex_id for clarity of API
+function select_vertex(mouse_coord: WindowPt) {
+    let i = get_nearby_vertex_index(mouse_coord);
+    if (i == null) return;
+    selected[i] = !selected[i];
+    draw_selected();
+}
+
+const VERTEX_CHOOSE_SENSE = 10;
+function get_nearby_vertex_index(mouse_coord: WindowPt): number | null {
+    let mp = window_to_canvas(mouse_coord);
+    for (let i = 0; i < figure.vertices.length; i++) {
+        let p = grid_to_canvas(figure.vertices[i]);
+        if (Math.pow(p[0] - mp[0], 2) + Math.pow(p[1] - mp[1], 2) < Math.pow(VERTEX_CHOOSE_SENSE, 2)) {
+            return i;
+        }
+    }
+    return null;
+}
+
+function closest_grid_vertex(mouse_coord: WindowPt): GridPt {
+    // for some reason using mouse_to_canvas makes it worse
+    // TODO: Check it
+    let [x, y] = canvas_to_grid(mouse_coord);
+    return [Math.floor(x + 0.5), Math.floor(y + 0.5)];
+}
+
+function move_selected([dx, dy]: GridPt) {
+    for (let i = 0; i < selected.length; i++) {
+        if (!selected[i]) continue;
+        figure.vertices[i][0] += dx;
+        figure.vertices[i][1] += dy;
+    }
+}
+
+function drag_point(from: MouseEvent, to: MouseEvent) {
+    let index = get_nearby_vertex_index([from.x, from.y]);
+    if (index == null) return;
+    let q = closest_grid_vertex([to.x, to.y]);
+    figure.vertices[index] = q;
+    on_figure_change();
+}
+
 // TODO: Implement for rotation
 function select_focus(mouse_coord: WindowPt) {
     console.log("Selecting focus");
@@ -538,3 +545,12 @@ function select_focus(mouse_coord: WindowPt) {
     }
     draw_foci();
 }
+
+function check_for_enough_foci_and_send(_action: Actions) {
+    if (foci.selected.size !== foci.expected) {
+        // TODO: wrong_amount_of_foci_error();
+    } else {
+        // TODO: query_server_with_action(action);
+    }
+}
+
