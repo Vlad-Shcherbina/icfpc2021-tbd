@@ -36,3 +36,21 @@ pub fn submit_pose(problem_id: i32, pose: &Pose) -> String {
     let resp: SubmitResponse = serde_json::from_str(&resp).unwrap();
     resp.id
 }
+
+crate::entry_point!("scrape_poses", scrape_poses, _EP3);
+fn scrape_poses() {
+    let agent = ureq::agent();
+    let page = agent.post("https://poses.live/login")
+         .set("Content-Type", "application/x-www-form-urlencoded")
+         .send_string("login.email=jm%40memorici.de&login.password=uy2c92JKQAtSRfb").unwrap()
+         .into_string().unwrap();
+    println!("{}", page);
+    scrape_one_problem(&agent, 1);
+}
+
+fn scrape_one_problem(agent: &ureq::Agent, n: i32) {
+    let page = agent.get(&format!("https://poses.live/problems/{}", n))
+         .call().unwrap().into_string().unwrap();
+    println!("{}", page);
+    // TODO: scrape html table from it
+}
