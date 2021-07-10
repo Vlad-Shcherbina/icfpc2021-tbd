@@ -7,12 +7,15 @@ import { Pt, Pair, Figure, Problem, Frame, Foci,
         ShakeRequest} from "./types.js"
 
 let canvas_hole = document.getElementById("hole") as HTMLCanvasElement;
-let canvas_figure = document.getElementById("figure") as HTMLCanvasElement;
 let ctx_hole = canvas_hole.getContext("2d")!;
+let canvas_figure = document.getElementById("figure") as HTMLCanvasElement;
 let ctx_figure = canvas_figure.getContext("2d")!;
+let canvas_circles = document.getElementById("circles") as HTMLCanvasElement;
+let ctx_circles = canvas_circles.getContext("2d")!;
 // let canvas_f_init = document.getElementById("f_init") as HTMLCanvasElement;
 // let ctx_f_init = canvas_f_init.getContext("2d")!;
-
+let dx = 0;
+let dy = 0;
 
 // color scheme
 const CLR_HOLE = "#777777";
@@ -22,6 +25,7 @@ const CLR_LONG_EDGE = "#D10000";
 const CLR_SELECTED = "#FFD800";
 const CLR_DESELECTED = "#222222";
 const CLR_GRID = "#BBBBBB";
+const CLR_CIRCLES = "#00FFFF";
 // const CLR_SHADOW_FIGURE = "#FF9B9B";
 
 async function get_problem(n: number): Promise<Problem> {
@@ -160,15 +164,7 @@ function static_figure_change() {
     draw_selected();
     let solution = document.getElementById('solution') as HTMLTextAreaElement;
     solution.value = JSON.stringify({ vertices: figure.vertices }, null, 2);
-    let txt = document.getElementById("score")! as HTMLParagraphElement;
-    txt.innerHTML = `Dislikes: ${
-        server_check_result == null
-        ? "waiting..."
-        : server_check_result.dislikes
-    }`;
-    if (server_check_result != null && !server_check_result.valid) {
-        txt.innerHTML += " (not valid)";
-    }
+    show_dislikes();
 }
 
 function on_figure_change() {
@@ -225,15 +221,19 @@ function get_frame(p: Problem): Frame {
     frame.min_y -= 1;
     frame.max_x += 2;
     frame.max_y += 2;
+
+    let width = canvas_hole.width;
+    let height = canvas_figure.height;
+    dx = width / (frame.max_x - frame.min_x);
+    dy = height / (frame.max_y - frame.min_y)
+
     return frame;
 }
 
 
 function grid_to_screen(p: Pt): Pt {
-    let width = canvas_hole.width;
-    let height = canvas_figure.height;    
-    let nx = Math.floor(width / (frame.max_x - frame.min_x) * (p[0] - frame.min_x)) + 0.5;
-    let ny = Math.floor(height / (frame.max_y - frame.min_y) * (p[1] - frame.min_y)) + 0.5;
+    let nx = Math.floor(dx * (p[0] - frame.min_x)) + 0.5;
+    let ny = Math.floor(dy * (p[1] - frame.min_y)) + 0.5;
     return [nx, ny];
 }
 
@@ -258,10 +258,6 @@ function draw_hole(hole: Pt[]) {
     ctx.stroke();
 }
 
-function edge_sq_len([x1, y1]: Pt, [x2, y2]: Pt): number {
-    return (x1 - x2) * (x1 - x2) + (y1 - y2) * (y1 - y2);
-}
-
 let version_counter = 0;
 async function check_solution_on_server() {
     let vc = ++version_counter;
@@ -279,8 +275,52 @@ async function check_solution_on_server() {
 };
 
 
-function draw_figure() {
+function show_dislikes() {
+    let txt = document.getElementById("score")! as HTMLParagraphElement;
+    txt.innerHTML = "Dislikes: ";
+    if (server_check_result == null) {
+        txt.innerHTML += "waiting...";
+        return;
+    }
+    txt.innerHTML += `${server_check_result.dislikes}`;
+    if (!server_check_result.valid) {
+        txt.innerHTML += " (not valid)";
+    }
+}
 
+function draw_circles() {
+    canvas_circles.width = canvas_circles.width
+    if (server_check_result == null) return;
+
+    let count = 0;
+    let p: number | null = null;
+    for (let i = 0; i <= selected.length; ++i) {
+        if (!selected[i]) continue;
+        if (p != null) return;
+        p = i;
+    }
+    if (p == null) return;
+
+    let edges = []
+    for (let i = 0; i < figure.edges.length; ++i) {
+        if (figure.edges[i][0] == p || figure.edges[i][1] == p)
+        edges.push(i);
+    }
+
+    let ctx = ctx_circles;
+    ctx.strokeStyle = CLR_CIRCLES;
+    for (let i of edges) {
+        let start = figure.edges[i][0] == p ? figure.edges[i][1] : figure.edges[i][0];
+        let [cx, cy] = grid_to_screen(figure.vertices[start]);
+        let status = server_check_result.edge_statuses[i];
+        ctx.beginPath();
+        ctx.ellipse(cx, cy, Math.sqrt(status.min_length) * dx, Math.sqrt(status.min_length) * dy, 0, 0, Math.PI * 2);
+        ctx.ellipse(cx, cy, Math.sqrt(status.max_length) * dx, Math.sqrt(status.max_length) * dy, 0, 0, Math.PI * 2);
+        ctx.stroke();
+    }
+}
+
+function draw_figure() {
     canvas_figure.width = canvas_figure.width;
     let ctx = ctx_figure;
     ctx.lineWidth = 2;
@@ -363,6 +403,7 @@ function draw_selected() {
         ctx.arc(p[0], p[1], 3, 0, 2 * Math.PI);
         ctx.fill();
     }
+    draw_circles();
 }
 
 
