@@ -127,11 +127,11 @@ async function main() {
 
     // canvas_figure.onmouseup = (e: MouseEvent) => {
     //     if (!e.ctrlKey && !e.shiftKey) selected = figure.vertices.map(_ => false);
-    //     select_vertex([e.pageX, e.pageY]);
+    //     select_vertex([e.x, e.y]);
     // }
 
     canvas_figure.onmousedown = (e: MouseEvent) => {
-        mouse_coord = [e.pageX, e.pageY];
+        mouse_coord = [e.x, e.y];
         mouse_dragging = false;
     };
 
@@ -142,12 +142,12 @@ async function main() {
             return;
         }
         if (mouse_dragging) {
-            drag_vertex(mouse_coord, [e.pageX, e.pageY]);
-            mouse_coord = [e.pageX, e.pageY];
+            drag_vertex(mouse_coord, [e.x, e.y]);
+            mouse_coord = [e.x, e.y];
             console.log("after", mouse_coord);
             return;
         }
-        if (Math.pow(e.pageX - mouse_coord[0], 2) + Math.pow(e.pageY - mouse_coord[0], 2) > DRAG_TRIGGER_SENSE_SQUARED) {
+        if (Math.pow(e.x - mouse_coord[0], 2) + Math.pow(e.y - mouse_coord[0], 2) > DRAG_TRIGGER_SENSE_SQUARED) {
             mouse_dragging = true;
             start_dragging_vertex(mouse_coord);
         }
@@ -163,10 +163,10 @@ async function main() {
         else {
             //console.log("Selecting vertex or focus", foci.expected, foci.selected.size);
             // if (foci.expected > foci.selected.size) {
-            //     select_focus([e.pageX, e.pageY]);
+            //     select_focus([e.x, e.y]);
             // } else {
             if (!e.ctrlKey && !e.shiftKey) selected = figure.vertices.map(_ => false);
-            select_vertex([e.pageX, e.pageY]);
+            select_vertex([e.x, e.y]);
             // }
         }
         mouse_coord = null;
@@ -306,8 +306,8 @@ function grid_to_canvas(p: GridPt): CanvasPt {
 }
 
 function canvas_to_grid(p: CanvasPt): GridPt {
-    let nx = Math.floor((p[0] - 0.5) / dx + frame.min_x);
-    let ny = Math.floor((p[1] - 0.5) / dy + frame.min_y);
+    let nx = Math.floor((p[0] - 0.5) / dx + frame.min_x + 0.5);
+    let ny = Math.floor((p[1] - 0.5) / dy + frame.min_y + 0.5);
     return [nx, ny];
 }
 
@@ -318,7 +318,6 @@ function window_to_canvas(mouse_coord: WindowPt): CanvasPt {
 }
 
 // ===== REDRAW =====
-
 
 function draw_grid(frame: Frame) {
     let ctx = ctx_hole;
