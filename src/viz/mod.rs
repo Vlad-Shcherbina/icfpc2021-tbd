@@ -32,7 +32,7 @@ fn handler(_state: &Mutex<ServerState>, req: &Request, resp: ResponseBuilder) ->
             .body("");
     }
 
-    if let Some(problem_id) = req.path.strip_prefix("/submit/") {
+    if let Some(problem_id) = req.path.strip_prefix("/api/submit/") {
         assert_eq!(req.method, "POST");
         let problem_id: i32 = problem_id.parse().unwrap();
 
@@ -50,7 +50,7 @@ fn handler(_state: &Mutex<ServerState>, req: &Request, resp: ResponseBuilder) ->
             .body(body);
     }
 
-    if req.path == "/check_pose" {
+    if req.path == "/api/check_pose" {
         assert_eq!(req.method, "POST");
         let req: CheckPoseRequest = serde_json::from_slice(req.body).unwrap();
         let r = check_pose(&req.problem, &req.vertices);

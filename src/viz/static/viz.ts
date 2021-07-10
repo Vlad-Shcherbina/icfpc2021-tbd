@@ -1,7 +1,9 @@
 // MAGIC HAPPENS AROUND LINE 70
 
 import assert from "./assert.js"
-import { Pt, Pair, Figure, Problem, Frame, Foci, Actions } from "./types.js"
+import { Pt, Pair, Figure, Problem, Frame, Foci, 
+        Actions, CheckPoseRequest, CheckPoseResponse,
+        EdgeStatus } from "./types.js"
 
 let canvas_hole = document.getElementById("hole") as HTMLCanvasElement;
 let canvas_figure = document.getElementById("figure") as HTMLCanvasElement;
@@ -32,6 +34,7 @@ let figure: Figure;
 let frame: Frame;
 let foci: Foci;
 let selected: boolean[] = [];
+let server_check_result: CheckPoseResponse | null = null;
 
 async function main() {
     window.addEventListener('hashchange', () => location.reload());
@@ -72,7 +75,7 @@ async function main() {
     let submit_result = document.getElementById('submit-result')!;
     submit_button.onclick = async function () {
         submit_result.innerText = 'submitting ...';
-        let r = await fetch('/submit/' + problem_no, {
+        let r = await fetch('/api/submit/' + problem_no, {
             method: 'POST', body: new Blob([solution.value]),
         });
         assert(r.ok);
@@ -133,13 +136,23 @@ async function main() {
 
 main();
 
-function on_figure_change() {
-    // запрос к серверу про состояние
+function static_figure_change() {
     draw_figure();
     draw_selected();
     let solution = document.getElementById('solution') as HTMLTextAreaElement;
     solution.value = JSON.stringify({ vertices: figure.vertices }, null, 2);
-    calculate_dislikes();
+    let txt = document.getElementById("score")! as HTMLParagraphElement;
+    txt.innerHTML = `Dislikes: ${
+        server_check_result == null
+        ? "waiting..."
+        : server_check_result.dislikes
+    }`;
+}
+
+function on_figure_change() {
+    static_figure_change();
+    check_solution_on_server();
+    // запрос к серверу про состояние
 }
 
 function keyboard_handler(e: KeyboardEvent) {
@@ -228,55 +241,64 @@ function edge_sq_len([x1, y1]: Pt, [x2, y2]: Pt): number {
 }
 
 
-function color_by_edge_len(i: number): string {
-    let [start, end] = figure.edges[i];
-    let d2 = edge_sq_len(figure.vertices[start], figure.vertices[end]);
-    [start, end] = figure.edges[i];
-    let d1 = edge_sq_len(problem.figure.vertices[start], problem.figure.vertices[end]);
-    if (d2 * 1e6 < (1e6 - problem.epsilon) * d1) {
-        return CLR_SHORT_EDGE;
-    }
-    if (d2 * 1e6 > (1e6 + problem.epsilon) * d1) {
-        return CLR_LONG_EDGE;
-    }
-    return CLR_OK_EDGE;
-}
+async function check_solution_on_server() {
+    let req: CheckPoseRequest = {
+        problem: problem, vertices: figure.vertices
+    };
+    let r = await fetch('/api/check_pose', {
+        method: 'POST', body: new Blob([JSON.stringify(req)]),
+    });
+    assert(r.ok);
 
-function get_edge_limits(i: number): [number, number, number] {
-    let [start, end] = figure.edges[i];
-    let d2 = edge_sq_len(figure.vertices[start], figure.vertices[end]);
-    [start, end] = figure.edges[i];
-    let d1 = edge_sq_len(problem.figure.vertices[start], problem.figure.vertices[end]);
-    return [Math.ceil(d1 * (1 - problem.epsilon / 1e6)),
-        d2,
-    Math.floor(d1 * (1 + problem.epsilon / 1e6))];
-}
+    // TODO: counter
+    server_check_result = await r.json();
+    static_figure_change();
+};
 
-
-function draw_edge(v1: Pt, v2: Pt, color: string, ctx: CanvasRenderingContext2D) {
-    ctx.strokeStyle = color;
-    ctx.beginPath();
-    let p1 = grid_to_screen(v1)
-    let p2 = grid_to_screen(v2)
-    ctx.moveTo(p1[0], p1[1]);
-    ctx.lineTo(p2[0], p2[1]);
-    ctx.stroke();
-}
 
 function draw_figure() {
+
     canvas_figure.width = canvas_figure.width;
     let ctx = ctx_figure;
     ctx.lineWidth = 2;
     for (let i = 0; i < figure.edges.length; i++) {
+        let ok_length = true;
+        ctx.setLineDash([]);
+        ctx.strokeStyle = CLR_OK_EDGE;
+        if (server_check_result != null) {
+            let status = server_check_result.edge_statuses[i];
+            if (!status.fits_in_hole) {
+                ctx.setLineDash([3, 3]);
+            }
+            if (status.actual_length > status.max_length) {
+                ctx.strokeStyle = CLR_LONG_EDGE;
+                ok_length = false;
+            }
+            if (status.actual_length < status.min_length) {
+                ctx.strokeStyle = CLR_SHORT_EDGE;
+                ok_length = false;
+            }
+        }
+
         let [start, end] = figure.edges[i];
-        let p1 = figure.vertices[start];
-        let p2 = figure.vertices[end];
-        draw_edge(p1, p2, color_by_edge_len(i), ctx);
-        let [min, cur, max] = get_edge_limits(i);
-        if (min > cur || max < cur) {
+        let p1 = grid_to_screen(figure.vertices[start])
+        let p2 = grid_to_screen(figure.vertices[end])
+        ctx.beginPath();
+        ctx.moveTo(p1[0], p1[1]);
+        ctx.lineTo(p2[0], p2[1]);
+        ctx.stroke();
+        if (!ok_length) {
+            // show limits as text
+            assert(server_check_result != null);
             ctx.fillStyle = "#444444";
-            let [mx, my] = grid_to_screen([(p1[0] + p2[0]) / 2, (p1[1] + p2[1]) / 2]);
-            ctx.fillText(`${cur} (${min} : ${max})`, mx, my);
+            let [mx, my] = [(p1[0] + p2[0]) / 2, (p1[1] + p2[1]) / 2];
+            ctx.fillText(`${
+                server_check_result.edge_statuses[i].actual_length
+            } (${
+                server_check_result.edge_statuses[i].min_length
+            } : ${
+                server_check_result.edge_statuses[i].max_length
+            })`, mx, my);
         }
     }
 }
@@ -357,19 +379,7 @@ function select_point(mouse_coord: Pt) {
     draw_selected();
 }
 
-function calculate_dislikes() {
-    let sum = 0;
-    for (let h of problem.hole) {
-        let min = edge_sq_len([frame.min_x, frame.min_y], [frame.max_x, frame.max_y]);
-        for (let v of figure.vertices) {
-            let d = edge_sq_len(h, v);
-            if (d < min) min = d;
-        }
-        sum += min;
-    }
-    let txt = document.getElementById("score")! as HTMLParagraphElement;
-    txt.innerHTML = `Dislikes: ${sum}`;
-}
+
 
 // TODO: Implement for rotation
 function closest_grid_vertex(mouse_coord: Pt): Pt | null {
