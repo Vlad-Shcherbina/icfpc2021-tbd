@@ -17,8 +17,10 @@ fn poses_live_demo() {
 
 crate::entry_point!("submit_example", submit_example, _EP2);
 fn submit_example() {
-    let pose_id = submit_pose(1, &Pose { vertices: vec![] });
-    eprintln!("https://poses.live/solutions/{}", pose_id);
+    match submit_pose(1, &Pose { vertices: vec![] }) {
+        Ok(pose_id) => eprintln!("https://poses.live/solutions/{}", pose_id),
+        Err(e) => eprintln!("{}", e),
+    }
 }
 
 #[derive(serde::Deserialize)]
@@ -26,15 +28,23 @@ struct SubmitResponse {
     id: String,
 }
 
-pub fn submit_pose(problem_id: i32, pose: &Pose) -> String {
+pub fn submit_pose(problem_id: i32, pose: &Pose) -> Result<String, String> {
     let resp = ureq::post(&format!("https://poses.live/api/problems/{}/solutions", problem_id))
         .set("Authorization", &format!("Bearer {}", API_KEY))
-        .send_bytes(&serde_json::to_vec(pose).unwrap())
-        .unwrap();
-    assert_eq!(resp.status(), 200, "{:?}", resp);
-    let resp = resp.into_string().unwrap();
-    let resp: SubmitResponse = serde_json::from_str(&resp).unwrap();
-    resp.id
+        .send_bytes(&serde_json::to_vec(pose).unwrap());
+    match resp {
+        Ok(resp) => {
+            assert_eq!(resp.status(), 200, "{:?}", resp);
+            let resp = resp.into_string().unwrap();
+            let resp: SubmitResponse = serde_json::from_str(&resp).unwrap();
+            Ok(resp.id)
+        }
+        Err(ureq::Error::Status(429, resp)) => {
+            let resp = resp.into_string().unwrap();
+            Err(resp)
+        }
+        r => panic!("{:?}", r),
+    }
 }
 
 crate::entry_point!("scrape_poses", scrape_poses, _EP3);
