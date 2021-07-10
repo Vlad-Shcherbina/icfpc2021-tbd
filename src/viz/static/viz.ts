@@ -159,7 +159,7 @@ async function main() {
             }
             return;
         }
-        if (Math.pow(e.x - mouse_coord[0], 2) + Math.pow(e.y - mouse_coord[0], 2) > DRAG_TRIGGER_SENSE_SQUARED) {
+        if (Math.pow(e.x - mouse_coord[0], 2) + Math.pow(e.y - mouse_coord[1], 2) > DRAG_TRIGGER_SENSE_SQUARED) {
             mouse_dragging = true;
             start_dragging_vertex(mouse_coord);
         }
@@ -171,7 +171,6 @@ async function main() {
         if (mouse_dragging) {
             canvas_auxi.width = canvas_auxi.width;
             on_figure_change();
-            mouse_dragging = false;
         }
         else {
             //console.log("Selecting vertex or focus", foci.expected, foci.selected.size);
