@@ -1,22 +1,13 @@
 // MAGIC HAPPENS AROUND LINE 70
 
 import assert from "./assert.js"
-<<<<<<< HEAD
-import { WindowPt, CanvasPt, GridPt,
-        Pt, Pair, Figure, Problem, Frame, Foci, 
-        Actions, CheckPoseRequest, CheckPoseResponse,
-        EdgeStatus, 
-        ShakeRequest,
-        RotateRequest } from "./types.js"
-=======
 import {
     WindowPt, CanvasPt, GridPt,
     Pt, Pair, Figure, Problem, Frame, Foci,
-    Actions, CheckPoseRequest, CheckPoseResponse,
+    Actions, CheckPoseRequest, CheckPoseResponse, RotateRequest,
     EdgeStatus,
     ShakeRequest
 } from "./types.js"
->>>>>>> Problem: No way to select pivot for rotation
 
 let canvas_hole = document.getElementById("hole") as HTMLCanvasElement;
 let ctx_hole = canvas_hole.getContext("2d")!;
