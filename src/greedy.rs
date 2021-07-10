@@ -1,12 +1,13 @@
 #![allow(unused_imports)]
 
 use rand::Rng;
-use crate::checker::{length_range, check_pose};
+use crate::checker::{length_range, check_pose, get_dislikes};
 use crate::geom::*;
 use crate::prelude::*;
 use crate::graph::*;
 use crate::shake::ShakeRequest;
 use rand::prelude::SliceRandom;
+use ndarray::Array2;
 
 fn orig_distance(problem: &Problem, v1_id: usize, v2_id: usize) -> i64 {
     problem.figure.vertices[v1_id].dist2(problem.figure.vertices[v2_id])
@@ -18,12 +19,15 @@ fn deformation_limits(problem: &Problem, v1_id: usize, v2_id: usize) -> (i64, i6
 }
 
 
-fn valid_positions(problem: &Problem, vs: &mut Vec<Pt>, idx: usize) -> Vec<Pt> {
+fn valid_positions(problem: &Problem, vs: &mut Vec<Pt>, idx: usize, hole_mask: &Array2<i16>) -> Vec<Pt> {
     let neighbours: Vec<_> = neighbours(&problem.figure.edges, idx).collect();
     let (pt_min, pt_max) = bounding_box(&problem.hole).unwrap();
     let mut result = vec!{};
     for x in pt_min.x..=pt_max.x {
         'l: for y in pt_min.y..=pt_max.y {
+            if hole_mask[[x as usize, y as usize]] != 0 {
+                continue;
+            }
             let assumed_pos = Pt { x, y };
             for neighbour_idx in &neighbours {
                 let neighbour = vs[*neighbour_idx];
@@ -45,7 +49,77 @@ fn valid_positions(problem: &Problem, vs: &mut Vec<Pt>, idx: usize) -> Vec<Pt> {
 }
 
 
+fn get_hole_mask(problem: &Problem) -> Array2<i16> {
+    let (_, pt_max) = bounding_box(&problem.hole).unwrap();
+    let xdim = pt_max.x + 1;
+    let ydim = pt_max.y + 1;
+    let mut result = Array2::ones((xdim as usize, ydim as usize));
+    for x in 0..xdim {
+        for y in 0..ydim {
+            if pt_in_poly(Pt::new(x, y), &problem.hole) {
+                result[[x as usize, y as usize]] = 0;
+            }
+        }
+    }
+    return result;
+}
+
+fn expand(problem: &Problem, vs: &mut Vec<Pt>, selected_idxs: &Vec<usize>, hole_mask: &Array2<i16>) {
+    let mut cur_dislikes = get_dislikes(&problem, &vs);
+    let mut prev_dislikes = cur_dislikes;
+    loop {
+        //dbg!(cur_dislikes);
+        for idx in selected_idxs.iter() {
+            //dbg!(idx);
+            let positions = valid_positions(&problem, vs, *idx, hole_mask);
+            for pt in positions {
+                let cur = vs[*idx];
+                vs[*idx] = pt;
+                let dislikes = get_dislikes(&problem, &vs);
+                if dislikes < cur_dislikes {
+                    cur_dislikes = dislikes;
+                } else {
+                    vs[*idx] = cur;
+                }
+            }
+        }
+        if cur_dislikes == prev_dislikes {
+            break
+        } else {
+            prev_dislikes = cur_dislikes;
+        }
+    }
+}
+
+fn shake(problem: &Problem, vs: &mut Vec<Pt>, selected_idxs: &Vec<usize>, rng:  &mut dyn rand::RngCore, hole_mask: &Array2<i16>) -> i64 {
+    let cur_dislikes = get_dislikes(&problem, &vs);
+    for _ in 0..1 {
+        for idx in selected_idxs.iter() {
+            //dbg!(idx);
+            let perturbations = valid_positions(&problem, vs, *idx, hole_mask);
+            let mut non_worsening_perturbations = vec!{};
+            let cur = vs[*idx];
+            for pt in perturbations {
+                vs[*idx] = pt;
+                let dislikes = get_dislikes(&problem, &vs);
+                if dislikes <= cur_dislikes {
+                    non_worsening_perturbations.push(pt);
+                }
+            }
+            // Actualy this shouldn't be empty because current position is in it.
+            if non_worsening_perturbations.is_empty() {
+                vs[*idx] = cur;
+            } else {
+                vs[*idx] = *non_worsening_perturbations.choose(rng).unwrap();
+            }
+
+        }
+    }
+    return cur_dislikes;
+}
+
 pub fn greedy_shake(r: &ShakeRequest) -> Vec<Pt> {
+    dbg!(r.problem.figure.vertices.len(), r.problem.hole.len());
     let mut selected = r.selected.clone();
     if selected.iter().all(|&s| !s) {
         selected = vec![true; selected.len()];
@@ -57,67 +131,8 @@ pub fn greedy_shake(r: &ShakeRequest) -> Vec<Pt> {
         }
     }
     let mut rng = rand::thread_rng();
-
-    let expand = |vs: &mut Vec<Pt>| {
-        let pr = check_pose(&r.problem, &Pose { vertices: vs.clone(), bonuses: vec![] });
-        assert!(pr.valid);
-        let mut prev_dislikes = pr.dislikes;
-        let mut cur_dislikes = pr.dislikes;
-        loop {
-            //dbg!(cur_dislikes);
-            for idx in selected_idxs.iter() {
-                //dbg!(idx);
-                for dx in -1..=1 {
-                    for dy in -1..=1 {
-                        if dx == 0 && dy == 0 { continue };
-                        let cur = vs[*idx];
-                        vs[*idx] = Pt{x: cur.x + dx, y: cur.y + dy};
-                        let pr = check_pose(&r.problem, &Pose { vertices: vs.clone(), bonuses: vec![] });
-                        if pr.valid && pr.dislikes < cur_dislikes {
-                            cur_dislikes = pr.dislikes;
-                        } else {
-                            vs[*idx] = cur;
-                        }
-                    }
-                }
-            }
-            if cur_dislikes == prev_dislikes {
-                break
-            } else {
-                prev_dislikes = cur_dislikes;
-            }
-        }
-    };
-
-    let shake = |vs: &mut Vec<Pt>, rng:  &mut dyn rand::RngCore| -> i64 {
-        let pr = check_pose(&r.problem, &Pose { vertices: vs.clone(), bonuses: vec![] });
-        assert!(pr.valid);
-        let mut cur_dislikes = pr.dislikes;
-        for _ in 0..1 {
-            for idx in selected_idxs.iter() {
-                //dbg!(idx);
-                //let dx = rng.gen_range(-1..=1);
-                //let dy = rng.gen_range(-1..=1);
-                //if dx == 0 && dy == 0 { continue };
-                //let new_pos = Pt{x: cur.x + dx, y: cur.y + dy};
-                let perturbations = valid_positions(&r.problem, vs, *idx);
-                if perturbations.is_empty() {
-                    continue;
-                }
-                let new_pos = perturbations.choose(rng).unwrap();
-                let cur = vs[*idx];
-                vs[*idx] = *new_pos;
-                let pr = check_pose(&r.problem, &Pose { vertices: vs.clone(), bonuses: vec![] });
-                // Here we allow perturbations that don't reduce dislikes.
-                if pr.valid && pr.dislikes <= cur_dislikes {
-                    cur_dislikes = pr.dislikes;
-                } else {
-                    vs[*idx] = cur;
-                }
-            }
-        }
-        return cur_dislikes;
-    };
+    
+    let hole_mask = get_hole_mask(&r.problem);
 
     let mut cur_vs = r.vertices.clone();
 
@@ -130,10 +145,10 @@ pub fn greedy_shake(r: &ShakeRequest) -> Vec<Pt> {
     let convergence_cutoff = r.param*100;
     let mut i = 0;
     loop {
-        //dbg!(i);
-        expand(&mut cur_vs);
+        dbg!(i);
+        expand(&r.problem, &mut cur_vs, &selected_idxs, &hole_mask);
         //dbg!("Shake");
-        let cur_dislikes = shake(&mut cur_vs, &mut rng);
+        let cur_dislikes = shake(&r.problem, &mut cur_vs, &selected_idxs, &mut rng, &hole_mask);
         if cur_dislikes < dislikes {
             dislikes = cur_dislikes;
             i = 0;

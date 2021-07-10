@@ -66,6 +66,14 @@ impl Checker {
     }
 }
 
+pub fn get_dislikes(problem: &Problem, vertices: &[Pt]) -> i64 {
+    let mut dislikes = 0;
+    for &h in &problem.hole {
+        dislikes += vertices.iter().map(|v| v.dist2(h)).min().unwrap();
+    }
+    return dislikes;
+}
+
 pub fn check_pose(problem: &Problem, pose: &Pose) -> CheckPoseResponse {
     let mut checker = Checker::new(problem, &pose.bonuses);
 
@@ -97,10 +105,7 @@ pub fn check_pose(problem: &Problem, pose: &Pose) -> CheckPoseResponse {
         unlocked.push(false);
     }
 
-    let mut dislikes = 0;
-    for &h in &problem.hole {
-        dislikes += vertices.iter().map(|v| v.dist2(h)).min().unwrap();
-    }
+    let dislikes = get_dislikes(problem, vertices);
 
     CheckPoseResponse {
         edge_statuses,
