@@ -222,6 +222,18 @@ function static_figure_change() {
 
 
 async function keyboard_handlers(e: KeyboardEvent) {
+    if (e.code == "KeyA" && !e.ctrlKey) {
+        e.preventDefault();
+        selected = figure.vertices.map(_ => true);
+        draw_selected();
+        return;
+    }
+    if (e.code == "Escape") {
+        e.preventDefault();
+        selected = figure.vertices.map(_ => false);
+        draw_selected();
+        return;
+    }
     if (e.code == "KeyC" && !e.ctrlKey) {
         e.preventDefault();
         let circles_checkbox = document.getElementById("show_circles") as HTMLInputElement;
@@ -233,9 +245,9 @@ async function keyboard_handlers(e: KeyboardEvent) {
     if ((e.code == "KeyM" || e.code == "KeyN") && !e.ctrlKey) {
         let angle = 0;
         if (e.code == "KeyM") {
-            angle = 15;
+            angle = e.shiftKey ? 90 : 15;
         } else {
-            angle = -15;
+            angle = e.shiftKey ? -90 : -15;
         }
         let req: RotateRequest = {
             problem: problem,
