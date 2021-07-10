@@ -16,9 +16,7 @@ let ctx_figure = canvas_figure.getContext("2d")!;
 let canvas_circles = document.getElementById("circles") as HTMLCanvasElement;
 let ctx_circles = canvas_circles.getContext("2d")!;
 let canvas_foci = document.getElementById("foci") as HTMLCanvasElement;
-let ctx_foci = canvas_circles.getContext("2d")!;
-// let canvas_f_init = document.getElementById("f_init") as HTMLCanvasElement;
-// let ctx_f_init = canvas_f_init.getContext("2d")!;
+let ctx_foci = canvas_foci.getContext("2d")!;
 let dx = 0;
 let dy = 0;
 
@@ -32,7 +30,6 @@ const CLR_DESELECTED = "#222222";
 const CLR_GRID = "#BBBBBB";
 const CLR_CIRCLES = "#00FFFF";
 const CLR_FOCI = "#A96060";
-// const CLR_SHADOW_FIGURE = "#FF9B9B";
 
 async function get_problem(n: number): Promise<Problem> {
     const response = await fetch(`/data/problems/${n}.problem`);
@@ -62,7 +59,6 @@ async function main() {
     frame = get_frame(problem);
     draw_hole();
     draw_grid(frame);
-    // draw_shadow_figure();
     on_figure_change();
 
     document.getElementById('problem-stats')!.innerHTML = `
@@ -446,20 +442,6 @@ function draw_figure() {
     }
 }
 
-// function draw_shadow_figure() {
-//     canvas_f_init.width = canvas_f_init.width;
-//     let ctx = ctx_f_init;
-//     ctx.lineWidth = 2;
-//     for (let i = 0; i < figure.edges.length; i++) {
-//         let [start, end] = figure.edges[i];
-//         draw_edge(figure.vertices[start],
-//                   figure.vertices[end],
-//                   color_by_edge_len(i),
-//                   ctx);
-//     }
-//     canvas_f_init.width = canvas_f_init.width;
-//     draw_figure(f, ctx_f_init, CLR_SHADOW_FIGURE, 1);
-// }
 
 function draw_grid(frame: Frame) {
     let ctx = ctx_hole;
