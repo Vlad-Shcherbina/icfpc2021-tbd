@@ -14,6 +14,7 @@ pub struct Figure {
 #[derive(serde::Deserialize)]
 #[derive(Debug)]
 pub struct Problem {
+    pub bonuses: Vec<ProblemBonus>,
     pub hole: Vec<Pt>,
     pub figure: Figure,
     pub epsilon: i64,
@@ -21,7 +22,30 @@ pub struct Problem {
 
 #[derive(serde::Deserialize, serde::Serialize)]
 #[derive(Debug)]
+pub enum BonusName {
+    GLOBALIST,
+    BREAK_A_LEG
+}
+
+#[derive(serde::Deserialize)]
+#[derive(Debug)]
+pub struct ProblemBonus {
+    pub bonus: BonusName,
+    pub problem: u32,
+    pub position: Pt,
+}
+
+#[derive(serde::Deserialize, serde::Serialize)]
+#[derive(Debug)]
+pub struct PoseBonus {
+    pub bonus: BonusName,
+    pub problem: u32,
+}
+
+#[derive(serde::Deserialize, serde::Serialize)]
+#[derive(Debug)]
 pub struct Pose {
+    pub bonuses: Vec<PoseBonus>,
     pub vertices: Vec<Pt>,
 }
 
