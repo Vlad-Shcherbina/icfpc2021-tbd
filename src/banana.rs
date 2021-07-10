@@ -5,11 +5,15 @@ use crate::prelude::*;
 use crate::shake::ShakeRequest;
 
 pub fn banana_shake(r: &ShakeRequest) -> Vec<Pt> {
+    let mut selected = r.selected.clone();
+    if selected.iter().all(|&s| !s) {
+        selected = vec![true; selected.len()];
+    }
 
     let compute_score = |vs: &[Pt]| {
         let mut score: f64 = 0.0;
         for &(start, end) in &r.problem.figure.edges {
-            if !r.selected[start] || !r.selected[end] {
+            if !selected[start] || !selected[end] {
                 continue;
             }
             if !segment_in_poly((vs[start], vs[end]), &r.problem.hole) {
@@ -32,7 +36,7 @@ pub fn banana_shake(r: &ShakeRequest) -> Vec<Pt> {
     let mut best_score = compute_score(&r.vertices);
 
     let mut selected_idxs = vec![];
-    for (i, &sel) in r.selected.iter().enumerate() {
+    for (i, &sel) in selected.iter().enumerate() {
         if sel {
             selected_idxs.push(i);
         }
@@ -44,7 +48,7 @@ pub fn banana_shake(r: &ShakeRequest) -> Vec<Pt> {
     for _ in 0..1000 {
         let old = cur.clone();
         let old_score = cur_score;
-        for _ in 0..r.param {
+        for _ in 0..10 * r.param {
             let i = rng.gen_range(0..selected_idxs.len());
             let i = selected_idxs[i];
             cur[i].x += rng.gen_range(-1..=1);
