@@ -17,6 +17,7 @@ pub fn shake(r: &ShakeRequest) -> Vec<Pt> {
         "ice" => crate::ice::ice_shake(r),
         "mango" => crate::mango::mango_shake(r),
         "greedy" => crate::greedy::greedy_shake(r),
+        "springs" => crate::springs::springs(r),
         s => panic!("{:?}", s),
     }
 }
