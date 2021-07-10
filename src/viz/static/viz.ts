@@ -119,33 +119,38 @@ async function main() {
     document.onkeydown = keyboard_handler;
 
     // Mouse events
-    canvas_figure.onmouseup = (e: MouseEvent) => {
-        if (!e.ctrlKey && !e.shiftKey) selected = figure.vertices.map(_ => false);
-        select_point([e.x, e.y]);
-    }
+    let MOUSE_COORD: MouseEvent | null = null;
+    const MOUSE_SENSE = 20;
+    let MOUSE_CLICK: boolean = true;
 
-    // let MOUSE_COORD: MouseEvent | null = null;
-    // const MOUSE_SENSE = 5;
-    // let MOUSE_CLICK: boolean = true;
+    // canvas_figure.onmouseup = (e: MouseEvent) => {
+    //     if (!e.ctrlKey && !e.shiftKey) selected = figure.vertices.map(_ => false);
+    //     select_point([e.x, e.y]);
+    // }
 
-    // document.onmousedown = (e: MouseEvent) => {
-    //     MOUSE_COORD = e;
-    //     MOUSE_CLICK = true;
-    // };
+    document.onmousedown = (e: MouseEvent) => {
+        MOUSE_COORD = e;
+        MOUSE_CLICK = true;
+    };
 
-    // document.onmousemove = (e: MouseEvent) => {
-    //     if (MOUSE_COORD == null) return;
-    //     if (Math.pow(e.x - MOUSE_COORD.x, 2) + Math.pow(e.y - MOUSE_COORD.y, 2) < MOUSE_SENSE) {
-    //         MOUSE_CLICK = false;
-    //     }
-    // };
+    document.onmousemove = (e: MouseEvent) => {
+        if (MOUSE_COORD == null) return;
+        if (Math.pow(e.x - MOUSE_COORD.x, 2) + Math.pow(e.y - MOUSE_COORD.y, 2) < MOUSE_SENSE) {
+            MOUSE_CLICK = false;
+        }
+    };
 
-    // document.onmouseup =  (e: MouseEvent) => {
-    //     assert(MOUSE_COORD != null)
-    //     if (MOUSE_CLICK) select_point(e, f, frame, 10);
-    //     else drag_point(MOUSE_COORD, e, frame, f);
-    //     MOUSE_COORD = null;
-    // };
+    document.onmouseup =  (e: MouseEvent) => {
+        assert(MOUSE_COORD != null)
+        if (MOUSE_CLICK) {
+            if (!e.ctrlKey && !e.shiftKey) selected = figure.vertices.map(_ => false);
+            select_point([e.x, e.y]);
+        }
+        else {
+            drag_point(MOUSE_COORD, e);
+        }
+        MOUSE_COORD = null;
+    };
 
     // Other events, elements and anchors
     document.getElementById("edge_too_long")!.style.color = CLR_LONG_EDGE;
@@ -203,6 +208,15 @@ function keyboard_handler(e: KeyboardEvent) {
     on_figure_change();
 }
 
+
+function drag_point(from: MouseEvent, to: MouseEvent) {
+    let index = get_nearby_vertex_index([from.x, from.y]);
+    if (index == null) return;
+    let q = closest_grid_vertex([to.x, to.y]);
+    figure.vertices[index] = q;
+    on_figure_change();
+}
+
 function check_for_enough_foci_and_send(_action: Actions) {
     if (foci.selected.size !== foci.expected) {
         // TODO: wrong_amount_of_foci_error();
@@ -250,11 +264,11 @@ function grid_to_screen(p: Pt): Pt {
     return [nx, ny];
 }
 
-// function screen_to_grid(p: Pt, frame: Frame): Pt {
-//     let nx = Math.floor((frame.max_x - frame.min_x) / width * (p[0] - 0.5) + frame.min_x);
-//     let ny = Math.floor((frame.max_y - frame.min_y) / height * (p[1] - 0.5) + frame.min_y);
-//     return [nx, ny];
-// }
+function screen_to_grid(p: Pt): Pt {
+    let nx = Math.floor((p[0] - 0.5) / dx + frame.min_x);
+    let ny = Math.floor((p[1] - 0.5) / dy + frame.min_y);
+    return [nx, ny];
+}
 
 function draw_hole(hole: Pt[]) {
     canvas_hole.width = canvas_hole.width;
@@ -441,7 +455,7 @@ function move_selected([dx, dy]: Pt) {
 }
 
 
-function mouse_coords_to_canvas(mouse_coord: Pt): number[] {
+function mouse_coords_to_canvas(mouse_coord: Pt): Pt {
     let r = canvas_figure.getBoundingClientRect();
     return [mouse_coord[0] - r.left, mouse_coord[1] - r.top];
 }
@@ -471,8 +485,9 @@ function select_point(mouse_coord: Pt) {
 
 
 // TODO: Implement for rotation
-function closest_grid_vertex(mouse_coord: Pt): Pt | null {
-    return null;
+function closest_grid_vertex(mouse_coord: Pt): Pt {
+    let [x, y] = screen_to_grid(mouse_coord);
+    return [Math.floor(x + 0.5), Math.floor(y + 0.5)];
 }
 
 // TODO: Implement for rotation
@@ -483,7 +498,6 @@ function draw_foci() {
 // TODO: Implement for rotation
 function select_focus(mouse_coord: Pt) {
     let p = closest_grid_vertex(mouse_coord);
-    if (p == null) return;
     let key = p[0] + "," + p[1];
     if (foci.selected.has(key)) {
         foci.selected.delete(key);
