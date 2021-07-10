@@ -1,6 +1,6 @@
 #![allow(clippy::needless_range_loop)]
 
-use super::dev_server::{serve_forever, Request, ResponseBuilder, HandlerResult};
+use crate::dev_server::{serve_forever, Request, ResponseBuilder, HandlerResult};
 use crate::util::project_path;
 
 use std::collections::HashMap;

@@ -8,6 +8,8 @@ mod domain_model;
 mod random;
 mod solver;
 mod poses_live;
+mod viz;
+mod dev_server;
 
 #[linkme::distributed_slice]
 static ENTRY_POINTS: [(&'static str, fn())] = [..];

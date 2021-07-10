@@ -109,8 +109,7 @@ By the way, there is an utility to get paths relative to the project root:
    ```
 3. Start the Web server:
    ```
-   cd icfpc2021-tdb
-   python3 -m http.server
+   cargo run viz_server
    ```
 4. Navigate to http://127.0.0.1:8000/src/viz/static/viz.html#42
    (where 42 is the problem number)
