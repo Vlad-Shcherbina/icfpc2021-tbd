@@ -100,7 +100,7 @@ pub fn greedy_shake(r: &ShakeRequest) -> Vec<Pt> {
                 //let dy = rng.gen_range(-1..=1);
                 //if dx == 0 && dy == 0 { continue };
                 //let new_pos = Pt{x: cur.x + dx, y: cur.y + dy};
-                let mut perturbations = valid_positions(&r.problem, vs, *idx);
+                let perturbations = valid_positions(&r.problem, vs, *idx);
                 if perturbations.is_empty() {
                     continue;
                 }
