@@ -260,3 +260,46 @@ pub fn segment_in_poly(seg: (Pt, Pt), poly: &[Pt]) -> bool {
 
     true
 }
+
+// Rotate a point around another point
+pub fn rotate_point(pt: Pt, pivot: Pt, angle: i16) -> Pt {
+    let rad = angle as f64 * std::f64::consts::PI / 180.0;
+
+    let d_x = (pt.x-pivot.x) as f64;
+    let d_y = (pt.y-pivot.y) as f64;
+
+    let new_x = rad.cos() * d_x - rad.sin() * d_y + pivot.x as f64;
+    let new_y = rad.sin() * d_x + rad.cos() * d_y + pivot.y as f64;
+
+    return Pt::new(new_x.round() as i64, new_y.round() as i64)
+}
+
+// Rotate the collection of points around a given point
+pub fn rotate_poly(poly: &[Pt], pivot: Pt, angle: i16) -> Vec<Pt> {
+    return poly.iter().map(|pt| rotate_point(*pt, pivot, angle)).collect::<Vec<Pt>>()
+}
+
+#[test]
+fn test_rotate_point() {
+    assert_eq!(rotate_point(Pt::new(10,10), Pt::new(10,11), 180), Pt::new(10, 12));
+    assert_eq!(rotate_point(Pt::new(0,0), Pt::new(10,10), 180), Pt::new(20, 20));
+    assert_eq!(rotate_point(Pt::new(0,0), Pt::new(10,10), 90), Pt::new(20, 0));
+}
+
+#[test]
+fn test_rotate_poly() {
+    let quad = &[
+        Pt::new(0, 0),
+        Pt::new(0, 10),
+        Pt::new(10, 0),
+        Pt::new(10, 10),
+    ];
+    let expected = &[
+        Pt::new(20, 20),
+        Pt::new(20, 10),
+        Pt::new(10, 20),
+        Pt::new(10, 10),
+    ];
+    assert_eq!(rotate_poly(quad, Pt::new(10,10), 0), quad);
+    assert_eq!(rotate_poly(quad, Pt::new(10,10), 180), expected);
+}
