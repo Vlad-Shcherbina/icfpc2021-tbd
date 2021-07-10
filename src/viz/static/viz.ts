@@ -76,6 +76,9 @@ async function main() {
         on_figure_change();
     };
 
+    let circles_checkbox = document.getElementById("show_circles") as HTMLInputElement;
+    circles_checkbox.onchange = draw_circles;
+
     let submit_button = document.getElementById('submit-button') as HTMLButtonElement;
     let submit_result = document.getElementById('submit-result')!;
     submit_button.onclick = async function () {
@@ -176,6 +179,14 @@ function on_figure_change() {
 }
 
 function keyboard_handler(e: KeyboardEvent) {
+    if (e.code == "KeyC") {
+        e.preventDefault();
+        let circles_checkbox = document.getElementById("show_circles") as HTMLInputElement;
+        circles_checkbox.checked = !circles_checkbox.checked;
+        draw_circles();
+        return;      
+    }
+
     let dx = 0;
     let dy = 0;
     if (e.code == "ArrowUp") dy = -1;
@@ -293,6 +304,8 @@ function show_dislikes() {
 function draw_circles() {
     canvas_circles.width = canvas_circles.width
     if (server_check_result == null) return;
+    let checkbox = document.getElementById("show_circles") as HTMLInputElement;
+    if (!checkbox.checked) return;
 
     let count = 0;
     let p: number | null = null;
