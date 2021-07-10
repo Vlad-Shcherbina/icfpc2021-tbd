@@ -3,7 +3,6 @@
 use std::collections::HashMap;
 
 use crate::prelude::*;
-use regex::Regex;
 
 const API_KEY: &str = "81acc597-be90-418c-90aa-0dfac878aeb0";
 
@@ -60,6 +59,17 @@ fn scrape_poses() {
     scrape_one_problem(&agent, 1);
 }
 
+pub fn scrape_problem_n(n: i32) -> HashMap<String, i32> {
+    let agent = ureq::agent();
+    let _page = agent.post("https://poses.live/login")
+         .set("Content-Type", "application/x-www-form-urlencoded")
+         .send_string("login.email=jm%40memorici.de&login.password=uy2c92JKQAtSRfb").unwrap()
+         .into_string().unwrap();
+
+    scrape_one_problem(&agent, n)
+}
+
+
 fn scrape_one_problem(agent: &ureq::Agent, n: i32) -> HashMap<String, i32> {
     let page = agent.get(&format!("https://poses.live/problems/{}", n))
          .call().unwrap().into_string().unwrap();
@@ -67,7 +77,7 @@ fn scrape_one_problem(agent: &ureq::Agent, n: i32) -> HashMap<String, i32> {
     let mut poses = HashMap::new();
 
     // yes, we use regex to parse HTML
-    let re = Regex::new("<tr><td><a href=\"/solutions/(.*?)\".*?</a></td><td>(\\d+)</td></tr>").unwrap();
+    let re = regex::Regex::new("<tr><td><a href=\"/solutions/(.*?)\".*?</a></td><td>(\\d+)</td></tr>").unwrap();
     for pose in re.captures_iter(&page) {
         poses.insert(
             pose.get(1).unwrap().as_str().to_string(),

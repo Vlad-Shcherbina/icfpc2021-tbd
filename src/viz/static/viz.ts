@@ -55,6 +55,7 @@ async function get_problem(n: number): Promise<Problem> {
 
 let problem: Problem;
 // let figure: Figure;
+let highscore: string;
 let pose: Pose;
 let history: Pose[] = [];
 let frame: Frame;
@@ -72,6 +73,9 @@ async function main() {
     }
 
     problem = await get_problem(problem_no);
+    let hs = await fetch('/api/highscore/' + problem_no);
+    assert(hs.ok);
+    highscore = await hs.text()
     pose = { vertices: JSON.parse(JSON.stringify(problem.figure.vertices)),
               bonuses: [] };
     selected = problem.figure.vertices.map(_ => false);
@@ -91,7 +95,8 @@ async function main() {
     for (let b of problem.bonuses) {
         problem_stats.innerHTML += `${b.bonus} for ${b.problem} `;
     }
-    problem_stats.innerHTML += "]";
+    problem_stats.innerHTML += "] <br>";
+    problem_stats.innerHTML += highscore;
 
 
     let solution = document.getElementById('solution') as HTMLTextAreaElement;

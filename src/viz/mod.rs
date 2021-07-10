@@ -76,6 +76,24 @@ fn handler(_state: &Mutex<ServerState>, req: &Request, resp: ResponseBuilder) ->
             .body(serde_json::to_vec(&r).unwrap());
     }
 
+    if let Some(problem_id) = req.path.strip_prefix("/api/highscore/") {
+        assert_eq!(req.method, "GET");
+        let problem_id: i32 = problem_id.parse().unwrap();
+
+        let poses = crate::poses_live::scrape_problem_n(problem_id);
+        let hs = poses.iter().min_by(|a, b| a.1.cmp(&b.1)).map(|(k, v)| (k, v));
+
+        let body = match hs {
+            Some((pose_id, dislikes)) => format!(
+                r#"Least dislikes: {}, at <a href="https://poses.live/solutions/{}">{}</a>"#,
+                dislikes, pose_id, pose_id),
+            None => "No previous valid solutions".to_string(),
+        };
+
+        return resp.code("200 OK")
+            .body(body);
+    }
+
     static_handler(req, resp)
 }
 
