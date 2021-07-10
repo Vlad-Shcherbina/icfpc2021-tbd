@@ -5,14 +5,14 @@ use crate::prelude::*;
 pub const EPS_BASE: i64 = 1_000_000;
 
 #[derive(serde::Deserialize)]
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Figure {
     pub vertices: Vec<Pt>,
     pub edges: Vec<(usize, usize)>,
 }
 
 #[derive(serde::Deserialize)]
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Problem {
     pub bonuses: Vec<ProblemBonus>,
     pub hole: Vec<Pt>,
@@ -21,15 +21,15 @@ pub struct Problem {
 }
 
 #[derive(serde::Deserialize, serde::Serialize)]
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 #[allow(non_camel_case_types)]
 pub enum BonusName {
     GLOBALIST,
-    BREAK_A_LEG
+    BREAK_A_LEG,
 }
 
 #[derive(serde::Deserialize)]
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct ProblemBonus {
     pub bonus: BonusName,
     pub problem: u32,
@@ -37,7 +37,7 @@ pub struct ProblemBonus {
 }
 
 #[derive(serde::Deserialize, serde::Serialize)]
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct PoseBonus {
     pub bonus: BonusName,
     pub problem: u32,

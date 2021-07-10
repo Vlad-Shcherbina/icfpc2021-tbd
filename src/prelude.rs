@@ -3,4 +3,4 @@
 
 pub use crate::util::project_path;
 pub use crate::geom::Pt;
-pub use crate::domain_model::{EPS_BASE, Figure, Problem, Pose};
+pub use crate::domain_model::{EPS_BASE, Figure, Problem, Pose, PoseBonus};

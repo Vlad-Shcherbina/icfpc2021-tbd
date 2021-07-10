@@ -40,21 +40,48 @@ pub fn length_range(d: i64, eps: i64) -> (i64, i64) {
     (min_length, max_length)
 }
 
+// Precomputed data to quickly check pose constraints.
+pub struct Checker {
+    pub problem: Problem,
+    pub edge_ranges: Vec<(i64, i64)>,
+}
+
+impl Checker {
+    pub fn new(p: &Problem, used_bonuses: &[PoseBonus]) -> Checker {
+        assert!(used_bonuses.is_empty(), "TODO");
+        let edge_ranges = p.figure.edges.iter()
+            .map(|&(start, end)| {
+                let d = p.figure.vertices[start].dist2(p.figure.vertices[end]);
+                length_range(d, p.epsilon)
+            }).collect();
+        Checker {
+            problem: p.clone(),
+            edge_ranges,
+        }
+    }
+
+    pub fn edge_in_hole(&mut self, pt1: Pt, pt2: Pt) -> bool {
+        // TODO: cache
+        segment_in_poly((pt1, pt2), &self.problem.hole)
+    }
+}
+
 pub fn check_pose(problem: &Problem, pose: &Pose) -> CheckPoseResponse {
+    let mut checker = Checker::new(problem, &pose.bonuses);
+
     let vertices = &pose.vertices;
     assert_eq!(problem.figure.vertices.len(), vertices.len());
 
     let mut edge_statuses = vec![];
     let mut valid = true;
     let mut unlocked = vec![];
-    for &(start, end) in &problem.figure.edges {
-        let pt1 = vertices[start];
-        let pt2 = vertices[end];
+    for i in 0..problem.figure.edges.len() {
+        let pt1 = vertices[problem.figure.edges[i].0];
+        let pt2 = vertices[problem.figure.edges[i].1];
 
-        let fits_in_hole = segment_in_poly((pt1, pt2), &problem.hole);
+        let fits_in_hole = checker.edge_in_hole(pt1, pt2);
 
-        let orig_d2 = problem.figure.vertices[start].dist2(problem.figure.vertices[end]);
-        let (min_length, max_length) = length_range(orig_d2, problem.epsilon);
+        let (min_length, max_length) = checker.edge_ranges[i];
 
         let es = EdgeStatus {
             fits_in_hole,
