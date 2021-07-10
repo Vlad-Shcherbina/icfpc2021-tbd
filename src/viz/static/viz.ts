@@ -136,15 +136,19 @@ async function main() {
     };
 
     canvas_figure.onmousemove = (e: MouseEvent) => {
-        console.log("caught");
         if (mouse_coord == null) {
             // TODO: show vertex to be selected
             return;
         }
         if (mouse_dragging) {
-            drag_vertex(mouse_coord, [e.x, e.y]);
-            mouse_coord = [e.x, e.y];
-            console.log("after", mouse_coord);
+            if (dragged_vertex == null) {
+                if (!e.ctrlKey && !e.shiftKey) selected = figure.vertices.map(_ => false);
+                select_range(mouse_coord, [e.x, e.y]);
+            }
+            else {
+                drag_vertex(mouse_coord, [e.x, e.y]);
+                mouse_coord = [e.x, e.y];
+            }
             return;
         }
         if (Math.pow(e.x - mouse_coord[0], 2) + Math.pow(e.y - mouse_coord[0], 2) > DRAG_TRIGGER_SENSE_SQUARED) {
@@ -502,11 +506,26 @@ async function check_solution_on_server() {
 };
 
 
-// TODO: Return selected vertex_id for clarity of API
 function select_vertex(mouse_coord: WindowPt) {
     let i = get_nearby_vertex_index(mouse_coord);
     if (i == null) return;
     selected[i] = !selected[i];
+    draw_selected();
+    return i;
+}
+
+
+function select_range(from: WindowPt, to: WindowPt) {
+    let [fx, fy] = canvas_to_grid(window_to_canvas(from));
+    let [tx, ty] = canvas_to_grid(window_to_canvas(to));
+    let [x1, y1] = [Math.min(tx, fx), Math.min(ty, fy)];
+    let [x2, y2] = [Math.max(tx, fx), Math.max(ty, fy)];
+    for (let i = 0; i < figure.vertices.length; ++i) {
+        let v = figure.vertices[i];
+        if (v[0] >= x1 && v[0] <= x2 && v[1] >= y1 && v[1] <= y2) {
+            selected[i] = true;
+        }
+    }
     draw_selected();
 }
 
