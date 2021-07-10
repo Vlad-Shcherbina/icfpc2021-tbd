@@ -1,7 +1,7 @@
 use std::sync::{Arc, Mutex};
 use std::net::TcpListener;
 use crate::dev_server::{serve_forever, Request, ResponseBuilder, HandlerResult};
-use crate::util::*;
+use crate::prelude::*;
 
 struct ServerState {
 }
@@ -35,8 +35,18 @@ fn handler(_state: &Mutex<ServerState>, req: &Request, resp: ResponseBuilder) ->
         assert_eq!(req.method, "POST");
         let problem_id: i32 = problem_id.parse().unwrap();
 
+        let pose: Pose = serde_json::from_slice(req.body).unwrap();
+        let res = crate::poses_live::submit_pose(problem_id, &pose);
+
+        let body = match res {
+            Ok(pose_id) => format!(
+                r#"submitted as <a href="https://poses.live/solutions/{}">{}</a>"#,
+                pose_id, pose_id),
+            Err(e) => e,
+        };
+
         return resp.code("200 OK")
-            .body(format!("mock submitted {}", problem_id));
+            .body(body);
     }
 
     static_handler(req, resp)

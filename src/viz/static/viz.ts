@@ -77,10 +77,15 @@ async function main() {
     let submit_result = document.getElementById('submit-result')!;
     submit_button.onclick = async function () {
         submit_result.innerText = 'submitting ...';
-        let r = await fetch('/submit/' + problem_no, { method: 'POST' });
+        let r = await fetch('/submit/' + problem_no, {
+            method: 'POST', body: new Blob([solution.value]),
+        });
         assert(r.ok);
-        submit_result.innerText = await r.text();
+        submit_result.innerHTML = await r.text();
     };
+
+    document.getElementById('our-submissions')!.innerHTML =
+        `<p><a href="https://poses.live/problems/${problem_no}">our submissions</a></p>`;
 
     // THIS IS WHERE THE MAGIC HAPPENS
     document.onmouseup = (e: MouseEvent) => {
