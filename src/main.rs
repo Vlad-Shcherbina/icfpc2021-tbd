@@ -18,6 +18,7 @@ mod mango;
 mod rotate;
 mod greedy;
 mod bonus_graph;
+mod ice;
 
 #[linkme::distributed_slice]
 static ENTRY_POINTS: [(&'static str, fn())] = [..];

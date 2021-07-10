@@ -14,7 +14,7 @@ pub fn shake(r: &ShakeRequest) -> Vec<Pt> {
     match r.method.as_str() {
         "random" => random_shake(r),
         "banana" => crate::banana::banana_shake(r),
-        "ice" => todo!(),
+        "ice" => crate::ice::ice_shake(r),
         "mango" => crate::mango::mango_shake(r),
         "greedy" => crate::greedy::greedy_shake(r),
         s => panic!("{:?}", s),
