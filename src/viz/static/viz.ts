@@ -120,7 +120,7 @@ async function main() {
 
     // Mouse events
     let MOUSE_COORD: MouseEvent | null = null;
-    const MOUSE_SENSE = 20;
+    const MOUSE_SENSE = 10;
     let MOUSE_CLICK: boolean = true;
 
     // canvas_figure.onmouseup = (e: MouseEvent) => {
@@ -128,19 +128,20 @@ async function main() {
     //     select_point([e.x, e.y]);
     // }
 
-    document.onmousedown = (e: MouseEvent) => {
+    canvas_figure.onmousedown = (e: MouseEvent) => {
         MOUSE_COORD = e;
         MOUSE_CLICK = true;
     };
 
-    document.onmousemove = (e: MouseEvent) => {
+    canvas_figure.onmousemove = (e: MouseEvent) => {
         if (MOUSE_COORD == null) return;
-        if (Math.pow(e.x - MOUSE_COORD.x, 2) + Math.pow(e.y - MOUSE_COORD.y, 2) < MOUSE_SENSE) {
+        console.log(e.x, e.y,  MOUSE_COORD.x, MOUSE_COORD.y);
+        if (Math.pow(e.x - MOUSE_COORD.x, 2) + Math.pow(e.y - MOUSE_COORD.y, 2) > MOUSE_SENSE * MOUSE_SENSE) {
             MOUSE_CLICK = false;
         }
     };
 
-    document.onmouseup =  (e: MouseEvent) => {
+    canvas_figure.onmouseup =  (e: MouseEvent) => {
         assert(MOUSE_COORD != null)
         if (MOUSE_CLICK) {
             if (!e.ctrlKey && !e.shiftKey) selected = figure.vertices.map(_ => false);
