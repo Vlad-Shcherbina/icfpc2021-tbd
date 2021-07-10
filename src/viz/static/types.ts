@@ -20,7 +20,12 @@ export interface Problem {
 
 export interface Pose {
     vertices: Pt[],
-    bonuses: PoseBonus[] | null,
+    bonuses: PoseBonus[],
+}
+
+export interface VizState {
+    pose: Pose,
+    edges: Pair[],
 }
 
 export interface Frame {
@@ -46,6 +51,7 @@ export interface ProblemBonus {
 export interface PoseBonus {
     bonus: string,
     problem: number,
+    edge: Pair[] | null,
 }
 
 export interface CheckPoseRequest {
