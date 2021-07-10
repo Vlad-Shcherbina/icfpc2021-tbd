@@ -22,7 +22,7 @@ pub struct Problem {
 
 #[derive(serde::Deserialize, serde::Serialize)]
 #[derive(Debug, Clone)]
-#[allow(non_camel_case_types)]
+#[allow(non_camel_case_types, clippy::upper_case_acronyms)]
 pub enum BonusName {
     GLOBALIST,
     BREAK_A_LEG,

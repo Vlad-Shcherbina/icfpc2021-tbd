@@ -214,6 +214,7 @@ impl ResponseHeadersBuilder {
 }
 
 #[must_use]
+#[allow(clippy::upper_case_acronyms)]
 pub struct SSE {
     pub stream: TcpStream,
 }

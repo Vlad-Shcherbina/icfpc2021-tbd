@@ -15,14 +15,14 @@ fn orig_distance(problem: &Problem, v1_id: usize, v2_id: usize) -> i64 {
 
 fn deformation_limits(problem: &Problem, v1_id: usize, v2_id: usize) -> (i64, i64) {
     let orig_d2 = orig_distance(problem, v1_id, v2_id);
-    return crate::checker::length_range(orig_d2, problem.epsilon);
+    crate::checker::length_range(orig_d2, problem.epsilon)
 }
 
 
 fn valid_positions(problem: &Problem, vs: &mut Vec<Pt>, idx: usize, hole_mask: &Array2<i16>) -> Vec<Pt> {
     let neighbours: Vec<_> = neighbours(&problem.figure.edges, idx).collect();
     let (pt_min, pt_max) = bounding_box(&problem.hole).unwrap();
-    let mut result = vec!{};
+    let mut result = vec![];
     for x in pt_min.x..=pt_max.x {
         'l: for y in pt_min.y..=pt_max.y {
             if hole_mask[[x as usize, y as usize]] != 0 {
@@ -31,7 +31,7 @@ fn valid_positions(problem: &Problem, vs: &mut Vec<Pt>, idx: usize, hole_mask: &
             let assumed_pos = Pt { x, y };
             for neighbour_idx in &neighbours {
                 let neighbour = vs[*neighbour_idx];
-                let (min_dist, max_dist) = deformation_limits(&problem, idx, *neighbour_idx);
+                let (min_dist, max_dist) = deformation_limits(problem, idx, *neighbour_idx);
                 let new_dist = assumed_pos.dist2(neighbour);
                 if !(min_dist <= new_dist && new_dist <= max_dist) {
                     // eprintln!("Drop {:?} by distance", assumed_pos);
@@ -45,7 +45,7 @@ fn valid_positions(problem: &Problem, vs: &mut Vec<Pt>, idx: usize, hole_mask: &
             result.push(assumed_pos);
         }
     }
-    return result;
+    result
 }
 
 
@@ -61,21 +61,21 @@ fn get_hole_mask(problem: &Problem) -> Array2<i16> {
             }
         }
     }
-    return result;
+    result
 }
 
-fn expand(problem: &Problem, vs: &mut Vec<Pt>, selected_idxs: &Vec<usize>, hole_mask: &Array2<i16>) {
-    let mut cur_dislikes = get_dislikes(&problem, &vs);
+fn expand(problem: &Problem, vs: &mut Vec<Pt>, selected_idxs: &[usize], hole_mask: &Array2<i16>) {
+    let mut cur_dislikes = get_dislikes(problem, vs);
     let mut prev_dislikes = cur_dislikes;
     loop {
         //dbg!(cur_dislikes);
         for idx in selected_idxs.iter() {
             //dbg!(idx);
-            let positions = valid_positions(&problem, vs, *idx, hole_mask);
+            let positions = valid_positions(problem, vs, *idx, hole_mask);
             for pt in positions {
                 let cur = vs[*idx];
                 vs[*idx] = pt;
-                let dislikes = get_dislikes(&problem, &vs);
+                let dislikes = get_dislikes(problem, vs);
                 if dislikes < cur_dislikes {
                     cur_dislikes = dislikes;
                 } else {
@@ -91,17 +91,17 @@ fn expand(problem: &Problem, vs: &mut Vec<Pt>, selected_idxs: &Vec<usize>, hole_
     }
 }
 
-fn shake(problem: &Problem, vs: &mut Vec<Pt>, selected_idxs: &Vec<usize>, rng:  &mut dyn rand::RngCore, hole_mask: &Array2<i16>) -> i64 {
-    let cur_dislikes = get_dislikes(&problem, &vs);
+fn shake(problem: &Problem, vs: &mut Vec<Pt>, selected_idxs: &[usize], rng:  &mut dyn rand::RngCore, hole_mask: &Array2<i16>) -> i64 {
+    let cur_dislikes = get_dislikes(problem, vs);
     for _ in 0..1 {
         for idx in selected_idxs.iter() {
             //dbg!(idx);
-            let perturbations = valid_positions(&problem, vs, *idx, hole_mask);
-            let mut non_worsening_perturbations = vec!{};
+            let perturbations = valid_positions(problem, vs, *idx, hole_mask);
+            let mut non_worsening_perturbations = vec![];
             let cur = vs[*idx];
             for pt in perturbations {
                 vs[*idx] = pt;
-                let dislikes = get_dislikes(&problem, &vs);
+                let dislikes = get_dislikes(problem, vs);
                 if dislikes <= cur_dislikes {
                     non_worsening_perturbations.push(pt);
                 }
@@ -115,7 +115,7 @@ fn shake(problem: &Problem, vs: &mut Vec<Pt>, selected_idxs: &Vec<usize>, rng:  
 
         }
     }
-    return cur_dislikes;
+    cur_dislikes
 }
 
 pub fn greedy_shake(r: &ShakeRequest) -> Vec<Pt> {

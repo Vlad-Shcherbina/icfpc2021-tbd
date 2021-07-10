@@ -14,14 +14,14 @@ struct Borders {
     max_y: i64,
 }
 
-fn borders(hole: &Vec<Pt>) -> Borders {
+fn borders(hole: &[Pt]) -> Borders {
     let (pt_min, pt_max) = bounding_box(hole).unwrap();
-    return Borders {
+    Borders {
         min_x: pt_min.x,
         max_x: pt_max.x,
         min_y: pt_min.y,
         max_y: pt_max.y
-    };
+    }
 }
 
 fn orig_distance(problem: &Problem, v1_id: usize, v2_id: usize) -> i64 {
@@ -30,10 +30,10 @@ fn orig_distance(problem: &Problem, v1_id: usize, v2_id: usize) -> i64 {
 
 fn deformation_limits(problem: &Problem, v1_id: usize, v2_id: usize) -> (i64, i64) {
     let orig_d2 = orig_distance(problem, v1_id, v2_id);
-    return crate::checker::length_range(orig_d2, problem.epsilon);
+    crate::checker::length_range(orig_d2, problem.epsilon)
 }
 
-fn available_positions(problem: &Problem, vertices: &Vec<Pt>, v_id: usize) -> Vec<Pt> {
+fn available_positions(problem: &Problem, vertices: &[Pt], v_id: usize) -> Vec<Pt> {
     let neighbours: Vec<_> = neighbours(&problem.figure.edges, v_id).collect();
     let borders = borders(&problem.hole);
     let mut available_positions = vec![];
@@ -47,7 +47,7 @@ fn available_positions(problem: &Problem, vertices: &Vec<Pt>, v_id: usize) -> Ve
 
             for n_id in &neighbours {
                 let n = vertices[*n_id];
-                let (min_dist, max_dist) = deformation_limits(&problem, v_id, *n_id);
+                let (min_dist, max_dist) = deformation_limits(problem, v_id, *n_id);
                 let new_dist = assumed_pos.dist2(n);
                 if !(min_dist <= new_dist && new_dist <= max_dist) {
                     // eprintln!("Drop {:?} by distance", assumed_pos);
@@ -61,7 +61,7 @@ fn available_positions(problem: &Problem, vertices: &Vec<Pt>, v_id: usize) -> Ve
             available_positions.push(assumed_pos);
         }
     }
-    return available_positions;
+    available_positions
 }
 
 pub fn mango_shake(r: &ShakeRequest) -> Vec<Pt> {
@@ -84,7 +84,7 @@ pub fn mango_shake(r: &ShakeRequest) -> Vec<Pt> {
             }
         }
         iteration_count += 1;
-        if success == true || iteration_count > 10 {
+        if success || iteration_count > 10 {
             return result;
         }
     }

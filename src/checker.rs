@@ -71,7 +71,7 @@ pub fn get_dislikes(problem: &Problem, vertices: &[Pt]) -> i64 {
     for &h in &problem.hole {
         dislikes += vertices.iter().map(|v| v.dist2(h)).min().unwrap();
     }
-    return dislikes;
+    dislikes
 }
 
 pub fn check_pose(problem: &Problem, pose: &Pose) -> CheckPoseResponse {
