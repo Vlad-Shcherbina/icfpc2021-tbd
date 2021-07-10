@@ -151,12 +151,12 @@ async function main() {
         assert(MOUSE_COORD != null)
         if (MOUSE_CLICK) {
             //console.log("Selecting vertex or focus", foci.expected, foci.selected.size);
-            if (foci.expected > foci.selected.size) {
-                select_focus([e.x, e.y]);
-            } else {
-                if (!e.ctrlKey && !e.shiftKey) selected = figure.vertices.map(_ => false);
-                select_vertex([e.x, e.y]);
-            }
+            // if (foci.expected > foci.selected.size) {
+            //     select_focus([e.x, e.y]);
+            // } else {
+            if (!e.ctrlKey && !e.shiftKey) selected = figure.vertices.map(_ => false);
+            select_vertex([e.x, e.y]);
+            // }
         }
         else {
             drag_point(MOUSE_COORD, e);
@@ -234,20 +234,17 @@ async function keyboard_handler(e: KeyboardEvent) {
     else if (e.code == "ArrowDown") dy = 1;
     else if (e.code == "ArrowLeft") dx = -1;
     else if (e.code == "ArrowRight") dx = +1;
-    else if (e.code == "KeyR") {
-        if (e.shiftKey) {
-            foci.expected = 0;
-            foci.selected = new Map();
-            return ctx_foci.clearRect(0, 0, canvas_foci.width, canvas_foci.height);
-        }
-        console.log("Expecting 1 focus")
-        foci.expected = 1;
-        check_for_enough_foci_and_send(Actions.Rotate);
-    }
-    else {
-        //console.log("No key found");
-        return;
-    }
+    // else if (e.code == "KeyR") {
+    //     if (e.shiftKey) {
+    //         foci.expected = 0;
+    //         foci.selected = new Map();
+    //         return ctx_foci.clearRect(0, 0, canvas_foci.width, canvas_foci.height);
+    //     }
+    //     console.log("Expecting 1 focus")
+    //     foci.expected = 1;
+    //     check_for_enough_foci_and_send(Actions.Rotate);
+    // }
+    else return;
     e.preventDefault();
     move_selected([dx, dy]);
     on_figure_change();
