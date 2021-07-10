@@ -92,11 +92,13 @@ async function main() {
 
     (document.getElementById('shake-button') as HTMLButtonElement).onclick = async function() {
         let shake_param = document.getElementById('shake-param') as HTMLInputElement;
+        let shake_method = document.getElementById('shake-method') as HTMLSelectElement;
         let req: ShakeRequest = {
-            param: parseInt(shake_param.value),
             problem: problem,
             vertices: figure.vertices,
             selected,
+            method: shake_method.value,
+            param: parseInt(shake_param.value),
         };
         let r = await fetch('/api/shake', {
             method: 'POST',

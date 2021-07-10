@@ -42,6 +42,7 @@ export interface ShakeRequest {
     problem: Problem,
     vertices: Pt[],
     selected: boolean[],
+    method: string,
     param: number,
 }
 
