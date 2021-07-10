@@ -326,13 +326,23 @@ function draw_circles() {
     ctx.strokeStyle = CLR_CIRCLES;
     for (let i of edges) {
         let start = figure.edges[i][0] == p ? figure.edges[i][1] : figure.edges[i][0];
-        let [cx, cy] = grid_to_screen(figure.vertices[start]);
+        let c = grid_to_screen(figure.vertices[start]);
         let status = server_check_result.edge_statuses[i];
-        ctx.beginPath();
-        ctx.ellipse(cx, cy, Math.sqrt(status.min_length) * dx, Math.sqrt(status.min_length) * dy, 0, 0, Math.PI * 2);
-        ctx.ellipse(cx, cy, Math.sqrt(status.max_length) * dx, Math.sqrt(status.max_length) * dy, 0, 0, Math.PI * 2);
-        ctx.stroke();
+        draw_circle(c, Math.sqrt(status.min_length) * dx, Math.sqrt(status.min_length) * dy, CLR_SHORT_EDGE, ctx);
+        draw_circle(c, Math.sqrt(status.max_length) * dx, Math.sqrt(status.max_length) * dy, CLR_LONG_EDGE, ctx);
     }
+}
+
+function draw_circle(c: Pt, r1: number, r2: number, color: string, ctx: CanvasRenderingContext2D) {
+    ctx.beginPath();
+    let prevStyle = ctx.strokeStyle;
+    let prevLineWidth = ctx.lineWidth
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 1;
+    ctx.ellipse(c[0], c[1], r1, r2, 0, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.strokeStyle = prevStyle;
+    ctx.lineWidth = prevLineWidth;
 }
 
 function draw_figure() {
