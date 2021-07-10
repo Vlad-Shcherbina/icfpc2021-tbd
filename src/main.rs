@@ -20,6 +20,7 @@ mod greedy;
 mod bonus_graph;
 mod ice;
 mod springs;
+mod threshold;
 
 #[linkme::distributed_slice]
 static ENTRY_POINTS: [(&'static str, fn())] = [..];
