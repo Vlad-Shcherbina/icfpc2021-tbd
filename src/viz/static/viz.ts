@@ -215,16 +215,6 @@ async function main() {
 
     document.getElementById("edge_too_long")!.style.color = CLR_LONG_EDGE;
     document.getElementById("edge_too_short")!.style.color = CLR_SHORT_EDGE;
-
-    (document.getElementById("select_all") as HTMLAnchorElement).onclick = () => {
-        selected = pose.vertices.map(_ => true);
-        draw_selected();
-    };
-
-    (document.getElementById("deselect_all") as HTMLAnchorElement).onclick = () => {
-        selected = pose.vertices.map(_ => false);
-        draw_selected();
-    };
 }
 
 main();
