@@ -1,6 +1,9 @@
 // A client library for their portal https://poses.live
 
+use std::collections::HashMap;
+
 use crate::prelude::*;
+use regex::Regex;
 
 const API_KEY: &str = "81acc597-be90-418c-90aa-0dfac878aeb0";
 
@@ -50,17 +53,32 @@ pub fn submit_pose(problem_id: i32, pose: &Pose) -> Result<String, String> {
 crate::entry_point!("scrape_poses", scrape_poses, _EP3);
 fn scrape_poses() {
     let agent = ureq::agent();
-    let page = agent.post("https://poses.live/login")
+    let _page = agent.post("https://poses.live/login")
          .set("Content-Type", "application/x-www-form-urlencoded")
          .send_string("login.email=jm%40memorici.de&login.password=uy2c92JKQAtSRfb").unwrap()
          .into_string().unwrap();
-    println!("{}", page);
     scrape_one_problem(&agent, 1);
 }
 
-fn scrape_one_problem(agent: &ureq::Agent, n: i32) {
+fn scrape_one_problem(agent: &ureq::Agent, n: i32) -> HashMap<String, i32> {
     let page = agent.get(&format!("https://poses.live/problems/{}", n))
          .call().unwrap().into_string().unwrap();
-    println!("{}", page);
-    // TODO: scrape html table from it
+
+    let mut poses = HashMap::new();
+
+    // yes, we use regex to parse HTML
+    let re = Regex::new("<tr><td><a href=\"/solutions/(.*?)\".*?</a></td><td>(\\d+)</td></tr>").unwrap();
+    for pose in re.captures_iter(&page) {
+        poses.insert(
+            pose.get(1).unwrap().as_str().to_string(),
+            pose.get(2).unwrap().as_str().parse::<i32>().unwrap()
+        );
+    }
+
+    poses
+
+    //for (id,dislikes) in &poses {
+    //    println!("{}, {}", id, dislikes);
+    //}
+
 }
