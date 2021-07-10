@@ -133,7 +133,9 @@ async function main() {
     document.getElementById('our-submissions')!.innerHTML =
         `<p><a href="https://poses.live/problems/${problem_no}">our submissions</a></p>`;
 
-    (document.getElementById('shake-button') as HTMLButtonElement).onclick = async function () {
+    let shake_button = document.getElementById('shake-button') as HTMLButtonElement;
+    shake_button.onclick = async function () {
+        shake_button.disabled = true;
         let shake_param = document.getElementById('shake-param') as HTMLInputElement;
         let shake_method = document.getElementById('shake-method') as HTMLSelectElement;
         let req: ShakeRequest = {
@@ -150,6 +152,7 @@ async function main() {
         assert(r.ok);
         pose.vertices = await r.json();
         assert(pose.vertices.length == problem.figure.vertices.length);
+        shake_button.disabled = false;
         on_figure_change();
     }
 
