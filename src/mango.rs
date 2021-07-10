@@ -33,45 +33,59 @@ fn deformation_limits(problem: &Problem, v1_id: usize, v2_id: usize) -> (i64, i6
     return crate::checker::length_range(orig_d2, problem.epsilon);
 }
 
-pub fn mango_shake(r: &ShakeRequest) -> Vec<Pt> {
-    eprintln!("Start mango shaking");
-    let rng = &mut rand::thread_rng();
-    let mut vs = r.vertices.clone();
-    assert_eq!(vs.len(), r.selected.len());
-    for v_id in 0..vs.len() {
-        if r.selected[v_id] {
-            let neighbours: Vec<_> = neighbours(&r.problem.figure.edges, v_id).collect();
-            let borders = borders(&r.problem.hole);
-            let mut availiable_positions = vec![];
-            for x in borders.min_x..=borders.max_x {
-                'l: for y in borders.min_y..=borders.max_y {
-                    let assumed_pos = Pt { x, y };
+fn available_positions(problem: &Problem, vertices: &Vec<Pt>, v_id: usize) -> Vec<Pt> {
+    let neighbours: Vec<_> = neighbours(&problem.figure.edges, v_id).collect();
+    let borders = borders(&problem.hole);
+    let mut available_positions = vec![];
+    for x in borders.min_x..=borders.max_x {
+        'l: for y in borders.min_y..=borders.max_y {
+            let assumed_pos = Pt { x, y };
 
-                    if assumed_pos == r.vertices[v_id] {
-                        continue 'l;
-                    }
+            if assumed_pos == vertices[v_id] {
+                continue 'l;
+            }
 
-                    for n_id in &neighbours {
-                        let n = vs[*n_id];
-                        let (min_dist, max_dist) = deformation_limits(&r.problem, v_id, *n_id);
-                        let new_dist = assumed_pos.dist2(n);
-                        if !(min_dist <= new_dist && new_dist <= max_dist) {
-                            // eprintln!("Drop {:?} by distance", assumed_pos);
-                            continue 'l;
-                        }
-                        if !segment_in_poly((n, assumed_pos), &r.problem.hole) {
-                            // eprintln!("Drop {:?} by intersection", assumed_pos);
-                            continue 'l;
-                        }
-                    }
-                    availiable_positions.push(assumed_pos);
+            for n_id in &neighbours {
+                let n = vertices[*n_id];
+                let (min_dist, max_dist) = deformation_limits(&problem, v_id, *n_id);
+                let new_dist = assumed_pos.dist2(n);
+                if !(min_dist <= new_dist && new_dist <= max_dist) {
+                    // eprintln!("Drop {:?} by distance", assumed_pos);
+                    continue 'l;
+                }
+                if !segment_in_poly((n, assumed_pos), &problem.hole) {
+                    // eprintln!("Drop {:?} by intersection", assumed_pos);
+                    continue 'l;
                 }
             }
-
-            if !availiable_positions.is_empty() {
-                vs[v_id] = *availiable_positions.choose(rng).unwrap();
-            }
+            available_positions.push(assumed_pos);
         }
     }
-    vs
+    return available_positions;
+}
+
+pub fn mango_shake(r: &ShakeRequest) -> Vec<Pt> {
+    let rng = &mut rand::thread_rng();
+    let mut result = r.vertices.clone();
+    let mut selected_idxs: Vec<_> = r.selected.iter().enumerate()
+        .filter(|(_, b)| **b)
+        .map(|(idx, _)| idx)
+        .collect();
+
+    let mut success = false;
+    let mut iteration_count = 0;
+    loop {
+        selected_idxs.shuffle(rng);
+        for v_id in &selected_idxs {
+            let available_positions = available_positions(&r.problem, &result, *v_id);
+            if !available_positions.is_empty() {
+                result[*v_id] = *available_positions.choose(rng).unwrap();
+                success = true;
+            }
+        }
+        iteration_count += 1;
+        if success == true || iteration_count > 10 {
+            return result;
+        }
+    }
 }
