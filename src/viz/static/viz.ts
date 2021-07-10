@@ -185,7 +185,7 @@ function on_figure_change() {
 }
 
 function keyboard_handler(e: KeyboardEvent) {
-    if (e.code == "KeyC") {
+    if (e.code == "KeyC" && !e.ctrlKey) {
         e.preventDefault();
         let circles_checkbox = document.getElementById("show_circles") as HTMLInputElement;
         circles_checkbox.checked = !circles_checkbox.checked;
