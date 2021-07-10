@@ -55,7 +55,7 @@ async function main() {
     figure = JSON.parse(JSON.stringify(problem.figure));
     selected = problem.figure.vertices.map(_ => false);
     frame = get_frame(problem);
-    draw_hole(problem.hole);
+    draw_hole();
     draw_grid(frame);
     // draw_shadow_figure();
     on_figure_change();
@@ -353,8 +353,9 @@ function draw_circle(c: CanvasPt, r1: number, r2: number, color: string, ctx: Ca
     ctx.beginPath();
     let prevStyle = ctx.strokeStyle;
     let prevLineWidth = ctx.lineWidth
+
     ctx.strokeStyle = color;
-    ctx.lineWidth = 1;
+    ctx.lineWidth = 0.3;
     ctx.ellipse(c[0], c[1], r1, r2, 0, 0, Math.PI * 2);
     ctx.stroke();
     ctx.strokeStyle = prevStyle;
