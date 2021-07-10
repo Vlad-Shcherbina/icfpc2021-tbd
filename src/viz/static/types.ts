@@ -2,13 +2,17 @@
 export type Pt = [number, number];
 export type Pair = [number, number];
 
+export type WindowPt = Pt;
+export type CanvasPt = Pt;
+export type GridPt = Pt;
+
 export interface Figure {
     edges: Pair[];
-    vertices: Pt[];
+    vertices: GridPt[];
 }
 
 export interface Problem {
-    hole: Pt[];
+    hole: GridPt[];
     figure: Figure;
     epsilon: number,
 }
@@ -29,7 +33,7 @@ export interface EdgeStatus {
 
 export interface CheckPoseRequest {
     problem: Problem,
-    vertices: Pt[],
+    vertices: GridPt[],
 }
 
 export interface CheckPoseResponse {
@@ -40,7 +44,7 @@ export interface CheckPoseResponse {
 
 export interface ShakeRequest {
     problem: Problem,
-    vertices: Pt[],
+    vertices: GridPt[],
     selected: boolean[],
     method: string,
     param: number,
@@ -68,12 +72,12 @@ export interface Universe {
 
 export interface Change {
     id: number,
-    destination: Pt;
+    destination: GridPt;
 }
 
 export interface Foci {
     expected: number;
-    selected: Map<string, Pt>;
+    selected: Map<string, GridPt>;
 }
 
 export enum Actions {

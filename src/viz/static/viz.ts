@@ -1,7 +1,8 @@
 // MAGIC HAPPENS AROUND LINE 70
 
 import assert from "./assert.js"
-import { Pt, Pair, Figure, Problem, Frame, Foci, 
+import { WindowPt, CanvasPt, GridPt,
+        Pt, Pair, Figure, Problem, Frame, Foci, 
         Actions, CheckPoseRequest, CheckPoseResponse,
         EdgeStatus, 
         ShakeRequest} from "./types.js"
@@ -125,7 +126,7 @@ async function main() {
 
     // canvas_figure.onmouseup = (e: MouseEvent) => {
     //     if (!e.ctrlKey && !e.shiftKey) selected = figure.vertices.map(_ => false);
-    //     select_point([e.x, e.y]);
+    //     select_vertex([e.x, e.y]);
     // }
 
     canvas_figure.onmousedown = (e: MouseEvent) => {
@@ -145,7 +146,7 @@ async function main() {
         assert(MOUSE_COORD != null)
         if (MOUSE_CLICK) {
             if (!e.ctrlKey && !e.shiftKey) selected = figure.vertices.map(_ => false);
-            select_point([e.x, e.y]);
+            select_vertex([e.x, e.y]);
         }
         else {
             drag_point(MOUSE_COORD, e);
@@ -181,7 +182,6 @@ function static_figure_change() {
 function on_figure_change() {
     static_figure_change();
     check_solution_on_server();
-    // запрос к серверу про состояние
 }
 
 function keyboard_handler(e: KeyboardEvent) {
@@ -259,28 +259,29 @@ function get_frame(p: Problem): Frame {
 }
 
 
-function grid_to_screen(p: Pt): Pt {
+function grid_to_canvas(p: GridPt): CanvasPt {
     let nx = Math.floor(dx * (p[0] - frame.min_x)) + 0.5;
     let ny = Math.floor(dy * (p[1] - frame.min_y)) + 0.5;
     return [nx, ny];
 }
 
-function screen_to_grid(p: Pt): Pt {
+function canvas_to_grid(p: CanvasPt): GridPt {
     let nx = Math.floor((p[0] - 0.5) / dx + frame.min_x);
     let ny = Math.floor((p[1] - 0.5) / dy + frame.min_y);
     return [nx, ny];
 }
 
-function draw_hole(hole: Pt[]) {
+function draw_hole() {
     canvas_hole.width = canvas_hole.width;
     let ctx = ctx_hole;
+    let hole = problem.hole;
     ctx.strokeStyle = CLR_HOLE;
     ctx.lineWidth = 2;
     ctx.beginPath();
-    let p = grid_to_screen(hole[hole.length - 1])
+    let p = grid_to_canvas(hole[hole.length - 1])
     ctx.moveTo(...p);
     for (let i = 0; i < hole.length; i++) {
-        let p = grid_to_screen(hole[i]);
+        let p = grid_to_canvas(hole[i]);
         ctx.lineTo(...p);
     }
     ctx.stroke();
@@ -341,14 +342,14 @@ function draw_circles() {
     ctx.strokeStyle = CLR_CIRCLES;
     for (let i of edges) {
         let start = figure.edges[i][0] == p ? figure.edges[i][1] : figure.edges[i][0];
-        let c = grid_to_screen(figure.vertices[start]);
+        let c = grid_to_canvas(figure.vertices[start]);
         let status = server_check_result.edge_statuses[i];
         draw_circle(c, Math.sqrt(status.min_length) * dx, Math.sqrt(status.min_length) * dy, CLR_SHORT_EDGE, ctx);
         draw_circle(c, Math.sqrt(status.max_length) * dx, Math.sqrt(status.max_length) * dy, CLR_LONG_EDGE, ctx);
     }
 }
 
-function draw_circle(c: Pt, r1: number, r2: number, color: string, ctx: CanvasRenderingContext2D) {
+function draw_circle(c: CanvasPt, r1: number, r2: number, color: string, ctx: CanvasRenderingContext2D) {
     ctx.beginPath();
     let prevStyle = ctx.strokeStyle;
     let prevLineWidth = ctx.lineWidth
@@ -384,8 +385,8 @@ function draw_figure() {
         }
 
         let [start, end] = figure.edges[i];
-        let p1 = grid_to_screen(figure.vertices[start])
-        let p2 = grid_to_screen(figure.vertices[end])
+        let p1 = grid_to_canvas(figure.vertices[start])
+        let p2 = grid_to_canvas(figure.vertices[end])
         ctx.beginPath();
         ctx.moveTo(p1[0], p1[1]);
         ctx.lineTo(p2[0], p2[1]);
@@ -426,7 +427,7 @@ function draw_grid(frame: Frame) {
     ctx.fillStyle = CLR_GRID;
     for (let x = frame.min_x; x < frame.max_x; x++) {
         for (let y = frame.min_y; y < frame.max_y; y++) {
-            let p = grid_to_screen([x, y]);
+            let p = grid_to_canvas([x, y]);
             ctx.beginPath();
             ctx.arc(p[0], p[1], 1, 0, 2 * Math.PI);
             ctx.fill();
@@ -438,7 +439,7 @@ function draw_selected() {
     let ctx = ctx_figure;
     for (let i = 0; i < selected.length; i++) {
         ctx.fillStyle = selected[i] ? CLR_SELECTED : CLR_DESELECTED;
-        let p = grid_to_screen(figure.vertices[i]);
+        let p = grid_to_canvas(figure.vertices[i]);
         ctx.beginPath();
         ctx.arc(p[0], p[1], 3, 0, 2 * Math.PI);
         ctx.fill();
@@ -447,7 +448,7 @@ function draw_selected() {
 }
 
 
-function move_selected([dx, dy]: Pt) {
+function move_selected([dx, dy]: GridPt) {
     for (let i = 0; i < selected.length; i++) {
         if (!selected[i]) continue;
         figure.vertices[i][0] += dx;
@@ -456,17 +457,17 @@ function move_selected([dx, dy]: Pt) {
 }
 
 
-function mouse_coords_to_canvas(mouse_coord: Pt): Pt {
+function mouse_coords_to_canvas(mouse_coord: WindowPt): CanvasPt {
     let r = canvas_figure.getBoundingClientRect();
     return [mouse_coord[0] - r.left, mouse_coord[1] - r.top];
 }
 
 const VERTEX_CHOOSE_SENSE = 10;
 
-function get_nearby_vertex_index(mouse_coord: Pt): number | null {
+function get_nearby_vertex_index(mouse_coord: WindowPt): number | null {
     let mp = mouse_coords_to_canvas(mouse_coord);
     for (let i = 0; i < figure.vertices.length; i++) {
-        let p = grid_to_screen(figure.vertices[i]);
+        let p = grid_to_canvas(figure.vertices[i]);
         if (Math.pow(p[0] - mp[0], 2) + Math.pow(p[1] - mp[1], 2) < Math.pow(VERTEX_CHOOSE_SENSE, 2)) {
             return i;
         }
@@ -474,9 +475,8 @@ function get_nearby_vertex_index(mouse_coord: Pt): number | null {
     return null;
 }
 
-// TODO: Rename to select_vertex_id
 // TODO: Return selected vertex_id for clarity of API
-function select_point(mouse_coord: Pt) {
+function select_vertex(mouse_coord: WindowPt) {
     let i = get_nearby_vertex_index(mouse_coord);
     if (i == null) return;
     selected[i] = !selected[i];
@@ -486,8 +486,10 @@ function select_point(mouse_coord: Pt) {
 
 
 // TODO: Implement for rotation
-function closest_grid_vertex(mouse_coord: Pt): Pt {
-    let [x, y] = screen_to_grid(mouse_coord);
+function closest_grid_vertex(mouse_coord: WindowPt): GridPt {
+    // for some reason using mouse_to_canvas makes it worse
+    // TODO: Check it
+    let [x, y] = canvas_to_grid(mouse_coord);
     return [Math.floor(x + 0.5), Math.floor(y + 0.5)];
 }
 
@@ -497,7 +499,7 @@ function draw_foci() {
 }
 
 // TODO: Implement for rotation
-function select_focus(mouse_coord: Pt) {
+function select_focus(mouse_coord: WindowPt) {
     let p = closest_grid_vertex(mouse_coord);
     let key = p[0] + "," + p[1];
     if (foci.selected.has(key)) {
