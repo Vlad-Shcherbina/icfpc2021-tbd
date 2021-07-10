@@ -12,7 +12,9 @@ mod viz;
 mod dev_server;
 mod checker;
 mod shake;
+mod graph;
 mod banana;
+mod mango;
 
 #[linkme::distributed_slice]
 static ENTRY_POINTS: [(&'static str, fn())] = [..];
