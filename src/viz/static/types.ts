@@ -38,6 +38,13 @@ export interface CheckPoseResponse {
     valid: boolean,
 }
 
+export interface ShakeRequest {
+    problem: Problem,
+    vertices: Pt[],
+    selected: boolean[],
+    param: number,
+}
+
 export type World = Problem;
 
 export enum Law {

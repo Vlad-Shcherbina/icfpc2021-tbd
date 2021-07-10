@@ -3,7 +3,8 @@
 import assert from "./assert.js"
 import { Pt, Pair, Figure, Problem, Frame, Foci, 
         Actions, CheckPoseRequest, CheckPoseResponse,
-        EdgeStatus } from "./types.js"
+        EdgeStatus, 
+        ShakeRequest} from "./types.js"
 
 let canvas_hole = document.getElementById("hole") as HTMLCanvasElement;
 let canvas_figure = document.getElementById("figure") as HTMLCanvasElement;
@@ -85,13 +86,31 @@ async function main() {
     document.getElementById('our-submissions')!.innerHTML =
         `<p><a href="https://poses.live/problems/${problem_no}">our submissions</a></p>`;
 
+    (document.getElementById('shake-button') as HTMLButtonElement).onclick = async function() {
+        let shake_param = document.getElementById('shake-param') as HTMLInputElement;
+        let req: ShakeRequest = {
+            param: parseInt(shake_param.value),
+            problem: problem,
+            vertices: figure.vertices,
+            selected,
+        };
+        let r = await fetch('/api/shake', {
+            method: 'POST',
+            body: new Blob([JSON.stringify(req)]),
+        });
+        assert(r.ok);
+        figure.vertices = await r.json();
+        assert(figure.vertices.length == problem.figure.vertices.length);
+        on_figure_change();
+    }
+
     // THIS IS WHERE THE MAGIC HAPPENS
 
     // Keyboard events
     document.onkeydown = keyboard_handler;
 
     // Mouse events
-    document.onmouseup = (e: MouseEvent) => {
+    canvas_figure.onmouseup = (e: MouseEvent) => {
         if (!e.ctrlKey) selected = figure.vertices.map(_ => false);
         select_point([e.x, e.y]);
     }
