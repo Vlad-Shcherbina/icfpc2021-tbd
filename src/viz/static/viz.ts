@@ -1,12 +1,22 @@
 // MAGIC HAPPENS AROUND LINE 70
 
 import assert from "./assert.js"
+<<<<<<< HEAD
 import { WindowPt, CanvasPt, GridPt,
         Pt, Pair, Figure, Problem, Frame, Foci, 
         Actions, CheckPoseRequest, CheckPoseResponse,
         EdgeStatus, 
         ShakeRequest,
         RotateRequest } from "./types.js"
+=======
+import {
+    WindowPt, CanvasPt, GridPt,
+    Pt, Pair, Figure, Problem, Frame, Foci,
+    Actions, CheckPoseRequest, CheckPoseResponse,
+    EdgeStatus,
+    ShakeRequest
+} from "./types.js"
+>>>>>>> Problem: No way to select pivot for rotation
 
 let canvas_hole = document.getElementById("hole") as HTMLCanvasElement;
 let ctx_hole = canvas_hole.getContext("2d")!;
@@ -14,6 +24,8 @@ let canvas_figure = document.getElementById("figure") as HTMLCanvasElement;
 let ctx_figure = canvas_figure.getContext("2d")!;
 let canvas_circles = document.getElementById("circles") as HTMLCanvasElement;
 let ctx_circles = canvas_circles.getContext("2d")!;
+let canvas_foci = document.getElementById("foci") as HTMLCanvasElement;
+let ctx_foci = canvas_circles.getContext("2d")!;
 // let canvas_f_init = document.getElementById("f_init") as HTMLCanvasElement;
 // let ctx_f_init = canvas_f_init.getContext("2d")!;
 let dx = 0;
@@ -28,6 +40,7 @@ const CLR_SELECTED = "#FFD800";
 const CLR_DESELECTED = "#222222";
 const CLR_GRID = "#BBBBBB";
 const CLR_CIRCLES = "#00FFFF";
+const CLR_FOCI = "#A96060";
 // const CLR_SHADOW_FIGURE = "#FF9B9B";
 
 async function get_problem(n: number): Promise<Problem> {
@@ -39,7 +52,7 @@ async function get_problem(n: number): Promise<Problem> {
 let problem: Problem;
 let figure: Figure;
 let frame: Frame;
-let foci: Foci;
+let foci: Foci = { expected: 0, selected: new Map() };
 let selected: boolean[] = [];
 let server_check_result: CheckPoseResponse | null = null;
 
@@ -95,7 +108,7 @@ async function main() {
     document.getElementById('our-submissions')!.innerHTML =
         `<p><a href="https://poses.live/problems/${problem_no}">our submissions</a></p>`;
 
-    (document.getElementById('shake-button') as HTMLButtonElement).onclick = async function() {
+    (document.getElementById('shake-button') as HTMLButtonElement).onclick = async function () {
         let shake_param = document.getElementById('shake-param') as HTMLInputElement;
         let shake_method = document.getElementById('shake-method') as HTMLSelectElement;
         let req: ShakeRequest = {
@@ -137,17 +150,22 @@ async function main() {
 
     canvas_figure.onmousemove = (e: MouseEvent) => {
         if (MOUSE_COORD == null) return;
-        console.log(e.x, e.y,  MOUSE_COORD.x, MOUSE_COORD.y);
+        console.log(e.x, e.y, MOUSE_COORD.x, MOUSE_COORD.y);
         if (Math.pow(e.x - MOUSE_COORD.x, 2) + Math.pow(e.y - MOUSE_COORD.y, 2) > MOUSE_SENSE * MOUSE_SENSE) {
             MOUSE_CLICK = false;
         }
     };
 
-    canvas_figure.onmouseup =  (e: MouseEvent) => {
+    canvas_figure.onmouseup = (e: MouseEvent) => {
         assert(MOUSE_COORD != null)
         if (MOUSE_CLICK) {
-            if (!e.ctrlKey && !e.shiftKey) selected = figure.vertices.map(_ => false);
-            select_vertex([e.x, e.y]);
+            //console.log("Selecting vertex or focus", foci.expected, foci.selected.size);
+            if (foci.expected > foci.selected.size) {
+                select_focus([e.x, e.y]);
+            } else {
+                if (!e.ctrlKey && !e.shiftKey) selected = figure.vertices.map(_ => false);
+                select_vertex([e.x, e.y]);
+            }
         }
         else {
             drag_point(MOUSE_COORD, e);
@@ -191,7 +209,7 @@ async function keyboard_handler(e: KeyboardEvent) {
         let circles_checkbox = document.getElementById("show_circles") as HTMLInputElement;
         circles_checkbox.checked = !circles_checkbox.checked;
         draw_circles();
-        return;      
+        return;
     }
 
     if (e.code == "KeyM" || e.code == "KeyN" && !e.ctrlKey) {
@@ -225,11 +243,20 @@ async function keyboard_handler(e: KeyboardEvent) {
     else if (e.code == "ArrowDown") dy = 1;
     else if (e.code == "ArrowLeft") dx = -1;
     else if (e.code == "ArrowRight") dx = +1;
-    else if (e.code == "r") {
+    else if (e.code == "KeyR") {
+        if (e.shiftKey) {
+            foci.expected = 0;
+            foci.selected = new Map();
+            return ctx_foci.clearRect(0, 0, canvas_foci.width, canvas_foci.height);
+        }
+        console.log("Expecting 1 focus")
         foci.expected = 1;
         check_for_enough_foci_and_send(Actions.Rotate);
     }
-    else return;
+    else {
+        //console.log("No key found");
+        return;
+    }
     e.preventDefault();
     move_selected([dx, dy]);
     on_figure_change();
@@ -361,7 +388,7 @@ function draw_circles() {
     let edges = []
     for (let i = 0; i < figure.edges.length; ++i) {
         if (figure.edges[i][0] == p || figure.edges[i][1] == p)
-        edges.push(i);
+            edges.push(i);
     }
 
     let ctx = ctx_circles;
@@ -423,13 +450,10 @@ function draw_figure() {
             assert(server_check_result != null);
             ctx.fillStyle = "#444444";
             let [mx, my] = [(p1[0] + p2[0]) / 2, (p1[1] + p2[1]) / 2];
-            ctx.fillText(`${
-                server_check_result.edge_statuses[i].actual_length
-            } (${
-                server_check_result.edge_statuses[i].min_length
-            } : ${
-                server_check_result.edge_statuses[i].max_length
-            })`, mx, my);
+            ctx.fillText(`${server_check_result.edge_statuses[i].actual_length
+                } (${server_check_result.edge_statuses[i].min_length
+                } : ${server_check_result.edge_statuses[i].max_length
+                })`, mx, my);
         }
     }
 }
@@ -510,9 +534,6 @@ function select_vertex(mouse_coord: WindowPt) {
     draw_selected();
 }
 
-
-
-// TODO: Implement for rotation
 function closest_grid_vertex(mouse_coord: WindowPt): GridPt {
     // for some reason using mouse_to_canvas makes it worse
     // TODO: Check it
@@ -520,13 +541,24 @@ function closest_grid_vertex(mouse_coord: WindowPt): GridPt {
     return [Math.floor(x + 0.5), Math.floor(y + 0.5)];
 }
 
-// TODO: Implement for rotation
 function draw_foci() {
-    return { error: "not implemented" };
+    console.log("Drawing foci");
+    let ctx = ctx_foci;
+    const fs0 = ctx.fillStyle;
+    ctx.fillStyle = CLR_FOCI;
+    foci.selected.forEach((v: Pt, _k: string) => {
+        //console.log("Handling", v);
+        let p = grid_to_canvas(v);
+        //console.log("It becomes", p)
+        ctx.rect(p[0] - 3, p[1] - 3, 6, 6);
+        ctx.fill();
+    })
+    ctx.fillStyle = fs0;
 }
 
 // TODO: Implement for rotation
 function select_focus(mouse_coord: WindowPt) {
+    console.log("Selecting focus");
     let p = closest_grid_vertex(mouse_coord);
     let key = p[0] + "," + p[1];
     if (foci.selected.has(key)) {
@@ -536,4 +568,3 @@ function select_focus(mouse_coord: WindowPt) {
     }
     draw_foci();
 }
-
