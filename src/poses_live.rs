@@ -17,7 +17,7 @@ fn poses_live_demo() {
 
 crate::entry_point!("submit_example", submit_example, _EP2);
 fn submit_example() {
-    match submit_pose(1, &Pose { vertices: vec![], bonuses: None }) {
+    match submit_pose(1, &Pose { vertices: vec![], bonuses: vec![] }) {
         Ok(pose_id) => eprintln!("https://poses.live/solutions/{}", pose_id),
         Err(e) => eprintln!("{}", e),
     }

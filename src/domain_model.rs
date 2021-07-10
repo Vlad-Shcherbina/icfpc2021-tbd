@@ -46,7 +46,7 @@ pub struct PoseBonus {
 #[derive(serde::Deserialize, serde::Serialize)]
 #[derive(Debug)]
 pub struct Pose {
-    pub bonuses: Option<Vec<PoseBonus>>,
+    pub bonuses: Vec<PoseBonus>,
     pub vertices: Vec<Pt>,
 }
 

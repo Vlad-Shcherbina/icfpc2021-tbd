@@ -59,7 +59,7 @@ pub fn greedy_shake(r: &ShakeRequest) -> Vec<Pt> {
     let mut rng = rand::thread_rng();
 
     let expand = |vs: &mut Vec<Pt>| {
-        let pr = check_pose(&r.problem, &Pose { vertices: vs.clone(), bonuses: None });
+        let pr = check_pose(&r.problem, &Pose { vertices: vs.clone(), bonuses: vec![] });
         assert!(pr.valid);
         let mut prev_dislikes = pr.dislikes;
         let mut cur_dislikes = pr.dislikes;
@@ -72,7 +72,7 @@ pub fn greedy_shake(r: &ShakeRequest) -> Vec<Pt> {
                         if dx == 0 && dy == 0 { continue };
                         let cur = vs[*idx];
                         vs[*idx] = Pt{x: cur.x + dx, y: cur.y + dy};
-                        let pr = check_pose(&r.problem, &Pose { vertices: vs.clone(), bonuses: None });
+                        let pr = check_pose(&r.problem, &Pose { vertices: vs.clone(), bonuses: vec![] });
                         if pr.valid && pr.dislikes < cur_dislikes {
                             cur_dislikes = pr.dislikes;
                         } else {
@@ -90,7 +90,7 @@ pub fn greedy_shake(r: &ShakeRequest) -> Vec<Pt> {
     };
 
     let shake = |vs: &mut Vec<Pt>, rng:  &mut dyn rand::RngCore| -> i64 {
-        let pr = check_pose(&r.problem, &Pose { vertices: vs.clone(), bonuses: None });
+        let pr = check_pose(&r.problem, &Pose { vertices: vs.clone(), bonuses: vec![] });
         assert!(pr.valid);
         let mut cur_dislikes = pr.dislikes;
         for _ in 0..1 {
@@ -107,7 +107,7 @@ pub fn greedy_shake(r: &ShakeRequest) -> Vec<Pt> {
                 let new_pos = perturbations.choose(rng).unwrap();
                 let cur = vs[*idx];
                 vs[*idx] = *new_pos;
-                let pr = check_pose(&r.problem, &Pose { vertices: vs.clone(), bonuses: None });
+                let pr = check_pose(&r.problem, &Pose { vertices: vs.clone(), bonuses: vec![] });
                 // Here we allow perturbations that don't reduce dislikes.
                 if pr.valid && pr.dislikes <= cur_dislikes {
                     cur_dislikes = pr.dislikes;
@@ -121,7 +121,7 @@ pub fn greedy_shake(r: &ShakeRequest) -> Vec<Pt> {
 
     let mut cur_vs = r.vertices.clone();
 
-    let pr = check_pose(&r.problem, &Pose { vertices: cur_vs.clone(), bonuses: None });
+    let pr = check_pose(&r.problem, &Pose { vertices: cur_vs.clone(), bonuses: vec![] });
     if !pr.valid {
         dbg!("invalid pose passed to greedy shake");
         return cur_vs;

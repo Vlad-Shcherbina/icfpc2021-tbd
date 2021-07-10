@@ -13,6 +13,7 @@ pub struct CheckPoseResponse {
     pub edge_statuses: Vec<EdgeStatus>,
     pub dislikes: i64,
     pub valid: bool,
+    pub unlocked: Vec<bool>,
 }
 
 #[derive(serde::Serialize)]
@@ -45,6 +46,7 @@ pub fn check_pose(problem: &Problem, pose: &Pose) -> CheckPoseResponse {
 
     let mut edge_statuses = vec![];
     let mut valid = true;
+    let mut unlocked = vec![];
     for &(start, end) in &problem.figure.edges {
         let pt1 = vertices[start];
         let pt2 = vertices[end];
@@ -64,6 +66,10 @@ pub fn check_pose(problem: &Problem, pose: &Pose) -> CheckPoseResponse {
         edge_statuses.push(es);
     }
 
+    for _b in &problem.bonuses {
+        unlocked.push(false);
+    }
+
     let mut dislikes = 0;
     for &h in &problem.hole {
         dislikes += vertices.iter().map(|v| v.dist2(h)).min().unwrap();
@@ -73,6 +79,7 @@ pub fn check_pose(problem: &Problem, pose: &Pose) -> CheckPoseResponse {
         edge_statuses,
         dislikes,
         valid,
+        unlocked,
     }
 }
 
@@ -81,7 +88,7 @@ fn test_check_pose() {
     let p = crate::util::load_problem("1");
     let pose = Pose {
         vertices: p.figure.vertices.clone(),
-        bonuses: None,
+        bonuses: vec![],
     };
     dbg!(check_pose(&p, &pose));
 }

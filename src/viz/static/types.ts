@@ -63,6 +63,7 @@ export interface CheckPoseResponse {
     edge_statuses: EdgeStatus[],
     dislikes: number,
     valid: boolean,
+    unlocked: boolean[],
 }
 
 export interface ShakeRequest {

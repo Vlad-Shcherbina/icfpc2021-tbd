@@ -79,12 +79,18 @@ async function main() {
     draw_grid(frame);
     on_figure_change();
 
-    document.getElementById('problem-stats')!.innerHTML = `
+    let problem_stats = document.getElementById('problem-stats')!;
+    problem_stats.innerHTML = `
     Problem #${problem_no}: <br>
     ${problem.figure.vertices.length} vertices,
     ${problem.figure.edges.length} edges,
-    epsilon = ${problem.epsilon}
-    `;
+    epsilon = ${problem.epsilon},
+    bonuses = [ `;
+    for (let b of problem.bonuses) {
+        problem_stats.innerHTML += `${b.bonus} for ${b.problem} `;
+    }
+    problem_stats.innerHTML += "]";
+
 
     let solution = document.getElementById('solution') as HTMLTextAreaElement;
     solution.onkeyup = () => {
@@ -226,7 +232,7 @@ function static_figure_change() {
     draw_selected();
     let solution = document.getElementById('solution') as HTMLTextAreaElement;
     solution.value = JSON.stringify({ vertices: state.pose.vertices }, null, 2);
-    show_dislikes();
+    show_dislikes_and_bonuses();
 }
 
 
@@ -372,10 +378,17 @@ function draw_hole() {
     let ctx = ctx_hole;
 
     for (let p of problem.bonuses) {
-        console.log(p);
         let [px, py] = grid_to_canvas(p.position);
         const r = 10;
-        ctx.fillStyle = CLR_BREAK_TARGET;
+        if (p.bonus == "GLOBALIST") {
+            ctx.fillStyle = CLR_GLOB_TARGET;
+        }
+        else if (p.bonus == "BREAK_A_LEG") {
+            ctx.fillStyle == CLR_BREAK_TARGET;
+        }
+        else {
+            assert(false, p.bonus);
+        }
         ctx.beginPath();
         ctx.arc(px, py, r, 0, 2 * Math.PI);
         ctx.fill();
@@ -514,17 +527,27 @@ function draw_foci() {
 }
 
 
-function show_dislikes() {
+function show_dislikes_and_bonuses() {
     let txt = document.getElementById("score")! as HTMLParagraphElement;
     txt.innerHTML = "Dislikes: ";
     if (server_check_result == null) {
         txt.innerHTML += "waiting...";
         return;
     }
-    txt.innerHTML += `${server_check_result.dislikes}`;
+    txt.innerHTML += `${server_check_result.dislikes} `;
+    let extra = false;
     if (!server_check_result.valid) {
-        txt.innerHTML += " (not valid)";
+        txt.innerHTML += " (not valid";
+        extra = true;
     }
+    for (let i = 0; i < problem.bonuses.length; ++i) {
+        if (server_check_result.unlocked[i]) {
+            txt.innerHTML += extra ? ", " : "(";
+            txt.innerHTML += `${problem.bonuses[i].problem} unlocked`;
+            extra = true;
+        }
+    }
+    if (extra) txt.innerHTML += ")";
 }
 
 
