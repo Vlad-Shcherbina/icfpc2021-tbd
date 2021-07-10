@@ -73,6 +73,15 @@ async function main() {
         draw_figure();
     };
 
+    let submit_button = document.getElementById('submit-button') as HTMLButtonElement;
+    let submit_result = document.getElementById('submit-result')!;
+    submit_button.onclick = async function () {
+        submit_result.innerText = 'submitting ...';
+        let r = await fetch('/submit/' + problem_no, { method: 'POST' });
+        assert(r.ok);
+        submit_result.innerText = await r.text();
+    };
+
     // THIS IS WHERE THE MAGIC HAPPENS
     document.onmouseup = (e: MouseEvent) => {
         if (!e.ctrlKey) selected = figure.vertices.map(_ => false);

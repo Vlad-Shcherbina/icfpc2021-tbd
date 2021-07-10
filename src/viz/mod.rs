@@ -14,7 +14,7 @@ fn viz_server() {
     let addr = "127.0.0.1:8000";
     let listener = TcpListener::bind(addr).unwrap();
     eprintln!("Don't forget to run tsc --watch!");
-    eprintln!("listening http://{} ...", addr);
+    eprintln!("listening on http://{} ...", addr);
 
     serve_forever(listener, || {
         let state = Arc::clone(&state);
@@ -31,6 +31,14 @@ fn handler(_state: &Mutex<ServerState>, req: &Request, resp: ResponseBuilder) ->
             .body("");
     }
 
+    if let Some(problem_id) = req.path.strip_prefix("/submit/") {
+        assert_eq!(req.method, "POST");
+        let problem_id: i32 = problem_id.parse().unwrap();
+
+        return resp.code("200 OK")
+            .body(format!("mock submitted {}", problem_id));
+    }
+
     static_handler(req, resp)
 }
 
@@ -45,6 +53,7 @@ fn static_handler(req: &Request, resp: ResponseBuilder) -> HandlerResult {
                 "css" => "text/css",
                 "js" => "application/javascript",
                 "map" => "text/plain",
+                "problem" => "application/json",
                 _ => {
                     eprintln!("warning: unknown file extension {}", pth.to_string_lossy());
                     eprintln!("serving as text/plain");
