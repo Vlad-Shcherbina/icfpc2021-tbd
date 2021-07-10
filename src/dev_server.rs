@@ -205,6 +205,25 @@ impl ResponseHeadersBuilder {
         self.stream.write_all(body)?;
         Ok(Some(self.stream))
     }
+
+    pub fn sse(mut self) -> std::io::Result<SSE> {
+        write!(self.buf, "Cache-Control: no-cache\r\nContent-Type: text/event-stream\r\n\r\n").unwrap();
+        self.stream.write_all(&self.buf)?;
+        Ok(SSE { stream: self.stream })
+    }
+}
+
+#[must_use]
+pub struct SSE {
+    pub stream: TcpStream,
+}
+
+impl SSE {
+    pub fn message(&mut self) -> std::io::Result<()> {
+        write!(self.stream, "data: hello\n\n")?;
+        self.stream.flush()?;
+        Ok(())
+    }
 }
 
 // What we get when we complete the request.

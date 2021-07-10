@@ -1,0 +1,14 @@
+<script>
+  let event_source = new EventSource('/sse');
+  // event_source.addEventListener('append', function(e) {
+  //   console.log(e.data)
+  //   document.write(JSON.parse(e.data));
+  // });
+  event_source.onmessage = function(message) {
+    console.log('message', message);
+  }
+  event_source.onerror = function(err) {
+    console.log('error', err);
+    event_source.close();
+  };
+</script>
