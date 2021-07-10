@@ -21,6 +21,7 @@ mod bonus_graph;
 mod ice;
 mod springs;
 mod threshold;
+mod daiquiri;
 
 #[linkme::distributed_slice]
 static ENTRY_POINTS: [(&'static str, fn())] = [..];

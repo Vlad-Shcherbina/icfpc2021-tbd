@@ -19,6 +19,7 @@ pub fn shake(r: &ShakeRequest) -> Vec<Pt> {
         "greedy" => crate::greedy::greedy_shake(r),
         "springs" => crate::springs::springs(r),
         "threshold" => crate::threshold::threshold_shake(r),
+        "daiquiri" => crate::daiquiri::daikuiri_shake(r),
         s => panic!("{:?}", s),
     }
 }
