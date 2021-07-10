@@ -63,7 +63,7 @@ impl Solver for RandomSolver {
 
             dbg!(cnt);
             dbg!(&pose);
-            solution = Some(Pose { vertices: pose, bonuses: vec![] });
+            solution = Some(Pose { vertices: pose, bonuses: None });
             break;
         }
         Ok(solution.unwrap())

@@ -15,6 +15,7 @@ export interface Problem {
     hole: GridPt[];
     figure: Figure;
     epsilon: number,
+    bonuses: ProblemBonus
 }
 
 export interface Frame {
@@ -31,9 +32,21 @@ export interface EdgeStatus {
     max_length: number,
 }
 
+export interface ProblemBonus {
+    bonus: string,
+    problem: number,
+    position: GridPt,
+}
+
+export interface PoseBonus {
+    bonus: string,
+    problem: number,
+}
+
 export interface CheckPoseRequest {
     problem: Problem,
     vertices: GridPt[],
+    bonuses: PoseBonus[] | null,
 }
 
 export interface CheckPoseResponse {
