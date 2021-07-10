@@ -37,7 +37,7 @@ const CLR_HOLE = "#777777";
 const CLR_OK_EDGE = "#007F0E";
 const CLR_SHORT_EDGE = "#B200FF";
 const CLR_LONG_EDGE = "#D10000";
-const CLR_SELECTED = "#FFD800";
+const CLR_SELECTED = "#FF6A00";
 const CLR_DESELECTED = "#222222";
 const CLR_GRID = "#BBBBBB";
 const CLR_CIRCLES = "#00FFFF";
@@ -45,6 +45,7 @@ const CLR_FOCI = "#A96060";
 const CLR_SELECTION_BOUNDARY = "#999999";
 const CLR_GLOB_TARGET = "#FFFF00";
 const CLR_BREAK_TARGET = "#00FFFF";
+const CLR_NEARBY_VERTEX = "#FFD800"
 
 async function get_problem(n: number): Promise<Problem> {
     const response = await fetch(`/data/problems/${n}.problem`);
@@ -159,23 +160,33 @@ async function main() {
         mouse_dragging = false;
     };
 
+    let last_nearby: number | null = null;
     canvas_figure.onmousemove = (e: MouseEvent) => {
         if (mouse_coord == null) {
-            // TODO: show vertex to be selected
+            // mouse is not down, show the closest vertex
+            if (last_nearby != null) {
+                draw_one_vertex(last_nearby, selected[last_nearby] ? CLR_SELECTED : CLR_DESELECTED);
+            }
+            last_nearby = get_nearby_vertex_index([e.x, e.y]);
+            if (last_nearby != null) draw_one_vertex(last_nearby, CLR_NEARBY_VERTEX);
             return;
         }
         if (mouse_dragging) {
+            // mouse is down and is being drugged
             if (dragged_vertex == null) {
+                // started from vertex - drag it somewhere else
                 if (!e.ctrlKey && !e.shiftKey) selected = pose.vertices.map(_ => false);
                 select_range(mouse_coord, [e.x, e.y]);
             }
             else {
-                drag_vertex(mouse_coord, [e.x, e.y]);
+                // started from no vertex - selection bound
+                drag_vertex([e.x, e.y]);
                 mouse_coord = [e.x, e.y];
             }
             return;
         }
         if (Math.pow(e.x - mouse_coord[0], 2) + Math.pow(e.y - mouse_coord[1], 2) > DRAG_TRIGGER_SENSE_SQUARED) {
+            // it's now officially dragging, not click
             mouse_dragging = true;
             start_dragging_vertex(mouse_coord);
         }
@@ -461,17 +472,19 @@ function draw_figure() {
 
 
 function draw_selected() {
-    let ctx = ctx_figure;
     for (let i = 0; i < selected.length; i++) {
-        ctx.fillStyle = selected[i] ? CLR_SELECTED : CLR_DESELECTED;
-        let p = grid_to_canvas(pose.vertices[i]);
-        ctx.beginPath();
-        ctx.arc(p[0], p[1], 3, 0, 2 * Math.PI);
-        ctx.fill();
+        draw_one_vertex(i, selected[i] ? CLR_SELECTED : CLR_DESELECTED);
     }
     draw_circles();
 }
 
+function draw_one_vertex(i: number, clr: string) {
+    ctx_figure.fillStyle = clr;
+    let p = grid_to_canvas(pose.vertices[i]);
+    ctx_figure.beginPath();
+    ctx_figure.arc(p[0], p[1], 3, 0, 2 * Math.PI);
+    ctx_figure.fill();
+}
 
 function draw_circles() {
     canvas_circles.width = canvas_circles.width
@@ -643,7 +656,7 @@ function start_dragging_vertex(from: WindowPt)  {
     dragged_vertex = get_nearby_vertex_index(from);
 }
 
-function drag_vertex(from: WindowPt, to: WindowPt) {
+function drag_vertex(to: WindowPt) {
     if (dragged_vertex == null) return;
     let q = closest_grid_vertex(to);
     pose.vertices[dragged_vertex] = q;
