@@ -4,7 +4,7 @@ use crate::shake::ShakeRequest;
 use crate::prelude::{Pt, Problem};
 use crate::graph::neighbours;
 use std::cmp::max;
-use crate::geom::segment_in_poly;
+use crate::geom::{segment_in_poly, bounding_box};
 use rand::prelude::SliceRandom;
 
 struct Borders {
@@ -15,15 +15,12 @@ struct Borders {
 }
 
 fn borders(hole: &Vec<Pt>) -> Borders {
-    let min_x = hole.iter().map(|pt| pt.x).min().unwrap();
-    let max_x = hole.iter().map(|pt| pt.x).max().unwrap();
-    let min_y = hole.iter().map(|pt| pt.x).min().unwrap();
-    let max_y = hole.iter().map(|pt| pt.x).max().unwrap();
+    let (pt_min, pt_max) = bounding_box(hole).unwrap();
     return Borders {
-        min_x,
-        max_x,
-        min_y,
-        max_y
+        min_x: pt_min.x,
+        max_x: pt_max.x,
+        min_y: pt_min.y,
+        max_y: pt_max.y
     };
 }
 

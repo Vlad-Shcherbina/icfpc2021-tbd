@@ -283,6 +283,33 @@ pub fn rotate_poly(poly: &[Pt], pivot: Pt, angle: i16) -> Vec<Pt> {
     return poly.iter().map(|pt| rotate_point(*pt, pivot, angle)).collect::<Vec<Pt>>()
 }
 
+pub fn bounding_box(points: &[Pt]) -> Option<(Pt, Pt)> {
+    let mut first = true;
+    let mut x_min = -1;
+    let mut x_max = -1;
+    let mut y_min = -1;
+    let mut y_max = -1;
+    for pt in points {
+        if first {
+            x_min = pt.x;
+            x_max = pt.x;
+            y_min = pt.y;
+            y_max = pt.y;
+            first = false;
+        } else {
+            x_min = x_min.min(pt.x);
+            x_max = x_max.max(pt.x);
+            y_min = y_min.min(pt.y);
+            y_max = y_max.max(pt.y);
+       }
+    }
+    if first {
+        None
+    } else {
+        Some((Pt::new(x_min, y_min), Pt::new(x_max, y_max)))
+    }
+}
+
 #[test]
 fn test_rotate_point() {
     assert_eq!(rotate_point(Pt::new(10,10), Pt::new(10,11), 180), Pt::new(10, 12));
@@ -306,4 +333,11 @@ fn test_rotate_poly() {
     ];
     assert_eq!(rotate_poly(quad, Pt::new(10,10), 0), quad);
     assert_eq!(rotate_poly(quad, Pt::new(10,10), 180), expected);
+}
+
+#[test]
+fn test_bounding_box() {
+    assert_eq!(bounding_box(&vec!{}), None);
+    assert_eq!(bounding_box(&vec!{Pt::new(1, 3)}), Some((Pt::new(1, 3), Pt::new(1,3))));
+    assert_eq!(bounding_box(&vec!{Pt::new(1, 3), Pt::new(0, 4)}), Some((Pt::new(0, 3), Pt::new(1,4))));
 }
