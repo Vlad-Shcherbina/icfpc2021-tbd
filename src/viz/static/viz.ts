@@ -234,7 +234,7 @@ function static_figure_change() {
     draw_figure();
     draw_selected();
     let solution = document.getElementById('solution') as HTMLTextAreaElement;
-    solution.value = JSON.stringify({ vertices: pose.vertices }, null, 2);
+    solution.value = JSON.stringify(pose, null, 2);
     show_dislikes_and_bonuses();
 }
 
