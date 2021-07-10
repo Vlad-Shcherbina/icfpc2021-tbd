@@ -35,6 +35,7 @@ export interface CheckPoseRequest {
 export interface CheckPoseResponse {
     edge_statuses: EdgeStatus[],
     dislikes: number,
+    valid: boolean,
 }
 
 export type World = Problem;
