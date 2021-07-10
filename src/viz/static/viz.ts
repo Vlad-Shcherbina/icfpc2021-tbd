@@ -60,7 +60,7 @@ let history: Pose[] = [];
 let frame: Frame;
 let foci: Foci = { expected: 0, selected: new Map() };
 let selected: boolean[] = [];
-let server_check_result: CheckPoseResponse | null = null;
+let server_check_result: CheckPoseResponse;
 
 async function main() {
     window.addEventListener('hashchange', () => location.reload());
@@ -78,6 +78,7 @@ async function main() {
     frame = get_frame(problem);
     draw_hole();
     draw_grid(frame);
+    await check_solution_on_server();
     on_figure_change();
 
     let problem_stats = document.getElementById('problem-stats')!;
@@ -223,10 +224,9 @@ main();
 
 // Request server for info
 function on_figure_change() {
-    console.log(pose);
     history.push(JSON.parse(JSON.stringify(pose)));
-    static_figure_change();
     check_solution_on_server();
+    static_figure_change();
 }
 
 // Redraw without server requests
@@ -425,19 +425,17 @@ function draw_figure() {
         let ok_length = true;
         ctx.setLineDash([]);
         ctx.strokeStyle = CLR_OK_EDGE;
-        if (server_check_result != null) {
-            let status = server_check_result.edge_statuses[i];
-            if (!status.fits_in_hole) {
-                ctx.setLineDash([3, 3]);
-            }
-            if (status.actual_length > status.max_length) {
-                ctx.strokeStyle = CLR_LONG_EDGE;
-                ok_length = false;
-            }
-            if (status.actual_length < status.min_length) {
-                ctx.strokeStyle = CLR_SHORT_EDGE;
-                ok_length = false;
-            }
+        let status = server_check_result.edge_statuses[i];
+        if (!status.fits_in_hole) {
+            ctx.setLineDash([3, 3]);
+        }
+        if (status.actual_length > status.max_length) {
+            ctx.strokeStyle = CLR_LONG_EDGE;
+            ok_length = false;
+        }
+        if (status.actual_length < status.min_length) {
+            ctx.strokeStyle = CLR_SHORT_EDGE;
+            ok_length = false;
         }
 
         let [start, end] = edges[i];
@@ -449,13 +447,9 @@ function draw_figure() {
         ctx.stroke();
         if (!ok_length) {
             // show limits as text
-            assert(server_check_result != null);
             ctx.fillStyle = "#444444";
             let [mx, my] = [(p1[0] + p2[0]) / 2, (p1[1] + p2[1]) / 2];
-            ctx.fillText(`${server_check_result.edge_statuses[i].actual_length
-                } (${server_check_result.edge_statuses[i].min_length
-                } : ${server_check_result.edge_statuses[i].max_length
-                })`, mx, my);
+            ctx.fillText(`${status.actual_length} (${status.min_length} : ${status.max_length})`, mx, my);
         }
     }
 }
@@ -477,8 +471,7 @@ function draw_one_vertex(i: number, clr: string) {
 }
 
 function draw_circles() {
-    canvas_circles.width = canvas_circles.width
-    if (server_check_result == null) return;
+    canvas_circles.width = canvas_circles.width;
     let checkbox = document.getElementById("show_circles") as HTMLInputElement;
     if (!checkbox.checked) return;
 
@@ -542,10 +535,6 @@ function draw_foci() {
 function show_dislikes_and_bonuses() {
     let txt = document.getElementById("score")! as HTMLParagraphElement;
     txt.innerHTML = "Dislikes: ";
-    if (server_check_result == null) {
-        txt.innerHTML += "waiting...";
-        return;
-    }
     txt.innerHTML += `${server_check_result.dislikes} `;
     let extra = false;
     if (!server_check_result.valid) {
