@@ -23,11 +23,6 @@ export interface Pose {
     bonuses: PoseBonus[],
 }
 
-export interface VizState {
-    pose: Pose,
-    edges: Pair[],
-}
-
 export interface Frame {
     min_x: number,
     max_x: number,

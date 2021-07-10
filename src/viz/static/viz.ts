@@ -3,7 +3,7 @@
 import assert from "./assert.js"
 import {
     WindowPt, CanvasPt, GridPt,
-    Pt, Pair, Figure, Problem, Frame, Foci, VizState,
+    Pt, Pair, Figure, Problem, Frame, Foci, Pose,
     Actions, CheckPoseRequest, CheckPoseResponse, RotateRequest,
     ShakeRequest
 } from "./types.js"
@@ -54,7 +54,8 @@ async function get_problem(n: number): Promise<Problem> {
 
 let problem: Problem;
 // let figure: Figure;
-let state: VizState;
+let pose: Pose;
+let history: Pose[] = [];
 let frame: Frame;
 let foci: Foci = { expected: 0, selected: new Map() };
 let selected: boolean[] = [];
@@ -70,9 +71,8 @@ async function main() {
     }
 
     problem = await get_problem(problem_no);
-    state = { pose: { vertices: JSON.parse(JSON.stringify(problem.figure.vertices)),
-                      bonuses: [] },
-              edges: JSON.parse(JSON.stringify(problem.figure.edges)) };
+    pose = { vertices: JSON.parse(JSON.stringify(problem.figure.vertices)),
+              bonuses: [] };
     selected = problem.figure.vertices.map(_ => false);
     frame = get_frame(problem);
     draw_hole();
@@ -95,9 +95,9 @@ async function main() {
     let solution = document.getElementById('solution') as HTMLTextAreaElement;
     solution.onkeyup = () => {
         // console.log(solution.value);
-        state.pose.vertices = JSON.parse(solution.value!).vertices;
+        pose.vertices = JSON.parse(solution.value!).vertices;
         // console.log(figure.vertices.length, problem.figure.vertices.length);
-        assert(state.pose.vertices.length == problem.figure.vertices.length);
+        assert(pose.vertices.length == problem.figure.vertices.length);
         // console.dir(figure.vertices);
         on_figure_change();
     };
@@ -124,7 +124,7 @@ async function main() {
         let shake_method = document.getElementById('shake-method') as HTMLSelectElement;
         let req: ShakeRequest = {
             problem: problem,
-            vertices: state.pose.vertices,
+            vertices: pose.vertices,
             selected,
             method: shake_method.value,
             param: parseInt(shake_param.value),
@@ -134,8 +134,8 @@ async function main() {
             body: new Blob([JSON.stringify(req)]),
         });
         assert(r.ok);
-        state.pose.vertices = await r.json();
-        assert(state.pose.vertices.length == problem.figure.vertices.length);
+        pose.vertices = await r.json();
+        assert(pose.vertices.length == problem.figure.vertices.length);
         on_figure_change();
     }
 
@@ -166,7 +166,7 @@ async function main() {
         }
         if (mouse_dragging) {
             if (dragged_vertex == null) {
-                if (!e.ctrlKey && !e.shiftKey) selected = state.pose.vertices.map(_ => false);
+                if (!e.ctrlKey && !e.shiftKey) selected = pose.vertices.map(_ => false);
                 select_range(mouse_coord, [e.x, e.y]);
             }
             else {
@@ -193,7 +193,7 @@ async function main() {
             // if (foci.expected > foci.selected.size) {
             //     select_focus([e.x, e.y]);
             // } else {
-            if (!e.ctrlKey && !e.shiftKey) selected = state.pose.vertices.map(_ => false);
+            if (!e.ctrlKey && !e.shiftKey) selected = pose.vertices.map(_ => false);
             select_vertex([e.x, e.y]);
             // }
         }
@@ -206,12 +206,12 @@ async function main() {
     document.getElementById("edge_too_short")!.style.color = CLR_SHORT_EDGE;
 
     (document.getElementById("select_all") as HTMLAnchorElement).onclick = () => {
-        selected = state.pose.vertices.map(_ => true);
+        selected = pose.vertices.map(_ => true);
         draw_selected();
     };
 
     (document.getElementById("deselect_all") as HTMLAnchorElement).onclick = () => {
-        selected = state.pose.vertices.map(_ => false);
+        selected = pose.vertices.map(_ => false);
         draw_selected();
     };
 }
@@ -222,6 +222,8 @@ main();
 
 // Request server for info
 function on_figure_change() {
+    console.log(pose);
+    history.push(JSON.parse(JSON.stringify(pose)));
     static_figure_change();
     check_solution_on_server();
 }
@@ -231,7 +233,7 @@ function static_figure_change() {
     draw_figure();
     draw_selected();
     let solution = document.getElementById('solution') as HTMLTextAreaElement;
-    solution.value = JSON.stringify({ vertices: state.pose.vertices }, null, 2);
+    solution.value = JSON.stringify({ vertices: pose.vertices }, null, 2);
     show_dislikes_and_bonuses();
 }
 
@@ -239,13 +241,13 @@ function static_figure_change() {
 async function keyboard_handlers(e: KeyboardEvent) {
     if (e.code == "KeyA" && !e.ctrlKey) {
         e.preventDefault();
-        selected = state.pose.vertices.map(_ => true);
+        selected = pose.vertices.map(_ => true);
         draw_selected();
         return;
     }
     if (e.code == "Escape") {
         e.preventDefault();
-        selected = state.pose.vertices.map(_ => false);
+        selected = pose.vertices.map(_ => false);
         draw_selected();
         return;
     }
@@ -254,6 +256,11 @@ async function keyboard_handlers(e: KeyboardEvent) {
         let circles_checkbox = document.getElementById("show_circles") as HTMLInputElement;
         circles_checkbox.checked = !circles_checkbox.checked;
         draw_circles();
+        return;
+    }
+    if (e.code == "KeyZ" && !e.ctrlKey) {
+        e.preventDefault();
+        undo();
         return;
     }
 
@@ -266,7 +273,7 @@ async function keyboard_handlers(e: KeyboardEvent) {
         }
         let req: RotateRequest = {
             problem: problem,
-            vertices: state.pose.vertices,
+            vertices: pose.vertices,
             selected,
             pivot: null,
             angle: angle
@@ -276,8 +283,8 @@ async function keyboard_handlers(e: KeyboardEvent) {
             body: new Blob([JSON.stringify(req)]),
         });
         assert(r.ok);
-        state.pose.vertices = await r.json();
-        assert(state.pose.vertices.length == problem.figure.vertices.length);
+        pose.vertices = await r.json();
+        assert(pose.vertices.length == problem.figure.vertices.length);
         on_figure_change();
     }
 
@@ -412,7 +419,8 @@ function draw_figure() {
     canvas_figure.width = canvas_figure.width;
     let ctx = ctx_figure;
     ctx.lineWidth = 2;
-    for (let i = 0; i < state.edges.length; i++) {
+    let edges = derive_edged_from_pose();
+    for (let i = 0; i < edges.length; i++) {
         let ok_length = true;
         ctx.setLineDash([]);
         ctx.strokeStyle = CLR_OK_EDGE;
@@ -431,9 +439,9 @@ function draw_figure() {
             }
         }
 
-        let [start, end] = state.edges[i];
-        let p1 = grid_to_canvas(state.pose.vertices[start])
-        let p2 = grid_to_canvas(state.pose.vertices[end])
+        let [start, end] = edges[i];
+        let p1 = grid_to_canvas(pose.vertices[start])
+        let p2 = grid_to_canvas(pose.vertices[end])
         ctx.beginPath();
         ctx.moveTo(p1[0], p1[1]);
         ctx.lineTo(p2[0], p2[1]);
@@ -456,7 +464,7 @@ function draw_selected() {
     let ctx = ctx_figure;
     for (let i = 0; i < selected.length; i++) {
         ctx.fillStyle = selected[i] ? CLR_SELECTED : CLR_DESELECTED;
-        let p = grid_to_canvas(state.pose.vertices[i]);
+        let p = grid_to_canvas(pose.vertices[i]);
         ctx.beginPath();
         ctx.arc(p[0], p[1], 3, 0, 2 * Math.PI);
         ctx.fill();
@@ -480,17 +488,18 @@ function draw_circles() {
     }
     if (p == null) return;
 
-    let edges = []
-    for (let i = 0; i < state.edges.length; ++i) {
-        if (state.edges[i][0] == p || state.edges[i][1] == p)
-            edges.push(i);
+    let adj_edges = [];
+    let edges = derive_edged_from_pose();
+    for (let i = 0; i < edges.length; ++i) {
+        if (edges[i][0] == p || edges[i][1] == p)
+            adj_edges.push(i);
     }
 
     let ctx = ctx_circles;
     ctx.strokeStyle = CLR_CIRCLES;
-    for (let i of edges) {
-        let start = state.edges[i][0] == p ? state.edges[i][1] : state.edges[i][0];
-        let c = grid_to_canvas(state.pose.vertices[start]);
+    for (let i of adj_edges) {
+        let start = edges[i][0] == p ? edges[i][1] : edges[i][0];
+        let c = grid_to_canvas(pose.vertices[start]);
         let status = server_check_result.edge_statuses[i];
         draw_one_circle(c, Math.sqrt(status.min_length) * dx, Math.sqrt(status.min_length) * dy, CLR_SHORT_EDGE, ctx);
         draw_one_circle(c, Math.sqrt(status.max_length) * dx, Math.sqrt(status.max_length) * dy, CLR_LONG_EDGE, ctx);
@@ -556,8 +565,8 @@ function show_dislikes_and_bonuses() {
 let version_counter = 0;
 async function check_solution_on_server() {
     let vc = ++version_counter;
-    let pose = { vertices: state.pose.vertices, bonuses: [] /* TODO*/ }
-    let req: CheckPoseRequest = { problem, pose };
+    let rpose = { vertices: pose.vertices, bonuses: [] /* TODO*/ }
+    let req: CheckPoseRequest = { problem, pose: rpose };
     let r = await fetch('/api/check_pose', {
         method: 'POST', body: new Blob([JSON.stringify(req)]),
     });
@@ -585,8 +594,8 @@ function select_range(from: WindowPt, to: WindowPt) {
     let [tx, ty] = canvas_to_grid([tpx, tpy]);
     let [x1, y1] = [Math.min(tx, fx), Math.min(ty, fy)];
     let [x2, y2] = [Math.max(tx, fx), Math.max(ty, fy)];
-    for (let i = 0; i < state.pose.vertices.length; ++i) {
-        let v = state.pose.vertices[i];
+    for (let i = 0; i < pose.vertices.length; ++i) {
+        let v = pose.vertices[i];
         if (v[0] >= x1 && v[0] <= x2 && v[1] >= y1 && v[1] <= y2) {
             selected[i] = true;
         }
@@ -605,8 +614,8 @@ function select_range(from: WindowPt, to: WindowPt) {
 const VERTEX_CHOOSE_SENSE = 10;
 function get_nearby_vertex_index(mouse_coord: WindowPt): number | null {
     let mp = window_to_canvas(mouse_coord);
-    for (let i = 0; i < state.pose.vertices.length; i++) {
-        let p = grid_to_canvas(state.pose.vertices[i]);
+    for (let i = 0; i < pose.vertices.length; i++) {
+        let p = grid_to_canvas(pose.vertices[i]);
         if (Math.pow(p[0] - mp[0], 2) + Math.pow(p[1] - mp[1], 2) < Math.pow(VERTEX_CHOOSE_SENSE, 2)) {
             return i;
         }
@@ -624,8 +633,8 @@ function closest_grid_vertex(mouse_coord: WindowPt): GridPt {
 function move_selected([dx, dy]: GridPt) {
     for (let i = 0; i < selected.length; i++) {
         if (!selected[i]) continue;
-        state.pose.vertices[i][0] += dx;
-        state.pose.vertices[i][1] += dy;
+        pose.vertices[i][0] += dx;
+        pose.vertices[i][1] += dy;
     }
 }
 
@@ -637,7 +646,7 @@ function start_dragging_vertex(from: WindowPt)  {
 function drag_vertex(from: WindowPt, to: WindowPt) {
     if (dragged_vertex == null) return;
     let q = closest_grid_vertex(to);
-    state.pose.vertices[dragged_vertex] = q;
+    pose.vertices[dragged_vertex] = q;
     static_figure_change();
 }
 
@@ -662,3 +671,14 @@ function check_for_enough_foci_and_send(_action: Actions) {
     }
 }
 
+function derive_edged_from_pose(): Pair[] {
+    // TODO : break a leg
+    return problem.figure.edges;
+}
+
+function undo() {
+    if (history.length < 2) return;
+    history.pop();
+    pose = history.pop()!;
+    on_figure_change();
+}
