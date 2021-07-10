@@ -55,7 +55,7 @@ fn handler(_state: &Mutex<ServerState>, req: &Request, resp: ResponseBuilder) ->
     if req.path == "/api/check_pose" {
         assert_eq!(req.method, "POST");
         let req: CheckPoseRequest = serde_json::from_slice(req.body).unwrap();
-        let r = check_pose(&req.problem, &req.vertices);
+        let r = check_pose(&req.problem, &req.pose);
         return resp.code("200 OK")
             .body(serde_json::to_vec(&r).unwrap());
     }

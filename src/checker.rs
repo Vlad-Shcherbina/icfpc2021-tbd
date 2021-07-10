@@ -4,7 +4,7 @@ use crate::geom::segment_in_poly;
 #[derive(serde::Deserialize)]
 pub struct CheckPoseRequest {
     pub problem: Problem,
-    pub vertices: Vec<Pt>,
+    pub pose: Pose,
 }
 
 #[derive(serde::Serialize)]
@@ -39,7 +39,8 @@ pub fn length_range(d: i64, eps: i64) -> (i64, i64) {
     (min_length, max_length)
 }
 
-pub fn check_pose(problem: &Problem, vertices: &[Pt]) -> CheckPoseResponse {
+pub fn check_pose(problem: &Problem, pose: &Pose) -> CheckPoseResponse {
+    let vertices = &pose.vertices;
     assert_eq!(problem.figure.vertices.len(), vertices.len());
 
     let mut edge_statuses = vec![];
@@ -78,5 +79,9 @@ pub fn check_pose(problem: &Problem, vertices: &[Pt]) -> CheckPoseResponse {
 #[test]
 fn test_check_pose() {
     let p = crate::util::load_problem("1");
-    dbg!(check_pose(&p, &p.figure.vertices));
+    let pose = Pose {
+        vertices: p.figure.vertices.clone(),
+        bonuses: None,
+    };
+    dbg!(check_pose(&p, &pose));
 }

@@ -512,9 +512,8 @@ function show_dislikes() {
 let version_counter = 0;
 async function check_solution_on_server() {
     let vc = ++version_counter;
-    let req: CheckPoseRequest = {
-        problem: problem, vertices: figure.vertices, bonuses: null
-    };
+    let pose = { vertices: figure.vertices, bonuses: null /* TODO*/ }
+    let req: CheckPoseRequest = { problem, pose };
     let r = await fetch('/api/check_pose', {
         method: 'POST', body: new Blob([JSON.stringify(req)]),
     });

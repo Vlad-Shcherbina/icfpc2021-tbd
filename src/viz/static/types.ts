@@ -18,6 +18,11 @@ export interface Problem {
     bonuses: ProblemBonus
 }
 
+export interface Pose {
+    vertices: Pt[],
+    bonuses: PoseBonus[] | null,
+}
+
 export interface Frame {
     min_x: number,
     max_x: number,
@@ -45,8 +50,7 @@ export interface PoseBonus {
 
 export interface CheckPoseRequest {
     problem: Problem,
-    vertices: GridPt[],
-    bonuses: PoseBonus[] | null,
+    pose: Pose,
 }
 
 export interface CheckPoseResponse {
