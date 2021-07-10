@@ -50,6 +50,14 @@ export interface ShakeRequest {
     param: number,
 }
 
+export interface RotateRequest {
+    problem: Problem,
+    vertices: Pt[],
+    selected: boolean[],
+    pivot: Pt | null,
+    angle: number,
+}
+
 export type World = Problem;
 
 export enum Law {

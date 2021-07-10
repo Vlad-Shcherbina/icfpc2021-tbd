@@ -15,6 +15,7 @@ mod shake;
 mod graph;
 mod banana;
 mod mango;
+mod rotate;
 
 #[linkme::distributed_slice]
 static ENTRY_POINTS: [(&'static str, fn())] = [..];

@@ -4,6 +4,7 @@ use crate::dev_server::{serve_forever, Request, ResponseBuilder, HandlerResult};
 use crate::prelude::*;
 use crate::checker::{CheckPoseRequest, check_pose};
 use crate::shake::{ShakeRequest, shake};
+use crate::rotate::{RotateRequest, rotate};
 
 struct ServerState {
 }
@@ -63,6 +64,14 @@ fn handler(_state: &Mutex<ServerState>, req: &Request, resp: ResponseBuilder) ->
         assert_eq!(req.method, "POST");
         let req: ShakeRequest = serde_json::from_slice(req.body).unwrap();
         let r = shake(&req);
+        return resp.code("200 OK")
+            .body(serde_json::to_vec(&r).unwrap());
+    }
+
+    if req.path == "/api/rotate" {
+        assert_eq!(req.method, "POST");
+        let req: RotateRequest = serde_json::from_slice(req.body).unwrap();
+        let r = rotate(&req);
         return resp.code("200 OK")
             .body(serde_json::to_vec(&r).unwrap());
     }

@@ -5,7 +5,8 @@ import { WindowPt, CanvasPt, GridPt,
         Pt, Pair, Figure, Problem, Frame, Foci, 
         Actions, CheckPoseRequest, CheckPoseResponse,
         EdgeStatus, 
-        ShakeRequest} from "./types.js"
+        ShakeRequest,
+        RotateRequest } from "./types.js"
 
 let canvas_hole = document.getElementById("hole") as HTMLCanvasElement;
 let ctx_hole = canvas_hole.getContext("2d")!;
@@ -184,13 +185,38 @@ function on_figure_change() {
     check_solution_on_server();
 }
 
-function keyboard_handler(e: KeyboardEvent) {
+async function keyboard_handler(e: KeyboardEvent) {
     if (e.code == "KeyC" && !e.ctrlKey) {
         e.preventDefault();
         let circles_checkbox = document.getElementById("show_circles") as HTMLInputElement;
         circles_checkbox.checked = !circles_checkbox.checked;
         draw_circles();
         return;      
+    }
+
+    if (e.code == "KeyM" || e.code == "KeyN" && !e.ctrlKey) {
+        let angle = 0;
+        if (e.code == "KeyM") {
+            angle = 15;
+        } else {
+            angle = -15;
+        }
+        let req: RotateRequest = {
+            problem: problem,
+            vertices: figure.vertices,
+            selected,
+            pivot: null,
+            angle: angle
+        };
+        let r = await fetch('/api/rotate', {
+            method: 'POST',
+            body: new Blob([JSON.stringify(req)]),
+        });
+        assert(r.ok);
+        figure.vertices = await r.json();
+        assert(figure.vertices.length == problem.figure.vertices.length);
+        on_figure_change();
+
     }
 
     let dx = 0;
