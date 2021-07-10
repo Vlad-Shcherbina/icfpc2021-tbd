@@ -1,3 +1,5 @@
+#![allow(unused_imports)]
+
 use rand::Rng;
 use crate::checker::{length_range, check_pose};
 use crate::geom::segment_in_poly;

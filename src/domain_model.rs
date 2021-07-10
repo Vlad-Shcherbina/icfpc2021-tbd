@@ -22,6 +22,7 @@ pub struct Problem {
 
 #[derive(serde::Deserialize, serde::Serialize)]
 #[derive(Debug)]
+#[allow(non_camel_case_types)]
 pub enum BonusName {
     GLOBALIST,
     BREAK_A_LEG
