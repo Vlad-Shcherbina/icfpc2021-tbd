@@ -5,10 +5,10 @@ import { Pt, Pair, Figure, Problem, Frame, Foci, Actions } from "./types.js"
 
 let canvas_hole = document.getElementById("hole") as HTMLCanvasElement;
 let canvas_figure = document.getElementById("figure") as HTMLCanvasElement;
-let canvas_f_init = document.getElementById("f_init") as HTMLCanvasElement;
 let ctx_hole = canvas_hole.getContext("2d")!;
 let ctx_figure = canvas_figure.getContext("2d")!;
-let ctx_f_init = canvas_f_init.getContext("2d")!;
+// let canvas_f_init = document.getElementById("f_init") as HTMLCanvasElement;
+// let ctx_f_init = canvas_f_init.getContext("2d")!;
 
 
 // color scheme
@@ -19,10 +19,7 @@ const CLR_LONG_EDGE = "#D10000";
 const CLR_SELECTED = "#FFD800";
 const CLR_DESELECTED = "#222222";
 const CLR_GRID = "#BBBBBB";
-const CLR_SHADOW_FIGURE = "#FF9B9B";
-
-let width = canvas_hole.width;
-let height = canvas_figure.height;
+// const CLR_SHADOW_FIGURE = "#FF9B9B";
 
 async function get_problem(n: number): Promise<Problem> {
     const response = await fetch(`/data/problems/${n}.problem`);
@@ -35,7 +32,6 @@ let figure: Figure;
 let frame: Frame;
 let foci: Foci;
 let selected: boolean[] = [];
-
 
 async function main() {
     window.addEventListener('hashchange', () => location.reload());
@@ -53,7 +49,7 @@ async function main() {
     draw_hole(problem.hole);
     draw_grid(frame);
     // draw_shadow_figure();
-    draw_figure();
+    on_figure_change();
 
     document.getElementById('problem-stats')!.innerHTML = `
     Problem #${problem_no}: <br>
@@ -63,14 +59,13 @@ async function main() {
     `;
 
     let solution = document.getElementById('solution') as HTMLTextAreaElement;
-    solution.value = JSON.stringify({ vertices: problem.figure.vertices }, null, 2);
     solution.onkeyup = () => {
         console.log(solution.value);
         figure.vertices = JSON.parse(solution.value!).vertices;
         console.log(figure.vertices.length, problem.figure.vertices.length);
         assert(figure.vertices.length == problem.figure.vertices.length);
         console.dir(figure.vertices);
-        draw_figure();
+        on_figure_change();
     };
 
     let submit_button = document.getElementById('submit-button') as HTMLButtonElement;
@@ -88,26 +83,15 @@ async function main() {
         `<p><a href="https://poses.live/problems/${problem_no}">our submissions</a></p>`;
 
     // THIS IS WHERE THE MAGIC HAPPENS
+
+    // Keyboard events
+    document.onkeydown = keyboard_handler;
+
+    // Mouse events
     document.onmouseup = (e: MouseEvent) => {
         if (!e.ctrlKey) selected = figure.vertices.map(_ => false);
         select_point([e.x, e.y]);
     }
-    document.onkeydown = (e: KeyboardEvent) => {
-        let dx = 0;
-        let dy = 0;
-        if (e.code == "ArrowUp") dy = -1;
-        else if (e.code == "ArrowDown") dy = 1;
-        else if (e.code == "ArrowLeft") dx = -1;
-        else if (e.code == "ArrowRight") dx = +1;
-        else if (e.code == "r") {
-            foci.expected = 1;
-            check_for_enough_foci_and_send(Actions.Rotate);
-        }
-        else return;
-        e.preventDefault();
-        move_selected([dx, dy]);
-        solution.value = JSON.stringify({ vertices: figure.vertices }, null, 2);
-    };
 
     // let MOUSE_COORD: MouseEvent | null = null;
     // const MOUSE_SENSE = 5;
@@ -132,6 +116,7 @@ async function main() {
     //     MOUSE_COORD = null;
     // };
 
+    // Other events, elements and anchors
     document.getElementById("edge_too_long")!.style.color = CLR_LONG_EDGE;
     document.getElementById("edge_too_short")!.style.color = CLR_SHORT_EDGE;
 
@@ -147,6 +132,32 @@ async function main() {
 }
 
 main();
+
+function on_figure_change() {
+    // запрос к серверу про состояние
+    draw_figure();
+    draw_selected();
+    let solution = document.getElementById('solution') as HTMLTextAreaElement;
+    solution.value = JSON.stringify({ vertices: figure.vertices }, null, 2);
+    calculate_dislikes();
+}
+
+function keyboard_handler(e: KeyboardEvent) {
+    let dx = 0;
+    let dy = 0;
+    if (e.code == "ArrowUp") dy = -1;
+    else if (e.code == "ArrowDown") dy = 1;
+    else if (e.code == "ArrowLeft") dx = -1;
+    else if (e.code == "ArrowRight") dx = +1;
+    else if (e.code == "r") {
+        foci.expected = 1;
+        check_for_enough_foci_and_send(Actions.Rotate);
+    }
+    else return;
+    e.preventDefault();
+    move_selected([dx, dy]);
+    on_figure_change();
+}
 
 function check_for_enough_foci_and_send(_action: Actions) {
     if (foci.selected.size !== foci.expected) {
@@ -184,6 +195,8 @@ function get_frame(p: Problem): Frame {
 
 
 function grid_to_screen(p: Pt): Pt {
+    let width = canvas_hole.width;
+    let height = canvas_figure.height;    
     let nx = Math.floor(width / (frame.max_x - frame.min_x) * (p[0] - frame.min_x)) + 0.5;
     let ny = Math.floor(height / (frame.max_y - frame.min_y) * (p[1] - frame.min_y)) + 0.5;
     return [nx, ny];
@@ -266,8 +279,6 @@ function draw_figure() {
             ctx.fillText(`${cur} (${min} : ${max})`, mx, my);
         }
     }
-    draw_selected();
-    calculate_dislikes();
 }
 
 // function draw_shadow_figure() {
@@ -316,7 +327,6 @@ function move_selected([dx, dy]: Pt) {
         figure.vertices[i][0] += dx;
         figure.vertices[i][1] += dy;
     }
-    draw_figure();
 }
 
 
@@ -337,8 +347,6 @@ function get_nearby_vertex_index(mouse_coord: Pt): number | null {
     }
     return null;
 }
-
-let marked: number[] = []
 
 // TODO: Rename to select_vertex_id
 // TODO: Return selected vertex_id for clarity of API
@@ -386,8 +394,3 @@ function select_focus(mouse_coord: Pt) {
     draw_foci();
 }
 
-// function redraw_figure() {
-canvas_figure.width = canvas_figure.width;
-//     draw_figure(figure, ctx_figure, CLR_OK_EDGE, 2);
-//     draw_selected();
-// }
