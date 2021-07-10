@@ -10,6 +10,7 @@ mod solver;
 mod poses_live;
 mod viz;
 mod dev_server;
+mod checker;
 
 #[linkme::distributed_slice]
 static ENTRY_POINTS: [(&'static str, fn())] = [..];

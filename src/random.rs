@@ -45,11 +45,9 @@ impl Solver for RandomSolver {
                 let orig_d2 = vertices[start].dist2(vertices[end]);
                 let new_d2 = pose[start].dist2(pose[end]);
 
-                // TODO: avoid floating point arithmetic here
-                let min_d2 = orig_d2 as f64 * (1.0 - problem.epsilon / 1e6);
-                let max_d2 = orig_d2 as f64 * (1.0 + problem.epsilon / 1e6);
+                let (min_d2, max_d2) = crate::checker::length_range(orig_d2, problem.epsilon);
 
-                if (new_d2 as f64) < min_d2 || new_d2 as f64 > max_d2 {
+                if new_d2 < min_d2 || new_d2 > max_d2 {
                     good = false;
                     break;
                 }

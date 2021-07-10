@@ -2,6 +2,7 @@ use std::sync::{Arc, Mutex};
 use std::net::TcpListener;
 use crate::dev_server::{serve_forever, Request, ResponseBuilder, HandlerResult};
 use crate::prelude::*;
+use crate::checker::{CheckPoseRequest, check_pose};
 
 struct ServerState {
 }
@@ -52,52 +53,12 @@ fn handler(_state: &Mutex<ServerState>, req: &Request, resp: ResponseBuilder) ->
     if req.path == "/check_pose" {
         assert_eq!(req.method, "POST");
         let req: CheckPoseRequest = serde_json::from_slice(req.body).unwrap();
-        let problem = &req.problem;
-        let pose = &req.vertices;
-
-        assert_eq!(pose.len(), problem.figure.vertices.len());
-
-        let mut edge_statuses = vec![];
-
-        for &(_start, _end) in &problem.figure.edges {
-            edge_statuses.push(EdgeStatus {
-                fits_in_hole: true,
-                actual_length: 42,
-                min_length: 42,
-                max_length: 42,
-            });
-        }
-
-        let r = CheckPoseResponse {
-            edge_statuses,
-            dislikes: 42,
-        };
-
+        let r = check_pose(&req.problem, &req.vertices);
         return resp.code("200 OK")
             .body(serde_json::to_vec(&r).unwrap());
     }
 
     static_handler(req, resp)
-}
-
-#[derive(serde::Deserialize)]
-struct CheckPoseRequest {
-    problem: Problem,
-    vertices: Vec<Pt>,
-}
-
-#[derive(serde::Serialize)]
-struct CheckPoseResponse {
-    edge_statuses: Vec<EdgeStatus>,
-    dislikes: i64,
-}
-
-#[derive(serde::Serialize)]
-struct EdgeStatus {
-    fits_in_hole: bool,
-    actual_length: i64,
-    min_length: i64,
-    max_length: i64,
 }
 
 fn static_handler(req: &Request, resp: ResponseBuilder) -> HandlerResult {

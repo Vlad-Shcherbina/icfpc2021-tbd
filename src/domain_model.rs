@@ -2,6 +2,8 @@
 
 use crate::prelude::*;
 
+pub const EPS_BASE: i64 = 1_000_000;
+
 #[derive(serde::Deserialize)]
 #[derive(Debug)]
 pub struct Figure {
@@ -14,7 +16,7 @@ pub struct Figure {
 pub struct Problem {
     pub hole: Vec<Pt>,
     pub figure: Figure,
-    pub epsilon: f64,
+    pub epsilon: i64,
 }
 
 #[derive(serde::Deserialize, serde::Serialize)]
