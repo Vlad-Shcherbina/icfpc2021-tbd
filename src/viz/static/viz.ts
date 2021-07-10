@@ -121,42 +121,55 @@ async function main() {
     document.onkeydown = keyboard_handlers;
 
     // Mouse events
-    let MOUSE_COORD: MouseEvent | null = null;
-    const MOUSE_SENSE = 10;
-    let MOUSE_CLICK: boolean = true;
+    let mouse_coord: WindowPt | null = null;
+    const DRAG_TRIGGER_SENSE_SQUARED = 10 * 10;
+    let mouse_dragging: boolean = false;
 
     // canvas_figure.onmouseup = (e: MouseEvent) => {
     //     if (!e.ctrlKey && !e.shiftKey) selected = figure.vertices.map(_ => false);
-    //     select_vertex([e.x, e.y]);
+    //     select_vertex([e.pageX, e.pageY]);
     // }
 
     canvas_figure.onmousedown = (e: MouseEvent) => {
-        MOUSE_COORD = e;
-        MOUSE_CLICK = true;
+        mouse_coord = [e.pageX, e.pageY];
+        mouse_dragging = false;
     };
 
     canvas_figure.onmousemove = (e: MouseEvent) => {
-        if (MOUSE_COORD == null) return;
-        if (Math.pow(e.x - MOUSE_COORD.x, 2) + Math.pow(e.y - MOUSE_COORD.y, 2) > MOUSE_SENSE * MOUSE_SENSE) {
-            MOUSE_CLICK = false;
+        console.log("caught");
+        if (mouse_coord == null) {
+            // TODO: show vertex to be selected
+            return;
+        }
+        if (mouse_dragging) {
+            drag_vertex(mouse_coord, [e.pageX, e.pageY]);
+            mouse_coord = [e.pageX, e.pageY];
+            console.log("after", mouse_coord);
+            return;
+        }
+        if (Math.pow(e.pageX - mouse_coord[0], 2) + Math.pow(e.pageY - mouse_coord[0], 2) > DRAG_TRIGGER_SENSE_SQUARED) {
+            mouse_dragging = true;
+            start_dragging_vertex(mouse_coord);
         }
     };
 
+
     canvas_figure.onmouseup = (e: MouseEvent) => {
-        if (MOUSE_COORD == null) return;
-        if (MOUSE_CLICK) {
-            //console.log("Selecting vertex or focus", foci.expected, foci.selected.size);
-            // if (foci.expected > foci.selected.size) {
-            //     select_focus([e.x, e.y]);
-            // } else {
-            if (!e.ctrlKey && !e.shiftKey) selected = figure.vertices.map(_ => false);
-            select_vertex([e.x, e.y]);
-            // }
+        if (mouse_coord == null) return;
+        if (mouse_dragging) {
+            on_figure_change();
+            mouse_dragging = false;
         }
         else {
-            drag_point(MOUSE_COORD, e);
+            //console.log("Selecting vertex or focus", foci.expected, foci.selected.size);
+            // if (foci.expected > foci.selected.size) {
+            //     select_focus([e.pageX, e.pageY]);
+            // } else {
+            if (!e.ctrlKey && !e.shiftKey) selected = figure.vertices.map(_ => false);
+            select_vertex([e.pageX, e.pageY]);
+            // }
         }
-        MOUSE_COORD = null;
+        mouse_coord = null;
     };
 
     // Other events, elements and anchors
@@ -513,7 +526,7 @@ function get_nearby_vertex_index(mouse_coord: WindowPt): number | null {
 function closest_grid_vertex(mouse_coord: WindowPt): GridPt {
     // for some reason using mouse_to_canvas makes it worse
     // TODO: Check it
-    let [x, y] = canvas_to_grid(mouse_coord);
+    let [x, y] = canvas_to_grid(window_to_canvas(mouse_coord));
     return [Math.floor(x + 0.5), Math.floor(y + 0.5)];
 }
 
@@ -525,12 +538,16 @@ function move_selected([dx, dy]: GridPt) {
     }
 }
 
-function drag_point(from: MouseEvent, to: MouseEvent) {
-    let index = get_nearby_vertex_index([from.x, from.y]);
-    if (index == null) return;
-    let q = closest_grid_vertex([to.x, to.y]);
-    figure.vertices[index] = q;
-    on_figure_change();
+let dragged_vertex: number | any = null;
+function start_dragging_vertex(from: WindowPt)  {
+    dragged_vertex = get_nearby_vertex_index(from);
+}
+
+function drag_vertex(from: WindowPt, to: WindowPt) {
+    if (dragged_vertex == null) return;
+    let q = closest_grid_vertex(to);
+    figure.vertices[dragged_vertex] = q;
+    static_figure_change();
 }
 
 // TODO: Implement for rotation
