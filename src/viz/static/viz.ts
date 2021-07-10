@@ -9,14 +9,21 @@ import {
     ShakeRequest
 } from "./types.js"
 
+// hole, grid, bonus area, draw only on load
 let canvas_hole = document.getElementById("hole") as HTMLCanvasElement;
 let ctx_hole = canvas_hole.getContext("2d")!;
+// figure, edge labels and selected vertices, redraw often
 let canvas_figure = document.getElementById("figure") as HTMLCanvasElement;
 let ctx_figure = canvas_figure.getContext("2d")!;
+// circles for goldilocks areas, redraw often
 let canvas_circles = document.getElementById("circles") as HTMLCanvasElement;
 let ctx_circles = canvas_circles.getContext("2d")!;
+// foci
 let canvas_foci = document.getElementById("foci") as HTMLCanvasElement;
 let ctx_foci = canvas_foci.getContext("2d")!;
+// short-lived auxiliary drawing like selection boundary 
+let canvas_auxi = document.getElementById("auxi") as HTMLCanvasElement;
+let ctx_auxi = canvas_auxi.getContext("2d")!;
 let dx = 0;
 let dy = 0;
 
@@ -30,6 +37,7 @@ const CLR_DESELECTED = "#222222";
 const CLR_GRID = "#BBBBBB";
 const CLR_CIRCLES = "#00FFFF";
 const CLR_FOCI = "#A96060";
+const CLR_SELECTION_BOUNDARY = "#999999";
 
 async function get_problem(n: number): Promise<Problem> {
     const response = await fetch(`/data/problems/${n}.problem`);
@@ -161,6 +169,7 @@ async function main() {
     canvas_figure.onmouseup = (e: MouseEvent) => {
         if (mouse_coord == null) return;
         if (mouse_dragging) {
+            canvas_auxi.width = canvas_auxi.width;
             on_figure_change();
             mouse_dragging = false;
         }
@@ -516,8 +525,10 @@ function select_vertex(mouse_coord: WindowPt) {
 
 
 function select_range(from: WindowPt, to: WindowPt) {
-    let [fx, fy] = canvas_to_grid(window_to_canvas(from));
-    let [tx, ty] = canvas_to_grid(window_to_canvas(to));
+    let [fpx, fpy] = window_to_canvas(from);
+    let [tpx, tpy] = window_to_canvas(to)
+    let [fx, fy] = canvas_to_grid([fpx, fpy]);
+    let [tx, ty] = canvas_to_grid([tpx, tpy]);
     let [x1, y1] = [Math.min(tx, fx), Math.min(ty, fy)];
     let [x2, y2] = [Math.max(tx, fx), Math.max(ty, fy)];
     for (let i = 0; i < figure.vertices.length; ++i) {
@@ -526,6 +537,14 @@ function select_range(from: WindowPt, to: WindowPt) {
             selected[i] = true;
         }
     }
+
+    canvas_auxi.width = canvas_auxi.width;
+    ctx_auxi.strokeStyle = CLR_SELECTION_BOUNDARY;
+    ctx_auxi.setLineDash([1, 1]);
+    ctx_auxi.lineWidth = 2;
+    ctx_auxi.beginPath();
+    ctx_auxi.rect(fpx, fpy, tpx - fpx, tpy - fpy);
+    ctx_auxi.stroke();
     draw_selected();
 }
 
