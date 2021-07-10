@@ -250,6 +250,10 @@ pub fn segment_in_poly(seg: (Pt, Pt), poly: &[Pt]) -> bool {
         return false;
     }
 
+    if seg.0 == seg.1 {
+        return true;
+    }
+
     for edge in poly_edges(poly) {
         match segment_intersection(seg, edge) {
             Intersection::Internal => return false,
