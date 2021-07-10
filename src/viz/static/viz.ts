@@ -147,6 +147,9 @@ function static_figure_change() {
         ? "waiting..."
         : server_check_result.dislikes
     }`;
+    if (server_check_result != null && !server_check_result.valid) {
+        txt.innerHTML += " (not valid)";
+    }
 }
 
 function on_figure_change() {
@@ -240,8 +243,9 @@ function edge_sq_len([x1, y1]: Pt, [x2, y2]: Pt): number {
     return (x1 - x2) * (x1 - x2) + (y1 - y2) * (y1 - y2);
 }
 
-
+let version_counter = 0;
 async function check_solution_on_server() {
+    let vc = ++version_counter;
     let req: CheckPoseRequest = {
         problem: problem, vertices: figure.vertices
     };
@@ -249,8 +253,8 @@ async function check_solution_on_server() {
         method: 'POST', body: new Blob([JSON.stringify(req)]),
     });
     assert(r.ok);
+    if (vc != version_counter) return;
 
-    // TODO: counter
     server_check_result = await r.json();
     static_figure_change();
 };
