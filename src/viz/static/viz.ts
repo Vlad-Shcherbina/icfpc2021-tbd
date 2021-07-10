@@ -63,27 +63,10 @@ let foci: Foci = { expected: 0, selected: new Map() };
 let selected: boolean[] = [];
 let server_check_result: CheckPoseResponse;
 
-async function main() {
-    window.addEventListener('hashchange', () => location.reload());
-    let problem_no = 1;
-    let { hash } = window.location;
-    if (hash.startsWith('#')) {
-        hash = hash.slice(1);
-        problem_no = parseInt(hash);
-    }
-
-    problem = await get_problem(problem_no);
+async function show_problem_stats(problem_no: number) {
     let hs = await fetch('/api/highscore/' + problem_no);
     assert(hs.ok);
-    highscore = await hs.text()
-    pose = { vertices: JSON.parse(JSON.stringify(problem.figure.vertices)),
-              bonuses: [] };
-    selected = problem.figure.vertices.map(_ => false);
-    frame = get_frame(problem);
-    draw_hole();
-    draw_grid(frame);
-    await check_solution_on_server();
-    on_figure_change();
+    highscore = await hs.text();
 
     let problem_stats = document.getElementById('problem-stats')!;
     problem_stats.innerHTML = `
@@ -97,6 +80,27 @@ async function main() {
     }
     problem_stats.innerHTML += "] <br>";
     problem_stats.innerHTML += highscore;
+}
+
+async function main() {
+    window.addEventListener('hashchange', () => location.reload());
+    let problem_no = 1;
+    let { hash } = window.location;
+    if (hash.startsWith('#')) {
+        hash = hash.slice(1);
+        problem_no = parseInt(hash);
+    }
+
+    problem = await get_problem(problem_no);
+    show_problem_stats(problem_no);
+    pose = { vertices: JSON.parse(JSON.stringify(problem.figure.vertices)),
+              bonuses: [] };
+    selected = problem.figure.vertices.map(_ => false);
+    frame = get_frame(problem);
+    draw_hole();
+    draw_grid(frame);
+    await check_solution_on_server();
+    on_figure_change();
 
 
     let solution = document.getElementById('solution') as HTMLTextAreaElement;
@@ -121,6 +125,9 @@ async function main() {
         });
         assert(r.ok);
         submit_result.innerHTML = await r.text();
+        setTimeout(() => {
+            show_problem_stats(problem_no);
+        }, 2000);
     };
 
     document.getElementById('our-submissions')!.innerHTML =
@@ -679,3 +686,4 @@ function undo() {
     pose = history.pop()!;
     on_figure_change();
 }
+
