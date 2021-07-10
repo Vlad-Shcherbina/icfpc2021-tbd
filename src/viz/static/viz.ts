@@ -5,7 +5,6 @@ import {
     WindowPt, CanvasPt, GridPt,
     Pt, Pair, Figure, Problem, Frame, Foci,
     Actions, CheckPoseRequest, CheckPoseResponse, RotateRequest,
-    EdgeStatus,
     ShakeRequest
 } from "./types.js"
 
@@ -38,6 +37,8 @@ const CLR_GRID = "#BBBBBB";
 const CLR_CIRCLES = "#00FFFF";
 const CLR_FOCI = "#A96060";
 const CLR_SELECTION_BOUNDARY = "#999999";
+const CLR_GLOB_TARGET = "#FFFF00";
+const CLR_BREAK_TARGET = "#00FFFF";
 
 async function get_problem(n: number): Promise<Problem> {
     const response = await fetch(`/data/problems/${n}.problem`);
@@ -360,6 +361,17 @@ function draw_grid(frame: Frame) {
 function draw_hole() {
     canvas_hole.width = canvas_hole.width;
     let ctx = ctx_hole;
+
+    for (let p of problem.bonuses) {
+        console.log(p);
+        let [px, py] = grid_to_canvas(p.position);
+        const r = 10;
+        ctx.fillStyle = CLR_BREAK_TARGET;
+        ctx.beginPath();
+        ctx.arc(px, py, r, 0, 2 * Math.PI);
+        ctx.fill();
+    }
+
     let hole = problem.hole;
     ctx.strokeStyle = CLR_HOLE;
     ctx.lineWidth = 2;

@@ -15,7 +15,7 @@ export interface Problem {
     hole: GridPt[];
     figure: Figure;
     epsilon: number,
-    bonuses: ProblemBonus
+    bonuses: ProblemBonus[]
 }
 
 export interface Pose {
