@@ -20,6 +20,23 @@ export interface Frame {
     max_y: number,
 }
 
+export interface EdgeStatus {
+    fits_in_hole: boolean,
+    actual_length: number,
+    min_length: number,
+    max_length: number,
+}
+
+export interface CheckPoseRequest {
+    problem: Problem,
+    vertices: Pt[],
+}
+
+export interface CheckPoseResponse {
+    edge_statuses: EdgeStatus[],
+    dislikes: number,
+}
+
 export type World = Problem;
 
 export enum Law {
