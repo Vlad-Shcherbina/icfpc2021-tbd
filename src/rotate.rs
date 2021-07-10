@@ -21,10 +21,17 @@ pub fn center_of_mass_rotation(r: &RotateRequest) -> Vec<Pt> {
     let mut vs = r.vertices.clone();
     assert_eq!(vs.len(), r.selected.len());
 
-    let sum_x : i64 = vs.iter().map(|pt| pt.x).sum();
-    let sum_y : i64 = vs.iter().map(|pt| pt.y).sum();
-    let com_x = sum_x as f64 / vs.len() as f64;
-    let com_y = sum_y as f64 / vs.len() as f64;
+    let mut sels = Vec::new();
+    for (v, &sel) in vs.iter_mut().zip(r.selected.iter()) {
+        if sel {
+            sels.push(v);
+        }
+    }
+
+    let sum_x : i64 = sels.iter().map(|pt| pt.x).sum();
+    let sum_y : i64 = sels.iter().map(|pt| pt.y).sum();
+    let com_x = sum_x as f64 / sels.len() as f64;
+    let com_y = sum_y as f64 / sels.len() as f64;
 
     let com_pivot = Pt::new(com_x.round() as i64, com_y.round() as i64);
 
