@@ -117,7 +117,6 @@ async function main() {
     await check_solution_on_server();
     on_figure_change();
 
-
     let solution = document.getElementById('solution') as HTMLTextAreaElement;
     solution.onblur = () => {
         // console.log(solution.value);
@@ -127,6 +126,21 @@ async function main() {
         // console.dir(figure.vertices);
         on_figure_change();
     };
+
+
+    let pose_id = document.getElementById('pose-id') as HTMLTextAreaElement;
+    let pose_button = document.getElementById('pose-button') as HTMLTextAreaElement;
+    let pose_result = document.getElementById('pose-result')!;
+    pose_button.onclick = async function () {
+        pose_result.innerText = 'getting the pose ...';
+        let r = await fetch('/api/get_pose/' + pose_id.value!);
+        assert(r.ok);
+        solution.value = await r.text();
+        pose_result.innerText = '';
+        pose.vertices = JSON.parse(solution.value!).vertices;
+        assert(pose.vertices.length == problem.figure.vertices.length);
+        on_figure_change();
+    }
 
     let circles_checkbox = document.getElementById("show_circles") as HTMLInputElement;
     circles_checkbox.onchange = draw_circles;
