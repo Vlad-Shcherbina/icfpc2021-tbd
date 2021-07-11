@@ -13,6 +13,7 @@ fn bonus_graph() {
     writeln!(fout, "  legend_x -> legend_y [label=BREAK_A_LEG,color=blue];").unwrap();
     writeln!(fout, "  legend_y -> legend_z [label=GLOBALIST,color=green];").unwrap();
     writeln!(fout, "  legend_z -> legend_t [label=WALLHACK,color=red];").unwrap();
+    writeln!(fout, "  legend_t -> legend_u [label=SUPERFLEX,color=yellow];").unwrap();
 
     for problem_no in all_problem_ids() {
         let p = load_problem(problem_no);
@@ -27,6 +28,7 @@ fn bonus_graph() {
                 crate::domain_model::BonusName::GLOBALIST => "green",
                 crate::domain_model::BonusName::BREAK_A_LEG => "blue",
                 crate::domain_model::BonusName::WALLHACK => "red",
+                crate::domain_model::BonusName::SUPERFLEX => "yellow",
             };
             writeln!(fout, "  {} -> {} [color={}];", problem_no, b.problem, color).unwrap();
         }
