@@ -53,6 +53,7 @@ fn scrape_poses() {
     let pi = scraper.problem_info(1);
     dbg!(&pi);
     dbg!(pi.highscore());
+    dbg!(pi.latest());
     let sol = scraper.get_pose_by_id("b9a6c73d-dd2c-4a54-9f6e-75ea51d11c79".to_string());
     dbg!(&sol);
 }
@@ -62,7 +63,6 @@ pub struct Scraper {
 }
 
 #[derive(Debug)]
-#[allow(dead_code)]   // TODO: remove when scraper is done
 pub enum EvaluationResult {
     Pending,  // hourglass
     Invalid,  // cross
@@ -93,9 +93,12 @@ impl ProblemInfo {
         .map(|q| q.1)
     }
 
-    pub fn _latest(&self) -> Option<&PoseInfo> {
-        // can't be implemented right now because we only have valid submissions
-        todo!()
+    pub fn latest(&self) -> Option<&PoseInfo> {
+        if self.poses.is_empty() {
+            None
+        } else {
+            Some(&self.poses[0])
+        }
     }
 }
 
@@ -114,17 +117,27 @@ impl Scraper {
             .call().unwrap().into_string().unwrap();
 
         // yes, we use regex to parse HTML
-        let re = regex::Regex::new("<tr><td><a href=\"/solutions/(.*?)\".*?</a></td><td>(\\d+)</td></tr>").unwrap();
+        let re = regex::Regex::new("<tr><td><a href=\"/solutions/(.*?)\".*?</a></td><td>(.*?)</td></tr>").unwrap();
 
-        // TODO: detect crosses and hourglasses, not only valid solutions
         let mut poses = vec![];
         for pose in re.captures_iter(&page) {
-            poses.push( PoseInfo {
-                id: pose.get(1).unwrap().as_str().to_string(),
-                er: EvaluationResult::Valid {
-                    dislikes: pose.get(2).unwrap().as_str().parse().unwrap(),
-                },
-            });
+            let id = pose.get(1).unwrap().as_str().to_string();
+            match pose.get(2).unwrap().as_str() {
+                "❌" => poses.push( PoseInfo {
+                    id,
+                    er: EvaluationResult::Invalid,
+                }),
+                "⏳" => poses.push( PoseInfo {
+                    id,
+                    er: EvaluationResult::Pending,
+                }),
+                other => poses.push( PoseInfo {
+                    id,
+                    er: EvaluationResult::Valid {
+                        dislikes: other.parse().unwrap(),
+                    },
+                }),
+            };
         }
         ProblemInfo { poses, global_highscore: self.get_global_highscore(problem_id) }
     }
