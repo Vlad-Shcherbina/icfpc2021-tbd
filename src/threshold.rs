@@ -106,6 +106,7 @@ fn threshold(i: i64, param: i64) -> i64 {
 }
 
 pub fn threshold_shake(r: &ShakeRequest) -> Vec<Pt> {
+    assert!(r.problem.bonuses.is_empty());
     dbg!(r.problem.figure.vertices.len(), r.problem.hole.len());
     let mut selected = r.selected.clone();
     if selected.iter().all(|&s| !s) {

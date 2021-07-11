@@ -7,6 +7,7 @@ use crate::prelude::*;
 use crate::shake::ShakeRequest;
 
 pub fn ice_shake(r: &ShakeRequest) -> Vec<Pt> {
+    assert!(r.problem.bonuses.is_empty());
     let mut pose = Pose {
         bonuses: vec![],
         vertices: r.vertices.clone(),
