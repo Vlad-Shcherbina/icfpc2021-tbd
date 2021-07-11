@@ -47,21 +47,13 @@
 
             <h3 id="score"></h3>
 
-            <button id="shake-button">shake selected</button>
-            <select id="shake-method">
-                <option value="random">random</option>
-                <option value="banana">banana</option>
-                <option value="ice">ice (TODO)</option>
-                <option value="mango">mango</option>
-                <option value="greedy">greedy</option>
-                <option value="springs">springs</option>
-                <option value="threshold">threshold</option>
-                <option value="daiquiri">daiquiri</option>
-                <option value="mojito">mojito</option>
-            </select>
+            <div id="shakers" style="line-height:160%"></div>
             <input id="shake-param" type="range" min=1 max=7 value=5>
 
-            <p><b>Hotkeys</b>: <ul> 
+            <br>
+            <details>
+            <summary>Hotkeys</summary>
+            <ul> 
                 <li><b>A</b> to select all</li>
                 <li><b>Esc</b> to deselect all</li>
                 <li><b>Ctrl</b> or <b>Shift</b> to select multiple</li>
@@ -69,7 +61,7 @@
                 <li><b>N</b> to turn CCW on 15 (90 with <b>Shift</b>)</li>
                 <li><b>Z</b> to undo</li>
             </ul>
-            </p>
+            </details>
             <p>
                 <input type="checkbox" id="show_circles" checked>
                 <label for="scales">show circles (hotkey: C)</label>

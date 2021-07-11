@@ -137,27 +137,42 @@ async function main() {
     document.getElementById('our-submissions')!.innerHTML =
         `<p><a href="https://poses.live/problems/${problem_no}">our submissions</a></p>`;
 
-    let shake_button = document.getElementById('shake-button') as HTMLButtonElement;
-    shake_button.onclick = async function () {
-        shake_button.disabled = true;
-        let shake_param = document.getElementById('shake-param') as HTMLInputElement;
-        let shake_method = document.getElementById('shake-method') as HTMLSelectElement;
-        let req: ShakeRequest = {
-            problem: problem,
-            vertices: pose.vertices,
-            selected,
-            method: shake_method.value,
-            param: parseInt(shake_param.value),
-        };
-        let r = await fetch('/api/shake', {
-            method: 'POST',
-            body: new Blob([JSON.stringify(req)]),
-        });
-        assert(r.ok);
-        pose.vertices = await r.json();
-        assert(pose.vertices.length == problem.figure.vertices.length);
-        shake_button.disabled = false;
-        on_figure_change();
+    let shakers: string[] = [
+        "random",
+        "banana",
+        "ice",
+        "mango",
+        "greedy",
+        "springs",
+        "threshold",
+        "daiquiri",
+        "mojito",
+    ];
+    let shakerdiv = document.getElementById('shakers') as HTMLDivElement;
+    for (let method of shakers) {
+        shakerdiv.innerHTML += `<button id="${method}">${method}</button> `;
+    };
+    for (let method of shakers) {
+        (document.getElementById(method) as HTMLInputElement).onclick = async function () {
+            for (let b of shakerdiv.childNodes) (b as HTMLInputElement).disabled = true;
+            let shake_param = document.getElementById('shake-param') as HTMLInputElement;
+            let req: ShakeRequest = {
+                problem: problem,
+                vertices: pose.vertices,
+                selected,
+                method,
+                param: parseInt(shake_param.value),
+            };
+            let r = await fetch('/api/shake', {
+                method: 'POST',
+                body: new Blob([JSON.stringify(req)]),
+            });
+            assert(r.ok);
+            pose.vertices = await r.json();
+            assert(pose.vertices.length == problem.figure.vertices.length);
+            for (let b of shakerdiv.childNodes) (b as HTMLInputElement).disabled = false;
+            on_figure_change();           
+        }
     }
 
     // THIS IS WHERE THE MAGIC HAPPENS

@@ -5,7 +5,7 @@ use crate::geom::pt_in_poly;
 use crate::prelude::*;
 use crate::shake::ShakeRequest;
 
-const COEFF: i64 = 2;
+const COEFF: i64 = 1;
 
 pub fn daikuiri_shake(r: &ShakeRequest, mojito: bool) -> Vec<Pt> {
     let mut vs = r.vertices.clone();
@@ -19,7 +19,7 @@ pub fn daikuiri_shake(r: &ShakeRequest, mojito: bool) -> Vec<Pt> {
                          r.problem.epsilon)
         }).collect();
 
-    for _ in 0..r.param * r.param * COEFF {
+    for _ in 0..r.param * r.param * COEFF * (r.selected.len() as i64) {
         let mut not_visited: Vec<usize> = vec![];
         for i in 0..r.selected.len() {
             if r.selected[i] { not_visited.push(i); }
@@ -75,7 +75,6 @@ fn shake_one(vs: &mut [Pt], i: usize, r: &ShakeRequest, ranges: &[(i64, i64)],
             vs[i].x += dx;
             vs[i].y += dy;
             if keep_in_hole && !pt_in_poly(vs[i], &r.problem.hole) {
-                println!("undo");
                 vs[i].x -= dx;
                 vs[i].y -= dy;    
             }
