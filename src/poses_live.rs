@@ -76,6 +76,7 @@ pub struct PoseInfo {
 #[derive(Debug)]
 pub struct ProblemInfo {
     poses: Vec<PoseInfo>,
+    global_highscore: i32,
 }
 
 impl ProblemInfo {
@@ -123,6 +124,15 @@ impl Scraper {
                 },
             });
         }
-        ProblemInfo { poses }
+        ProblemInfo { poses, global_highscore: self.get_global_highscore(problem_id) }
+    }
+
+    pub fn get_global_highscore(&mut self, problem_id: i32) -> i32 {
+        let page = self.agent.get("https://poses.live/problems")
+            .call().unwrap().into_string().unwrap();
+
+        let re = regex::Regex::new(&format!("<tr><td><a href=\"/problems/{}\">{}</a></td><td>.*?</td><td>(\\d+)</td></tr>", problem_id, problem_id)).unwrap();
+
+        re.captures(&page).unwrap().get(1).unwrap().as_str().parse::<i32>().unwrap()
     }
 }
