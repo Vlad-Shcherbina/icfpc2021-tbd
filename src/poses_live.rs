@@ -95,5 +95,5 @@ fn scrape_one_problem(agent: &ureq::Agent, n: i32) -> HashMap<String, i32> {
 
 pub fn get_problem_highscore(n: i32) -> Option<(String, i32)> {
     let poses = scrape_problem_n(n);
-    poses.iter().min_by(|a, b| a.1.cmp(&b.1)).map(|(k, v)| (k.clone(), v.clone()))
+    poses.iter().min_by(|a, b| a.1.cmp(b.1)).map(|(k, v)| (k.clone(), *v))
 }
