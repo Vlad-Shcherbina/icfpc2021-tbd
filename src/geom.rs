@@ -27,6 +27,10 @@ impl Pt {
     pub fn dist2(self, other: Pt) -> i64 {
         (self - other).len2()
     }
+
+    pub fn angle(self) -> f64 {
+        (self.y as f64).atan2(self.x as f64)
+    }
 }
 
 impl std::fmt::Debug for Pt {
@@ -273,6 +277,8 @@ pub fn segment_in_poly(seg: (Pt, Pt), poly: &[Pt]) -> bool {
         return true;
     }
 
+    let sign = poly_area_doubled(&poly).signum();
+
     for edge in poly_edges(poly) {
         match segment_intersection(seg, edge) {
             Intersection::Internal => return false,
@@ -281,7 +287,36 @@ pub fn segment_in_poly(seg: (Pt, Pt), poly: &[Pt]) -> bool {
         }
     }
 
+    for &(a, b) in &[seg, (seg.1, seg.0)] {
+        if let Some(i) = poly.iter().position(|&p| p == a) {
+            let i1 = if i == 0 { poly.len() - 1 } else { i - 1 };
+            let i2 = if i == poly.len() - 1 { 0 } else { i + 1 };
+            let d1 = poly[i1] - poly[i];
+            let d2 = poly[i2] - poly[i];
+            let d = b - a;
+            if sign * qqqqqq(d1, d, d2) < 0 {
+                return false;
+            }
+        }
+    }
+
     true
+}
+
+fn qqqqqq(v1: Pt, v2: Pt, v3: Pt) -> i64 {
+    let a = [v1.angle(), v2.angle(), v3.angle()];
+    let mut res = 1;
+    for i in 0..3 {
+        for j in 0..i {
+            if a[i] == a[j] {
+                return 0;
+            }
+            if a[i] < a[j] {
+                res = -res;
+            }
+        }
+    }
+    res
 }
 
 fn check_segment_in_poly(mut seg: (Pt, Pt), poly: &[Pt], expected: bool) {
@@ -312,10 +347,10 @@ fn test_segment_in_poly_bug() {
     check_segment_in_poly((Pt::new(101, 200), Pt::new(107, 203)), &poly, true);
     check_segment_in_poly((Pt::new(100, 200), Pt::new(107, 203)), &poly, true);
 
+    check_segment_in_poly((Pt::new(110, 200), Pt::new(110, 210)), &poly, false);
+    check_segment_in_poly((Pt::new(110, 200), Pt::new(109, 209)), &poly, false);
     // TODO: this is a bug, should be false
-    check_segment_in_poly((Pt::new(110, 200), Pt::new(110, 210)), &poly, true);
     check_segment_in_poly((Pt::new(108, 202), Pt::new(109, 209)), &poly, true);
-    check_segment_in_poly((Pt::new(110, 200), Pt::new(109, 209)), &poly, true);
 }
 
 // Rotate a point around another point
