@@ -142,8 +142,9 @@ async function main() {
             assert(pose.vertices.length == problem.figure.vertices.length);
             on_figure_change();
             pose_result.innerText = '';
-        }
+        } else {
         pose_result.innerText = 'no pose with this id';
+        }
     }
 
     let circles_checkbox = document.getElementById("show_circles") as HTMLInputElement;
