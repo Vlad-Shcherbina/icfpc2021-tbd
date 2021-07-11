@@ -22,6 +22,7 @@ mod ice;
 mod springs;
 mod threshold;
 mod daiquiri;
+mod summary;
 
 #[linkme::distributed_slice]
 static ENTRY_POINTS: [(&'static str, fn())] = [..];

@@ -33,7 +33,7 @@ pub enum BonusName {
 #[derive(Debug, Clone)]
 pub struct ProblemBonus {
     pub bonus: BonusName,
-    pub problem: u32,
+    pub problem: i32,
     pub position: Pt,
 }
 

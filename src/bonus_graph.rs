@@ -7,14 +7,14 @@ use crate::util::*;
 
 crate::entry_point!("bonus_graph", bonus_graph);
 fn bonus_graph() {
-    let mut next: HashMap<u32, Vec<u32>> = HashMap::new();
+    let mut next: HashMap<i32, Vec<i32>> = HashMap::new();
     let mut fout = std::fs::File::create(project_path("outputs/bonus_graph.dot")).unwrap();
     writeln!(fout, "digraph {{").unwrap();
     writeln!(fout, "  legend_x -> legend_y [label=BREAK_A_LEG,color=blue];").unwrap();
     writeln!(fout, "  legend_y -> legend_z [label=GLOBALIST,color=green];").unwrap();
     writeln!(fout, "  legend_z -> legend_t [label=WALLHACK,color=red];").unwrap();
 
-    for problem_no in 1..=106 {
+    for problem_no in all_problem_ids() {
         let p = load_problem(problem_no.to_string());
         print!("{} -> ", problem_no);
 

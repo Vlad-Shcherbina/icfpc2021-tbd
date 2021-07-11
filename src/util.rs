@@ -27,6 +27,10 @@ fn project_path_test() {
     assert!(project_path("src/util.rs").exists());
 }
 
+pub fn all_problem_ids() -> impl Iterator<Item=i32> {
+    1..=106
+}
+
 pub fn load_problem<S: AsRef<str>>(problem_id: S) -> Problem {
     let path = project_path(format!("data/problems/{}.problem", problem_id.as_ref()));
     let data = std::fs::read(path).unwrap();
