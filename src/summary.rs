@@ -97,18 +97,18 @@ fn summary() {
 
         let best = match pi.highscore() {
             Some(PoseInfo{id, er}) => match er {
-                  EvaluationResult::Invalid => format!("❌, {}", id),
-                  EvaluationResult::Pending => format!("⏳, {}", id),
-                  EvaluationResult::Valid{dislikes} => format!("{}, {}", dislikes, id),
+                  EvaluationResult::Invalid => format!(r#"❌, <a href="http://127.0.0.1:8000/src/viz/static/viz.html#{}@{}">{}</a>"#, problem_id, id, id),
+                  EvaluationResult::Pending => format!(r#"⏳, <a href="http://127.0.0.1:8000/src/viz/static/viz.ht    ml#{}@{}">{}</a>"#, problem_id, id, id),
+                  EvaluationResult::Valid{dislikes} => format!(r#"{}, <a href="http://127.0.0.1:8000/src/viz/static/viz.html#{}@{}">{}</a>"#, dislikes, problem_id, id, id),
             },
             None => "-".to_string(),
         };
 
         let latest = match pi.latest() {
             Some(PoseInfo{id, er}) => match er {
-                  EvaluationResult::Invalid => format!("❌, {}", id),
-                  EvaluationResult::Pending => format!("⏳, {}", id),
-                  EvaluationResult::Valid{dislikes} => format!("{}, {}", dislikes, id),
+                  EvaluationResult::Invalid => format!(r#"❌, <a href="http://127.0.0.1:8000/src/viz/static/viz.html#{}@{}">{}</a>"#, problem_id, id, id),
+                  EvaluationResult::Pending => format!(r#"⏳, <a href="http://127.0.0.1:8000/src/viz/static/viz.ht    ml#{}@{}">{}</a>"#, problem_id, id, id),
+                  EvaluationResult::Valid{dislikes} => format!(r#"{}, <a href="http://127.0.0.1:8000/src/viz/static/viz.html#{}@{}">{}</a>"#, dislikes, problem_id, id, id),
             },
             None => "-".to_string(),
         };

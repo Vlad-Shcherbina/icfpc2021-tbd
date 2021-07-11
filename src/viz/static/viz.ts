@@ -93,10 +93,15 @@ async function main() {
 
     window.addEventListener('hashchange', () => location.reload());
     let problem_no = 1;
+    let pose_id = null;
     let { hash } = window.location;
     if (hash.startsWith('#')) {
         hash = hash.slice(1);
-        problem_no = parseInt(hash);
+        let ids = hash.split('@');
+        problem_no = parseInt(ids[0]);
+        if (hash.includes('@')) {
+            pose_id = ids[1];
+        }
     }
     problem = await get_problem(problem_no);
     show_problem_stats(problem_no);
@@ -120,6 +125,15 @@ async function main() {
     on_figure_change();
 
     let solution = document.getElementById('solution') as HTMLTextAreaElement;
+
+    let r = await fetch('/api/get_pose/' + pose_id);
+    if (r.ok) {
+        solution.value = await r.text();
+        pose.vertices = JSON.parse(solution.value!).vertices;
+        assert(pose.vertices.length == problem.figure.vertices.length);
+        on_figure_change();
+    }
+
     solution.onblur = () => {
         // console.log(solution.value);
         pose = JSON.parse(solution.value!);
@@ -128,24 +142,6 @@ async function main() {
         // console.dir(figure.vertices);
         on_figure_change();
     };
-
-
-    let pose_id = document.getElementById('pose-id') as HTMLTextAreaElement;
-    let pose_button = document.getElementById('pose-button') as HTMLTextAreaElement;
-    let pose_result = document.getElementById('pose-result')!;
-    pose_button.onclick = async function () {
-        pose_result.innerText = 'getting the pose ...';
-        let r = await fetch('/api/get_pose/' + pose_id.value!);
-        if (r.ok) {
-            solution.value = await r.text();
-            pose = JSON.parse(solution.value!);
-            assert(pose.vertices.length == problem.figure.vertices.length);
-            on_figure_change();
-            pose_result.innerText = '';
-        } else {
-        pose_result.innerText = 'no pose with this id';
-        }
-    }
 
     let circles_checkbox = document.getElementById("show_circles") as HTMLInputElement;
     circles_checkbox.onchange = draw_circles;
