@@ -293,21 +293,8 @@ async function keyboard_handlers(e: KeyboardEvent) {
         } else {
             angle = e.shiftKey ? -90 : -15;
         }
-        let req: RotateRequest = {
-            problem: problem,
-            vertices: pose.vertices,
-            selected,
-            pivot: null,
-            angle: angle
-        };
-        let r = await fetch('/api/rotate', {
-            method: 'POST',
-            body: new Blob([JSON.stringify(req)]),
-        });
-        assert(r.ok);
-        pose.vertices = await r.json();
-        assert(pose.vertices.length == problem.figure.vertices.length);
-        on_figure_change();
+        e.preventDefault();
+        await turn(angle);
     }
 
     let dx = 0;
@@ -699,3 +686,20 @@ function undo() {
     on_figure_change();
 }
 
+async function turn(angle: number) {
+    let req: RotateRequest = {
+        problem: problem,
+        vertices: pose.vertices,
+        selected,
+        pivot: null,
+        angle: angle
+    };
+    let r = await fetch('/api/rotate', {
+        method: 'POST',
+        body: new Blob([JSON.stringify(req)]),
+    });
+    assert(r.ok);
+    pose.vertices = await r.json();
+    assert(pose.vertices.length == problem.figure.vertices.length);
+    on_figure_change();
+}

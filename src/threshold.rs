@@ -132,13 +132,13 @@ pub fn threshold_shake(r: &ShakeRequest) -> Vec<Pt> {
     let convergence_cutoff = r.param*100;
     let mut j = 0;
     for i in 0.. {
-        dbg!(i);
+        // dbg!(i);
         let threshold = threshold(i, pr.dislikes);
         step(&r.problem, &mut cur_vs, &selected_idxs, &mut rng, &hole_mask, threshold);
 
         let cur_dislikes = get_dislikes(&r.problem, &cur_vs);
         //if threshold > 0 { dbg!(threshold); }
-        dbg!(cur_dislikes);
+        // dbg!(cur_dislikes);
         if cur_dislikes != dislikes {
             dislikes = cur_dislikes;
             j = 0;
