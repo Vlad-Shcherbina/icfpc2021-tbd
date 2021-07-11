@@ -18,7 +18,7 @@ pub fn daikuiri_shake(r: &ShakeRequest) -> Vec<Pt> {
                          r.problem.epsilon)
         }).collect();
 
-    for _ in 0..r.param * COEFF * COEFF / 2 {
+    for _ in 0..r.param * r.param * COEFF {
         let mut not_visited: Vec<usize> = vec![];
         for i in 0..r.selected.len() {
             if r.selected[i] { not_visited.push(i); }
@@ -27,28 +27,6 @@ pub fn daikuiri_shake(r: &ShakeRequest) -> Vec<Pt> {
         for i in not_visited {
             shake_one(&mut vs, i, r, &ranges, &mut rng);
         }
-
-        // let mut continuous = false;
-
-        // while !not_visited.is_empty() {
-        //     let mut current = 0;
-        //     if !continuous {
-        //         current = not_visited.pop().unwrap();
-        //     }
-        //     else {
-        //         continuous = false;
-        //         for idx in 0..not_visited.len() {
-        //             if !is_adjacent(current, not_visited[idx], r) {
-        //                 continue;
-        //             }
-        //             current = not_visited.remove(idx);
-        //             continuous = true;
-        //             break;
-        //         }
-        //     }
-        //     if !continuous { continue; }
-        //     shake_one(&mut vs, current, r, &ranges, &mut rng);
-        // }
     }
     vs
 }
@@ -77,7 +55,7 @@ fn shake_one(vs: &mut [Pt], i: usize, r: &ShakeRequest, ranges: &[(i64, i64)],
         let &(start, end) = &(*edges)[e];
         if start == i || end == i { adj_edges.push(e); }
     }
-    for _ in 0..r.param * COEFF * COEFF / 2 {
+    for _ in 0..r.param * r.param * COEFF {
         for &e in &adj_edges {
             let j = if edges[e].0 == i { edges[e].1 } else { edges[e].0 };
             let d = vs[i].dist2(vs[j]);
