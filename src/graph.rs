@@ -21,8 +21,7 @@ pub fn bfs(edges: &[(usize, usize)], v_id: usize) -> Vec<usize> {
     while !queue.is_empty() {
         let current_vid = queue.pop_front().unwrap();
         result.push(current_vid);
-        let ns: Vec<_> = neighbours(edges, current_vid).collect();
-        for n_id in ns {
+        for n_id in neighbours(edges, current_vid) {
             if !visited.contains(&n_id) {
                 queue.push_back(n_id);
                 visited.insert(n_id);

@@ -3,6 +3,7 @@ use std::convert::TryInto;
 use crate::domain_model::BonusName;
 use crate::prelude::*;
 use crate::geom::{bounding_box, pt_in_poly, segment_in_poly};
+use crate::graph::neighbours;
 
 #[derive(serde::Deserialize)]
 pub struct CheckPoseRequest {
@@ -52,6 +53,7 @@ pub struct Checker {
     pub edges: Vec<(usize, usize)>,
     pub inside: Vec<Pt>,
     pub edge_cache: HashMap<[i16; 4], bool>,
+    pub neighbours_cache: HashMap<usize, Vec<usize>>,
 }
 
 impl Checker {
@@ -80,6 +82,7 @@ impl Checker {
             edge_ranges,
             inside,
             edge_cache: HashMap::new(),
+            neighbours_cache: HashMap::new(),
         }
     }
 
@@ -96,6 +99,13 @@ impl Checker {
         ];
         *self.edge_cache.entry(key).or_insert_with(|| {
             segment_in_poly((pt1, pt2), hole)
+        })
+    }
+
+    pub fn neighbours(&mut self, v_id: usize) -> &Vec<usize> {
+        let Checker { neighbours_cache, problem, .. } = self;
+        neighbours_cache.entry(v_id).or_insert_with(|| {
+            neighbours(&problem.figure.edges, v_id).collect()
         })
     }
 }
