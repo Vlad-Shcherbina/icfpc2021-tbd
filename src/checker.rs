@@ -1,5 +1,5 @@
 use crate::prelude::*;
-use crate::geom::segment_in_poly;
+use crate::geom::{bounding_box, pt_in_poly, segment_in_poly};
 
 #[derive(serde::Deserialize)]
 pub struct CheckPoseRequest {
@@ -44,6 +44,8 @@ pub fn length_range(d: i64, eps: i64) -> (i64, i64) {
 pub struct Checker {
     pub problem: Problem,
     pub edge_ranges: Vec<(i64, i64)>,
+    pub edges: Vec<(usize, usize)>,
+    pub inside: Vec<Pt>,
 }
 
 impl Checker {
@@ -54,9 +56,23 @@ impl Checker {
                 let d = p.figure.vertices[start].dist2(p.figure.vertices[end]);
                 length_range(d, p.epsilon)
             }).collect();
+
+        let (pt_min, pt_max) = bounding_box(&p.hole).unwrap();
+        let mut inside = vec![];
+        for x in pt_min.x..=pt_max.x {
+            for y in pt_min.y..=pt_max.y {
+                let pt = Pt::new(x, y);
+                if pt_in_poly(pt, &p.hole) {
+                    inside.push(pt);
+                }
+            }
+        }
+
         Checker {
             problem: p.clone(),
+            edges: p.figure.edges.clone(),
             edge_ranges,
+            inside,
         }
     }
 
