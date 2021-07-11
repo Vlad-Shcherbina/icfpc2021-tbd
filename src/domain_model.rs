@@ -30,6 +30,12 @@ pub enum BonusName {
     SUPERFLEX,
 }
 
+impl BonusName {
+    pub fn short_name(&self) -> String {
+        format!("{:?}", self)[..1].to_owned()
+    }
+}
+
 #[derive(serde::Deserialize, serde::Serialize)]
 #[derive(Debug, Clone)]
 pub struct ProblemBonus {

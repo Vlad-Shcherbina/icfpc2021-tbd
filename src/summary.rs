@@ -42,6 +42,7 @@ fn summary() {
     writeln!(s, "<th class=diag><div>latest solution</div></th>").unwrap();
     writeln!(s, "</tr>").unwrap();
 
+    let mut scraper = Scraper::new();
     let bonuslist = get_bonus_list();
     for problem_id in all_problem_ids() {
         dbg!(problem_id);
@@ -82,34 +83,29 @@ fn summary() {
 
         writeln!(s, "<td class=num>").unwrap();
         for b in p.bonuses {
-            writeln!(s, "{:?} for {} <br>", b.bonus, b.problem).unwrap();
+            writeln!(s, "{} for {}, ", b.bonus.short_name(), b.problem).unwrap();
         }
         writeln!(s, "</td>").unwrap();
 
         writeln!(s, "<td class=num>").unwrap();
         for b in bonuslist.get(&problem_id).unwrap_or(&vec![]) {
-            writeln!(s, "{}<br>", b).unwrap();
+            writeln!(s, "{}, ", b).unwrap();
         }
         writeln!(s, "</td>").unwrap();
 
-        let mut scraper = Scraper::new();
         let pi = scraper.problem_info(problem_id);
 
         let best = match pi.highscore() {
-            Some(PoseInfo{id, er}) => match er {
-                  EvaluationResult::Invalid => format!(r#"❌, <a href="http://127.0.0.1:8000/src/viz/static/viz.html#{}@{}">{}</a>"#, problem_id, id, id),
-                  EvaluationResult::Pending => format!(r#"⏳, <a href="http://127.0.0.1:8000/src/viz/static/viz.ht    ml#{}@{}">{}</a>"#, problem_id, id, id),
-                  EvaluationResult::Valid{dislikes} => format!(r#"{}, <a href="http://127.0.0.1:8000/src/viz/static/viz.html#{}@{}">{}</a>"#, dislikes, problem_id, id, id),
-            },
+            Some(PoseInfo{id, er}) =>
+                format!(r#"{}, <a href="http://127.0.0.1:8000/src/viz/static/viz.html#{}@{}">vis</a>"#,
+                    er, problem_id, id),
             None => "-".to_string(),
         };
 
         let latest = match pi.latest() {
-            Some(PoseInfo{id, er}) => match er {
-                  EvaluationResult::Invalid => format!(r#"❌, <a href="http://127.0.0.1:8000/src/viz/static/viz.html#{}@{}">{}</a>"#, problem_id, id, id),
-                  EvaluationResult::Pending => format!(r#"⏳, <a href="http://127.0.0.1:8000/src/viz/static/viz.ht    ml#{}@{}">{}</a>"#, problem_id, id, id),
-                  EvaluationResult::Valid{dislikes} => format!(r#"{}, <a href="http://127.0.0.1:8000/src/viz/static/viz.html#{}@{}">{}</a>"#, dislikes, problem_id, id, id),
-            },
+            Some(PoseInfo{id, er}) =>
+            format!(r#"{}, <a href="http://127.0.0.1:8000/src/viz/static/viz.html#{}@{}">vis</a>"#,
+                er, problem_id, id),
             None => "-".to_string(),
         };
 
@@ -131,7 +127,7 @@ fn get_bonus_list() -> HashMap<i32, Vec<String>> {
         for b in p.bonuses {
             bonuses.entry(b.problem)
                    .or_default()
-                   .push(format!("{:?} from {}", b.bonus, problem_id));
+                   .push(format!("{} from {}", b.bonus.short_name(), problem_id));
         }
     }
     bonuses

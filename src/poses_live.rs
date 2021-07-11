@@ -60,6 +60,7 @@ fn scrape_poses() {
 
 pub struct Scraper {
     agent: ureq::Agent,
+    global_highscore_page: Option<String>,
 }
 
 #[derive(Debug)]
@@ -67,6 +68,16 @@ pub enum EvaluationResult {
     Pending,  // hourglass
     Invalid,  // cross
     Valid { dislikes: i64 },
+}
+
+impl std::fmt::Display for EvaluationResult {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            EvaluationResult::Pending => write!(f, "⏳"),
+            EvaluationResult::Invalid => write!(f, "❌"),
+            EvaluationResult::Valid { dislikes } => write!(f, "{}", dislikes),
+        }
+    }
 }
 
 #[derive(Debug)]
@@ -109,7 +120,7 @@ impl Scraper {
              .set("Content-Type", "application/x-www-form-urlencoded")
              .send_string("login.email=jm%40memorici.de&login.password=uy2c92JKQAtSRfb").unwrap()
              .into_string().unwrap();
-        Scraper { agent }
+        Scraper { agent, global_highscore_page: None }
     }
 
     pub fn problem_info(&mut self, problem_id: i32) -> ProblemInfo {
@@ -143,8 +154,11 @@ impl Scraper {
     }
 
     pub fn get_global_highscore(&mut self, problem_id: i32) -> i32 {
-        let page = self.agent.get("https://poses.live/problems")
-            .call().unwrap().into_string().unwrap();
+        let agent = &mut self.agent;
+        let page = self.global_highscore_page.get_or_insert_with(|| {
+            agent.get("https://poses.live/problems")
+                .call().unwrap().into_string().unwrap()
+        });
 
         let re = regex::Regex::new(&format!("<tr><td><a href=\"/problems/{}\">{}</a></td><td>.*?</td><td>(\\d+)</td></tr>", problem_id, problem_id)).unwrap();
 
