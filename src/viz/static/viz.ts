@@ -111,16 +111,11 @@ async function main() {
         bonuses_to_use.innerHTML += `[${b.bonus} from ${b.from_problem}] `;
     }
 
-    let solution = document.getElementById('solution') as HTMLTextAreaElement;
-    if (pose_id != null) {
+    if (pose_id !== null) {
         let r = await fetch('/api/get_pose/' + pose_id);
-        if (r.ok) {
-            solution.value = await r.text();
-            pose = JSON.parse(solution.value!);
-            assert(pose.vertices.length == problem.figure.vertices.length);
-        }
-    }
-    else {
+        assert(r.ok);
+        pose = await r.json();
+    } else {
         pose = {
             vertices: JSON.parse(JSON.stringify(problem.figure.vertices)),
             bonuses: []
@@ -134,6 +129,8 @@ async function main() {
     draw_hole();
     await check_solution_on_server();
     static_figure_change();
+
+    let solution = document.getElementById('solution') as HTMLTextAreaElement;
 
     solution.onblur = () => {
         // console.log(solution.value);
