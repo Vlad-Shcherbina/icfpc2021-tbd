@@ -26,6 +26,7 @@ pub struct Problem {
 pub enum BonusName {
     GLOBALIST,
     BREAK_A_LEG,
+    WALLHACK,
 }
 
 #[derive(serde::Deserialize)]

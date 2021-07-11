@@ -11,20 +11,22 @@ fn bonus_graph() {
     let mut fout = std::fs::File::create(project_path("outputs/bonus_graph.dot")).unwrap();
     writeln!(fout, "digraph {{").unwrap();
     writeln!(fout, "  legend_x -> legend_y [label=BREAK_A_LEG,color=blue];").unwrap();
-    writeln!(fout, "  legend_x -> legend_y [label=GLOBALIST,color=green];").unwrap();
+    writeln!(fout, "  legend_y -> legend_z [label=GLOBALIST,color=green];").unwrap();
+    writeln!(fout, "  legend_z -> legend_t [label=WALLHACK,color=red];").unwrap();
 
-    for problem_no in 1..=88 {
+    for problem_no in 1..=106 {
         let p = load_problem(problem_no.to_string());
         print!("{} -> ", problem_no);
 
         let e = next.entry(problem_no).or_default();
 
         for b in &p.bonuses {
-            print!("{:?} {}", b.bonus, b.problem);
+            print!("{:?} {}  ", b.bonus, b.problem);
             e.push(b.problem);
             let color = match b.bonus {
                 crate::domain_model::BonusName::GLOBALIST => "green",
                 crate::domain_model::BonusName::BREAK_A_LEG => "blue",
+                crate::domain_model::BonusName::WALLHACK => "red",
             };
             writeln!(fout, "  {} -> {} [color={}];", problem_no, b.problem, color).unwrap();
         }
