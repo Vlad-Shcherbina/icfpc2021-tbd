@@ -3,7 +3,7 @@
 #[derive(serde::Serialize, serde::Deserialize)]
 #[serde(into="(i64, i64)")]
 #[serde(from="(i64, i64)")]
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, PartialEq)]
 pub struct Pt {
     pub x: i64,
     pub y: i64,  // y axis points down
@@ -26,6 +26,12 @@ impl Pt {
     /// distance squared
     pub fn dist2(self, other: Pt) -> i64 {
         (self - other).len2()
+    }
+}
+
+impl std::fmt::Debug for Pt {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "Pt({}, {})", self.x, self.y)
     }
 }
 
