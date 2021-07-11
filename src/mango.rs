@@ -6,6 +6,7 @@ use crate::graph::neighbours;
 use std::cmp::max;
 use crate::geom::{segment_in_poly, bounding_box};
 use rand::prelude::SliceRandom;
+use crate::checker::Checker;
 
 struct Borders {
     min_x: i64,
@@ -33,9 +34,8 @@ fn deformation_limits(problem: &Problem, v1_id: usize, v2_id: usize) -> (i64, i6
     crate::checker::length_range(orig_d2, problem.epsilon)
 }
 
-pub fn available_positions(problem: &Problem, vertices: &[Option<Pt>], v_id: usize) -> Vec<Pt> {
-    let neighbours: Vec<_> = neighbours(&problem.figure.edges, v_id).collect();
-    let borders = borders(&problem.hole);
+pub fn available_positions(checker: &mut Checker, vertices: &[Option<Pt>], v_id: usize) -> Vec<Pt> {
+    let borders = borders(&checker.problem.hole);
     let mut available_positions = vec![];
     for x in borders.min_x..=borders.max_x {
         'l: for y in borders.min_y..=borders.max_y {
@@ -45,15 +45,15 @@ pub fn available_positions(problem: &Problem, vertices: &[Option<Pt>], v_id: usi
                 continue 'l;
             }
 
-            for n_id in &neighbours {
-                if let Some(n) = vertices[*n_id] {
-                    let (min_dist, max_dist) = deformation_limits(problem, v_id, *n_id);
+            for n_id in checker.neighbours(v_id).clone() {
+                if let Some(n) = vertices[n_id] {
+                    let (min_dist, max_dist) = deformation_limits(&checker.problem, v_id, n_id);
                     let new_dist = assumed_pos.dist2(n);
                     if !(min_dist <= new_dist && new_dist <= max_dist) {
                         // eprintln!("Drop {:?} by distance", assumed_pos);
                         continue 'l;
                     }
-                    if !segment_in_poly((n, assumed_pos), &problem.hole) {
+                    if !segment_in_poly((n, assumed_pos), &checker.problem.hole) {
                         // eprintln!("Drop {:?} by intersection", assumed_pos);
                         continue 'l;
                     }
@@ -75,10 +75,11 @@ pub fn mango_shake(r: &ShakeRequest) -> Vec<Pt> {
 
     let mut success = false;
     let mut iteration_count = 0;
+    let mut checker = Checker::new(&r.problem, &vec![]);
     loop {
         selected_idxs.shuffle(rng);
         for v_id in &selected_idxs {
-            let available_positions = available_positions(&r.problem, &result, *v_id);
+            let available_positions = available_positions(&mut checker, &result, *v_id);
             if !available_positions.is_empty() {
                 result[*v_id] = Some(*available_positions.choose(rng).unwrap());
                 success = true;
