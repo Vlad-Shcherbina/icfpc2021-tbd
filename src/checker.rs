@@ -133,7 +133,7 @@ pub fn check_pose(problem: &Problem, pose: &Pose) -> CheckPoseResponse {
 
 #[test]
 fn test_check_pose() {
-    let p = crate::util::load_problem("1");
+    let p = crate::util::load_problem(1);
     let pose = Pose {
         vertices: p.figure.vertices.clone(),
         bonuses: vec![],

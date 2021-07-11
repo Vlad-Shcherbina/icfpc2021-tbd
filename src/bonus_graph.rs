@@ -15,7 +15,7 @@ fn bonus_graph() {
     writeln!(fout, "  legend_z -> legend_t [label=WALLHACK,color=red];").unwrap();
 
     for problem_no in all_problem_ids() {
-        let p = load_problem(problem_no.to_string());
+        let p = load_problem(problem_no);
         print!("{} -> ", problem_no);
 
         let e = next.entry(problem_no).or_default();

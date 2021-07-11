@@ -167,7 +167,7 @@ impl EdgeInfo {
 
 crate::entry_point!("ice_demo", ice_demo);
 fn ice_demo() {
-    let p = load_problem(std::env::args().nth(2).unwrap());
+    let p = load_problem(std::env::args().nth(2).unwrap().parse().unwrap());
 
     let r = ShakeRequest {
         vertices: p.figure.vertices.clone(),

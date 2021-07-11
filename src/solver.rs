@@ -19,8 +19,8 @@ pub trait Solver {
 
 crate::entry_point!("solver", solver_main);
 fn solver_main() {
-    let problem_no = match std::env::args().nth(2) {
-        Some(p) => p,
+    let problem_no: i32 = match std::env::args().nth(2) {
+        Some(p) => p.parse().unwrap(),
         None => {
             eprintln!("Usage:");
             eprintln!("    cargo run solver 11");
@@ -47,9 +47,9 @@ fn solver_main() {
         }
     });
 
-    let problem: Problem = load_problem(&problem_no);
+    let problem: Problem = load_problem(problem_no);
     match solver.solve(&problem, duration_per_task) {
-        Ok(pose) => store_solution(&problem_no, &pose),
+        Ok(pose) => store_solution(problem_no, &pose),
         Err(err) => eprintln!("Error: {:?}", err),
     }
 }

@@ -31,15 +31,15 @@ pub fn all_problem_ids() -> impl Iterator<Item=i32> {
     1..=106
 }
 
-pub fn load_problem<S: AsRef<str>>(problem_id: S) -> Problem {
-    let path = project_path(format!("data/problems/{}.problem", problem_id.as_ref()));
+pub fn load_problem(problem_id: i32) -> Problem {
+    let path = project_path(format!("data/problems/{}.problem", problem_id));
     let data = std::fs::read(path).unwrap();
     let problem: Problem = serde_json::from_slice(&data).unwrap();
     problem
 }
 
-pub fn store_solution<S: AsRef<str>>(problem_id: S, solution: &Pose) {
-    let path = format!("outputs/sol_{}.json", problem_id.as_ref());
+pub fn store_solution(problem_id: i32, solution: &Pose) {
+    let path = format!("outputs/sol_{}.json", problem_id);
     let data = serde_json::to_vec(&solution).unwrap();
     std::fs::write(project_path(&path), data).unwrap();
     eprintln!("solution saved to {}", path);

@@ -72,8 +72,8 @@ impl Solver for RandomSolver {
 
 crate::entry_point!("random_solver", random_solver);
 fn random_solver() {
-    let problem_no = match std::env::args().nth(2) {
-        Some(p) => p,
+    let problem_no: i32 = match std::env::args().nth(2) {
+        Some(p) => p.parse().unwrap(),
         None => {
             eprintln!("Usage:");
             eprintln!("    cargo run random_solver 11");
@@ -81,8 +81,8 @@ fn random_solver() {
         }
     };
 
-    let problem: Problem = load_problem(&problem_no);
+    let problem: Problem = load_problem(problem_no);
     let mut solver = RandomSolver;
     let pose = solver.solve(&problem, None).ok().unwrap();
-    store_solution(&problem_no, &pose);
+    store_solution(problem_no, &pose);
 }
