@@ -78,7 +78,7 @@ async function show_problem_stats(problem_no: number) {
     ${problem.figure.vertices.length} vertices,
     ${problem.figure.edges.length} edges,
     epsilon = ${problem.epsilon}`
-    problem_stats.innerHTML += "] <br>";
+    problem_stats.innerHTML += "<br>";
     problem_stats.innerHTML += highscore;
 }
 
@@ -122,7 +122,7 @@ async function main() {
     let solution = document.getElementById('solution') as HTMLTextAreaElement;
     solution.onblur = () => {
         // console.log(solution.value);
-        pose.vertices = JSON.parse(solution.value!).vertices;
+        pose = JSON.parse(solution.value!);
         // console.log(figure.vertices.length, problem.figure.vertices.length);
         assert(pose.vertices.length == problem.figure.vertices.length);
         // console.dir(figure.vertices);
