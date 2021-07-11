@@ -90,6 +90,18 @@ pub fn get_dislikes(problem: &Problem, vertices: &[Pt]) -> i64 {
     dislikes
 }
 
+pub fn check_unlocked(problem: &Problem, vertices: &[Pt]) -> Vec<bool> {
+    let mut unlocked: Vec<bool> = vec![false; problem.bonuses.len()];
+    for v in vertices {
+        for i in 0..unlocked.len() {
+            if *v == problem.bonuses[i].position {
+                unlocked[i] = true;
+            }
+        }
+    }
+    unlocked
+}
+
 pub fn check_pose(problem: &Problem, pose: &Pose) -> CheckPoseResponse {
     let mut checker = Checker::new(problem, &pose.bonuses);
 
@@ -98,7 +110,7 @@ pub fn check_pose(problem: &Problem, pose: &Pose) -> CheckPoseResponse {
 
     let mut edge_statuses = vec![];
     let mut valid = true;
-    let mut unlocked = vec![];
+    let mut unlocked = check_unlocked(problem, vertices);
     for i in 0..problem.figure.edges.len() {
         let pt1 = vertices[problem.figure.edges[i].0];
         let pt2 = vertices[problem.figure.edges[i].1];
