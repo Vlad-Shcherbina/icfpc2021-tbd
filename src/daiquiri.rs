@@ -1,15 +1,16 @@
 use rand::Rng;
 use rand::prelude::ThreadRng;
 use crate::checker::length_range;
-// use crate::geom::segment_in_poly;
+use crate::geom::pt_in_poly;
 use crate::prelude::*;
 use crate::shake::ShakeRequest;
 
 const COEFF: i64 = 2;
 
-pub fn daikuiri_shake(r: &ShakeRequest) -> Vec<Pt> {
+pub fn daikuiri_shake(r: &ShakeRequest, mojito: bool) -> Vec<Pt> {
     let mut vs = r.vertices.clone();
     let mut rng = rand::thread_rng();
+    let in_hole: Vec<bool> = vs.iter().map(|v| pt_in_poly(*v, &r.problem.hole)).collect();
     let ranges: Vec<(i64, i64)> = r.problem.figure.edges.iter().map(
         |e| {
             let &(start, end) = e;
@@ -25,7 +26,7 @@ pub fn daikuiri_shake(r: &ShakeRequest) -> Vec<Pt> {
         }
         rand_permutation(&mut not_visited, &mut rng);
         for i in not_visited {
-            shake_one(&mut vs, i, r, &ranges, &mut rng);
+            shake_one(&mut vs, i, r, &ranges, &mut rng, mojito && in_hole[i]);
         }
     }
     vs
@@ -48,7 +49,7 @@ fn rand_permutation(a: &mut [usize], rng: &mut ThreadRng) {
 }
 
 fn shake_one(vs: &mut [Pt], i: usize, r: &ShakeRequest, ranges: &[(i64, i64)], 
-             rng: &mut ThreadRng) {
+             rng: &mut ThreadRng, keep_in_hole: bool) {
     let mut adj_edges = vec![];
     let edges = &r.problem.figure.edges;
     for e in 0..(*edges).len() {
@@ -59,19 +60,24 @@ fn shake_one(vs: &mut [Pt], i: usize, r: &ShakeRequest, ranges: &[(i64, i64)],
         for &e in &adj_edges {
             let j = if edges[e].0 == i { edges[e].1 } else { edges[e].0 };
             let d = vs[i].dist2(vs[j]);
-            let delta = 
-            if ranges[e].0 > d {
-                1
+            let extend = if ranges[e].0 > d { 1 } else if ranges[e].1 < d { -1 }
+                         else { continue; };
+            
+            let [mut dx, mut dy] = [0, 0];
+            let choose_x = rng.gen_bool(0.5);
+            let choose_both = rng.gen_bool(0.1);
+            if choose_x || choose_both {
+                dx = if vs[j].x > vs[i].x { -extend } else { extend };
             }
-            else if ranges[e].1 < d {
-                -1
+            if !choose_x || choose_both {
+                dy = if vs[j].y > vs[i].y { -extend } else { extend };
             }
-            else { continue; };
-            if rng.gen_bool(0.5) {
-                vs[i].x += if vs[j].x > vs[i].x { -delta } else { delta };
-            }
-            else {
-                vs[i].y += if vs[j].y > vs[i].y { -delta } else { delta };
+            vs[i].x += dx;
+            vs[i].y += dy;
+            if keep_in_hole && !pt_in_poly(vs[i], &r.problem.hole) {
+                println!("undo");
+                vs[i].x -= dx;
+                vs[i].y -= dy;    
             }
         }
     }
