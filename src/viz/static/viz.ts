@@ -135,6 +135,11 @@ async function main() {
         }, 2000);
     };
 
+    let reset_buttons = document.getElementById('reset-buttons') as HTMLButtonElement;
+    reset_buttons.onclick = function () {
+        for (let b of shakerdiv.childNodes) (b as HTMLInputElement).disabled = false;
+    };
+
     document.getElementById('our-submissions')!.innerHTML =
         `<p><a href="https://poses.live/problems/${problem_no}">our submissions</a></p>`;
 
