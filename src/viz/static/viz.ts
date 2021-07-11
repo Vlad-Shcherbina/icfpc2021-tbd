@@ -58,7 +58,6 @@ async function get_problem(n: number): Promise<Problem> {
 
 
 let problem: Problem;
-// let figure: Figure;
 let highscore: string;
 let pose: Pose;
 let history: Pose[] = [];
@@ -103,8 +102,8 @@ async function main() {
             pose_id = ids[1];
         }
     }
+    let waiting_for_stats = show_problem_stats(problem_no);
     problem = await get_problem(problem_no);
-    show_problem_stats(problem_no);
 
     let bonuses_to_use = document.getElementById("bonus_to_use")!;
     bonuses_to_use.innerHTML = "<b>Bonuses to use</b>: "
@@ -112,27 +111,29 @@ async function main() {
         bonuses_to_use.innerHTML += `[${b.bonus} from ${b.from_problem}] `;
     }
 
-    pose = {
-        vertices: JSON.parse(JSON.stringify(problem.figure.vertices)),
-        bonuses: []
-    };
+    let solution = document.getElementById('solution') as HTMLTextAreaElement;
+    if (pose_id != null) {
+        let r = await fetch('/api/get_pose/' + pose_id);
+        if (r.ok) {
+            solution.value = await r.text();
+            pose = JSON.parse(solution.value!);
+            assert(pose.vertices.length == problem.figure.vertices.length);
+        }
+    }
+    else {
+        pose = {
+            vertices: JSON.parse(JSON.stringify(problem.figure.vertices)),
+            bonuses: []
+        };
+    }
+
     selected = problem.figure.vertices.map(_ => false);
     frame = get_frame(problem);
     canvas_hole.width = canvas_hole.width;
     draw_grid();
     draw_hole();
     await check_solution_on_server();
-    on_figure_change();
-
-    let solution = document.getElementById('solution') as HTMLTextAreaElement;
-
-    let r = await fetch('/api/get_pose/' + pose_id);
-    if (r.ok) {
-        solution.value = await r.text();
-        pose = JSON.parse(solution.value!);
-        assert(pose.vertices.length == problem.figure.vertices.length);
-        on_figure_change();
-    }
+    static_figure_change();
 
     solution.onblur = () => {
         // console.log(solution.value);
@@ -207,6 +208,7 @@ async function main() {
         for (let b of shakerdiv.childNodes) (b as HTMLInputElement).disabled = false;
     };
 
+    await waiting_for_stats;
     // THIS IS WHERE THE MAGIC HAPPENS
 
     // Keyboard events

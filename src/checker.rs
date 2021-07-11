@@ -1,5 +1,6 @@
 use std::collections::HashMap;
 use std::convert::TryInto;
+use crate::domain_model::BonusName;
 use crate::prelude::*;
 use crate::geom::{bounding_box, pt_in_poly, segment_in_poly};
 
@@ -145,6 +146,15 @@ pub fn check_pose(problem: &Problem, pose: &Pose) -> CheckPoseResponse {
         };
         valid = valid && es.is_valid();
         edge_statuses.push(es);
+    }
+
+    for i in 0..pose.bonuses.len() {
+        for j in 0..pose.bonuses.len() {
+            if i == j { continue; }
+            if pose.bonuses[i].bonus == pose.bonuses[j].bonus {
+                valid = false;
+            }
+        }
     }
 
     for _b in &problem.bonuses {

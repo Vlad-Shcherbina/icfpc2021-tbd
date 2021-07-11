@@ -140,6 +140,7 @@ fn static_handler(req: &Request, resp: ResponseBuilder) -> HandlerResult {
                 "css" => "text/css",
                 "js" => "application/javascript",
                 "map" => "text/plain",
+                "ts" => "text/plain",
                 "problem" => "application/json",
                 _ => {
                     eprintln!("warning: unknown file extension {}", pth.to_string_lossy());
