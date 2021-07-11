@@ -1,3 +1,4 @@
+use std::collections::HashMap;
 use crate::prelude::*;
 use crate::geom::{bounding_box, pt_in_poly, segment_in_poly};
 
@@ -46,6 +47,7 @@ pub struct Checker {
     pub edge_ranges: Vec<(i64, i64)>,
     pub edges: Vec<(usize, usize)>,
     pub inside: Vec<Pt>,
+    pub edge_cache: HashMap<(Pt, Pt), bool>,
 }
 
 impl Checker {
@@ -73,12 +75,18 @@ impl Checker {
             edges: p.figure.edges.clone(),
             edge_ranges,
             inside,
+            edge_cache: HashMap::new(),
         }
     }
 
-    pub fn edge_in_hole(&mut self, pt1: Pt, pt2: Pt) -> bool {
-        // TODO: cache
-        segment_in_poly((pt1, pt2), &self.problem.hole)
+    pub fn edge_in_hole(&mut self, mut pt1: Pt, mut pt2: Pt) -> bool {
+        if (pt1.x, pt1.y) > (pt2.x, pt1.y) {
+            std::mem::swap(&mut pt1, &mut pt2);
+        }
+        let hole = &self.problem.hole;
+        *self.edge_cache.entry((pt1, pt2)).or_insert_with(|| {
+            segment_in_poly((pt1, pt2), hole)
+        })
     }
 }
 

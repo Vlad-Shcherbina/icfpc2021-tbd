@@ -3,7 +3,7 @@
 #[derive(serde::Serialize, serde::Deserialize)]
 #[serde(into="(i64, i64)")]
 #[serde(from="(i64, i64)")]
-#[derive(Clone, Copy, PartialEq)]
+#[derive(Clone, Copy, PartialEq, Eq, Hash)]
 pub struct Pt {
     pub x: i64,
     pub y: i64,  // y axis points down
