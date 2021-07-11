@@ -120,13 +120,10 @@ fn handler(_state: &Mutex<ServerState>, req: &Request, resp: ResponseBuilder) ->
         let mut scraper = Scraper::new();
         let pose = scraper.get_pose_by_id(pose_id.to_string());
 
-        let body = match pose {
-            Some(valid_pose) => serde_json::to_vec(&valid_pose).unwrap(),
-            None => vec![],
-        };
-
-        return resp.code("200 OK")
-            .body(body);
+        return match pose {
+            Some(valid_pose) => resp.code("200 OK").body(serde_json::to_vec(&valid_pose).unwrap()),
+            None => resp.code("404 Not Found").body(vec![]),
+        }
     }
 
     static_handler(req, resp)

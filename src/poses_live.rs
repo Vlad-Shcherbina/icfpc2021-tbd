@@ -146,6 +146,9 @@ impl Scraper {
             Ok(data) => {
                 Some(serde_json::from_str(&data.into_string().unwrap()).unwrap())
             }
+            Err(ureq::Error::Status(404, _)) => {
+                None
+            }
             Err(ureq::Error::Status(500, _)) => {
                 None
             }

@@ -136,12 +136,14 @@ async function main() {
     pose_button.onclick = async function () {
         pose_result.innerText = 'getting the pose ...';
         let r = await fetch('/api/get_pose/' + pose_id.value!);
-        assert(r.ok);
-        solution.value = await r.text();
-        pose_result.innerText = '';
-        pose.vertices = JSON.parse(solution.value!).vertices;
-        assert(pose.vertices.length == problem.figure.vertices.length);
-        on_figure_change();
+        if (r.ok) {
+            solution.value = await r.text();
+            pose.vertices = JSON.parse(solution.value!).vertices;
+            assert(pose.vertices.length == problem.figure.vertices.length);
+            on_figure_change();
+            pose_result.innerText = '';
+        }
+        pose_result.innerText = 'no pose with this id';
     }
 
     let circles_checkbox = document.getElementById("show_circles") as HTMLInputElement;
