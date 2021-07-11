@@ -155,6 +155,11 @@ pub fn poly_edges(poly: &[Pt]) -> impl Iterator<Item=(Pt, Pt)> + '_ {
         poly.iter().copied().skip(1).chain(std::iter::once(poly[0])))
 }
 
+// positive if CCW
+pub fn poly_area_doubled(poly: &[Pt]) -> i64 {
+    poly_edges(poly).map(|(a, b)| (b.x - a.x) * (a.y + b.y)).sum()
+}
+
 // boundary included
 pub fn pt_in_poly(pt: Pt, poly: &[Pt]) -> bool {
     let mut odd = false;
@@ -277,6 +282,40 @@ pub fn segment_in_poly(seg: (Pt, Pt), poly: &[Pt]) -> bool {
     }
 
     true
+}
+
+fn check_segment_in_poly(mut seg: (Pt, Pt), poly: &[Pt], expected: bool) {
+    let mut poly = poly.to_owned();
+    for _ in 0..2 {
+        for _ in 0..2 {
+            for _ in 0..poly.len() {
+                assert_eq!(segment_in_poly(seg, &poly), expected);
+                poly.rotate_left(1);
+            }
+            poly.reverse();
+        }
+        seg = (seg.1, seg.0);
+    }
+}
+
+#[test]
+fn test_segment_in_poly_bug() {
+    let poly = vec![
+        Pt::new(100, 200),
+        Pt::new(110, 200),
+        Pt::new(105, 205),
+        Pt::new(110, 210),
+        Pt::new(100, 210),
+    ];
+
+    check_segment_in_poly((Pt::new(100, 200), Pt::new(105, 205)), &poly, true);
+    check_segment_in_poly((Pt::new(101, 200), Pt::new(107, 203)), &poly, true);
+    check_segment_in_poly((Pt::new(100, 200), Pt::new(107, 203)), &poly, true);
+
+    // TODO: this is a bug, should be false
+    check_segment_in_poly((Pt::new(110, 200), Pt::new(110, 210)), &poly, true);
+    check_segment_in_poly((Pt::new(108, 202), Pt::new(109, 209)), &poly, true);
+    check_segment_in_poly((Pt::new(110, 200), Pt::new(109, 209)), &poly, true);
 }
 
 // Rotate a point around another point
