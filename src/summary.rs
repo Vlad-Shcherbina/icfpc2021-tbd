@@ -2,6 +2,7 @@ use std::collections::HashMap;
 use std::fmt::Write;
 use crate::prelude::*;
 use crate::geom::*;
+use crate::poses_live::*;
 
 crate::entry_point!("summary", summary);
 fn summary() {
@@ -37,6 +38,8 @@ fn summary() {
     writeln!(s, "<th class=diag><div>hole area</div></th>").unwrap();
     writeln!(s, "<th class=diag><div>unlocks bonuses</div></th>").unwrap();
     writeln!(s, "<th class=diag><div>gets bonuses</div></th>").unwrap();
+    writeln!(s, "<th class=diag><div>best solution</div></th>").unwrap();
+    writeln!(s, "<th class=diag><div>latest solution</div></th>").unwrap();
     writeln!(s, "</tr>").unwrap();
 
     let bonuslist = get_bonus_list();
@@ -88,6 +91,30 @@ fn summary() {
             writeln!(s, "{}<br>", b).unwrap();
         }
         writeln!(s, "</td>").unwrap();
+
+        let mut scraper = Scraper::new();
+        let pi = scraper.problem_info(problem_id);
+
+        let best = match pi.highscore() {
+            Some(PoseInfo{id, er}) => match er {
+                  EvaluationResult::Invalid => format!("❌, {}", id),
+                  EvaluationResult::Pending => format!("⏳, {}", id),
+                  EvaluationResult::Valid{dislikes} => format!("{}, {}", dislikes, id),
+            },
+            None => "-".to_string(),
+        };
+
+        let latest = match pi.latest() {
+            Some(PoseInfo{id, er}) => match er {
+                  EvaluationResult::Invalid => format!("❌, {}", id),
+                  EvaluationResult::Pending => format!("⏳, {}", id),
+                  EvaluationResult::Valid{dislikes} => format!("{}, {}", dislikes, id),
+            },
+            None => "-".to_string(),
+        };
+
+        writeln!(s, "<td class=num>{}</td>", best).unwrap();
+        writeln!(s, "<td class=num>{}</td>", latest).unwrap();
 
     }
     writeln!(s, "</table>").unwrap();
