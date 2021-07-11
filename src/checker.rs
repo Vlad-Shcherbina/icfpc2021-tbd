@@ -1,4 +1,5 @@
 use std::collections::HashMap;
+use std::convert::TryInto;
 use crate::prelude::*;
 use crate::geom::{bounding_box, pt_in_poly, segment_in_poly};
 
@@ -49,7 +50,7 @@ pub struct Checker {
     pub edge_ranges: Vec<(i64, i64)>,
     pub edges: Vec<(usize, usize)>,
     pub inside: Vec<Pt>,
-    pub edge_cache: HashMap<(Pt, Pt), bool>,
+    pub edge_cache: HashMap<[i16; 4], bool>,
 }
 
 impl Checker {
@@ -86,7 +87,13 @@ impl Checker {
             std::mem::swap(&mut pt1, &mut pt2);
         }
         let hole = &self.problem.hole;
-        *self.edge_cache.entry((pt1, pt2)).or_insert_with(|| {
+        let key = [
+            pt1.x.try_into().unwrap(),
+            pt1.y.try_into().unwrap(),
+            pt2.x.try_into().unwrap(),
+            pt2.y.try_into().unwrap(),
+        ];
+        *self.edge_cache.entry(key).or_insert_with(|| {
             segment_in_poly((pt1, pt2), hole)
         })
     }
