@@ -66,7 +66,7 @@ pub struct Scraper {
 pub enum EvaluationResult {
     Pending,  // hourglass
     Invalid,  // cross
-    Valid { dislikes: i32 },
+    Valid { dislikes: i64 },
 }
 
 #[derive(Debug)]
@@ -122,7 +122,7 @@ impl Scraper {
             poses.push( PoseInfo {
                 id: pose.get(1).unwrap().as_str().to_string(),
                 er: EvaluationResult::Valid {
-                    dislikes: pose.get(2).unwrap().as_str().parse::<i32>().unwrap(),
+                    dislikes: pose.get(2).unwrap().as_str().parse().unwrap(),
                 },
             });
         }
