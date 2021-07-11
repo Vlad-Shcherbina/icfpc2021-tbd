@@ -51,15 +51,15 @@ pub fn daikuiri_shake(r: &ShakeRequest) -> Vec<Pt> {
     vs
 }
 
-fn is_adjacent(i: usize, j: usize, r: &ShakeRequest) -> bool {
-    if i == j { return false; }
-    for &(start, end) in &r.problem.figure.edges {
-        if (start == i || end == i) &&  (start == j || end == j) {
-            return true;
-        }
-    }
-    false
-}
+// fn is_adjacent(i: usize, j: usize, r: &ShakeRequest) -> bool {
+//     if i == j { return false; }
+//     for &(start, end) in &r.problem.figure.edges {
+//         if (start == i || end == i) &&  (start == j || end == j) {
+//             return true;
+//         }
+//     }
+//     false
+// }
 
 fn rand_permutation(a: &mut [usize], rng: &mut ThreadRng) {
     for i in 0..a.len() {
