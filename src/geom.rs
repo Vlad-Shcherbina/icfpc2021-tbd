@@ -283,7 +283,18 @@ pub fn segment_in_poly(seg: (Pt, Pt), poly: &[Pt]) -> bool {
         match segment_intersection(seg, edge) {
             Intersection::Internal => return false,
             Intersection::No => {}
-            Intersection::Endpoint(_) => {}
+            Intersection::Endpoint(pt) => {
+                if pt != edge.0 && pt != edge.1 {
+                    assert!(pt == seg.0 || pt == seg.1);
+                    let other = seg.0 + seg.1 - pt;
+                    let d = other - pt;
+                    let d1 = edge.0 - pt;
+                    let d2 = edge.1 - pt;
+                    if sign * qqqqqq(d1, d, d2) < 0 {
+                        return false;
+                    }
+                }
+            }
         }
     }
 
@@ -349,8 +360,7 @@ fn test_segment_in_poly_bug() {
 
     check_segment_in_poly((Pt::new(110, 200), Pt::new(110, 210)), &poly, false);
     check_segment_in_poly((Pt::new(110, 200), Pt::new(109, 209)), &poly, false);
-    // TODO: this is a bug, should be false
-    check_segment_in_poly((Pt::new(108, 202), Pt::new(109, 209)), &poly, true);
+    check_segment_in_poly((Pt::new(108, 202), Pt::new(109, 209)), &poly, false);
 }
 
 // Rotate a point around another point
