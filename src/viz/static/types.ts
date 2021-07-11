@@ -37,6 +37,11 @@ export interface EdgeStatus {
     max_length: number,
 }
 
+export interface ProblemTgtBonus {
+    bonus: string,
+    from_problem: number,
+}
+
 export interface ProblemBonus {
     bonus: string,
     problem: number,

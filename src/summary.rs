@@ -100,7 +100,6 @@ fn summary() {
 fn get_bonus_list() -> HashMap<i32, Vec<String>> {
     let mut bonuses: HashMap<i32, Vec<String>> = HashMap::new();
     for problem_id in all_problem_ids() {
-        dbg!(problem_id);
         let p = load_problem(problem_id);
         for b in p.bonuses {
             bonuses.entry(b.problem)

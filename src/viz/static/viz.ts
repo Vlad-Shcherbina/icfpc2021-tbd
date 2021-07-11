@@ -5,7 +5,8 @@ import {
     WindowPt, CanvasPt, GridPt,
     Pt, Pair, Figure, Problem, Frame, Foci, Pose,
     Actions, CheckPoseRequest, CheckPoseResponse, RotateRequest,
-    ShakeRequest
+    ShakeRequest,
+    ProblemTgtBonus
 } from "./types.js"
 
 // hole, grid, bonus area, draw only on load
@@ -55,6 +56,7 @@ async function get_problem(n: number): Promise<Problem> {
     return await response.json();
 }
 
+
 let problem: Problem;
 // let figure: Figure;
 let highscore: string;
@@ -75,13 +77,15 @@ async function show_problem_stats(problem_no: number) {
     Problem #${problem_no}: <br>
     ${problem.figure.vertices.length} vertices,
     ${problem.figure.edges.length} edges,
-    epsilon = ${problem.epsilon},
-    bonuses = |`;
-    for (let b of problem.bonuses) {
-        problem_stats.innerHTML += ` ${b.bonus} for ${b.problem} |`;
-    }
+    epsilon = ${problem.epsilon}`
     problem_stats.innerHTML += "] <br>";
     problem_stats.innerHTML += highscore;
+}
+
+async function get_tgt_bonuses(problem_no: number): Promise<ProblemTgtBonus[]> {
+    const response = await fetch('/api/tgt_bonuses/' + problem_no);
+    assert(response.ok);
+    return await response.json();
 }
 
 async function main() {
@@ -94,9 +98,15 @@ async function main() {
         hash = hash.slice(1);
         problem_no = parseInt(hash);
     }
-
     problem = await get_problem(problem_no);
     show_problem_stats(problem_no);
+
+    let bonuses_to_use = document.getElementById("bonus_to_use")!;
+    bonuses_to_use.innerHTML = "<b>Bonuses to use</b>: "
+    for (let b of await get_tgt_bonuses(problem_no)) {
+        bonuses_to_use.innerHTML += `[${b.bonus} from ${b.from_problem}] `;
+    }
+
     pose = { vertices: JSON.parse(JSON.stringify(problem.figure.vertices)),
               bonuses: [] };
     selected = problem.figure.vertices.map(_ => false);
@@ -259,6 +269,7 @@ async function main() {
     document.getElementById("edge_too_short")!.style.color = CLR_SHORT_EDGE;
 }
 
+
 main();
 
 // ===== HANDLERS =====
@@ -277,6 +288,7 @@ function static_figure_change() {
     let solution = document.getElementById('solution') as HTMLTextAreaElement;
     solution.value = JSON.stringify(pose, null, 2);
     show_dislikes_and_bonuses();
+    show_unlocked_bonuses();
 }
 
 
@@ -418,7 +430,6 @@ function draw_hole() {
     for (let p of problem.bonuses) {
         let [px, py] = grid_to_canvas(p.position);
         const r = 10;
-        console.log(p);
         if (p.bonus == "GLOBALIST") {
             ctx.fillStyle = CLR_GLOB_TARGET;
         }
@@ -568,26 +579,36 @@ function draw_foci() {
     ctx.fillStyle = fs0;
 }
 
-
+    
 function show_dislikes_and_bonuses() {
     let txt = document.getElementById("score")! as HTMLParagraphElement;
     txt.innerHTML = "Dislikes: ";
     txt.innerHTML += `${server_check_result.dislikes} `;
-    let extra = false;
+    let brace = false;
     if (!server_check_result.valid) {
         txt.innerHTML += " (not valid";
-        extra = true;
+        brace = true;
     }
+    let ul = false;
     for (let i = 0; i < problem.bonuses.length; ++i) {
         if (server_check_result.unlocked[i]) {
-            txt.innerHTML += extra ? ", " : "(";
-            txt.innerHTML += `${problem.bonuses[i].problem} unlocked`;
-            extra = true;
+            txt.innerHTML += brace ? ", " : "(";
+            txt.innerHTML += ul ? "" : "unlocked:";
+            txt.innerHTML += ` ${problem.bonuses[i].problem}`;
+            brace = ul = true;
         }
     }
-    if (extra) txt.innerHTML += ")";
+    if (brace) txt.innerHTML += ")";
 }
 
+function show_unlocked_bonuses() {
+    let txt = document.getElementById("bonus_to_get")! as HTMLParagraphElement;
+    txt.innerHTML = "<b>Bonuses to get:</b> ";
+    for (let b of problem.bonuses) {
+        txt.innerHTML += `[${b.bonus} for ${b.problem}`;
+        txt.innerHTML += '] ';
+    }
+}
 
 // ===== INTERACTION =====
 
@@ -729,3 +750,4 @@ async function turn(angle: number) {
     assert(pose.vertices.length == problem.figure.vertices.length);
     on_figure_change();
 }
+

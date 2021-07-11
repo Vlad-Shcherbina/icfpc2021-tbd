@@ -30,12 +30,19 @@ pub enum BonusName {
     SUPERFLEX,
 }
 
-#[derive(serde::Deserialize)]
+#[derive(serde::Deserialize, serde::Serialize)]
 #[derive(Debug, Clone)]
 pub struct ProblemBonus {
     pub bonus: BonusName,
     pub problem: i32,
     pub position: Pt,
+}
+
+#[derive(serde::Serialize)]
+#[derive(Debug, Clone)]
+pub struct ProblemTgtBonus {
+    pub bonus: BonusName,
+    pub from_problem: i32,
 }
 
 #[derive(serde::Deserialize, serde::Serialize)]
