@@ -45,6 +45,7 @@ const CLR_FOCI = "#A96060";
 const CLR_SELECTION_BOUNDARY = "#999999";
 const CLR_GLOB_TARGET = "#FFFF00";
 const CLR_BREAK_TARGET = "#00FFFF";
+const CLR_WALL_TARGET = "#FFA500";
 const CLR_NEARBY_VERTEX = "#FFD800"
 
 async function get_problem(n: number): Promise<Problem> {
@@ -408,6 +409,9 @@ function draw_hole() {
         }
         else if (p.bonus == "BREAK_A_LEG") {
             ctx.fillStyle == CLR_BREAK_TARGET;
+        }
+        else if (p.bonus == "WALLHACK") {
+            ctx.fillStyle == CLR_WALL_TARGET;
         }
         else {
             assert(false, p.bonus);
