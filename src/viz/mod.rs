@@ -5,6 +5,7 @@ use crate::prelude::*;
 use crate::checker::{CheckPoseRequest, check_pose};
 use crate::shake::{ShakeRequest, shake};
 use crate::rotate::{RotateRequest, rotate};
+use crate::poses_live::{Scraper, PoseInfo, EvaluationResult };
 
 struct ServerState {
 }
@@ -80,13 +81,14 @@ fn handler(_state: &Mutex<ServerState>, req: &Request, resp: ResponseBuilder) ->
         assert_eq!(req.method, "GET");
         let problem_id: i32 = problem_id.parse().unwrap();
 
-        let mut scraper = crate::poses_live::Scraper::new();
+        let mut scraper = Scraper::new();
         let problem_info = scraper.problem_info(problem_id);
 
         let body = match problem_info.highscore() {
-            Some(pose_info) => format!(
+            Some(PoseInfo { id, er: EvaluationResult::Valid { dislikes }} ) => format!(
                 r#"Least dislikes: {}, at <a href="https://poses.live/solutions/{}">{}</a>"#,
-                pose_info.server_dislikes, pose_info.id, pose_info.id),
+                dislikes, id, id),
+            Some(PoseInfo { .. }) => unreachable!(),
             None => "No previous valid solutions".to_string(),
         };
 

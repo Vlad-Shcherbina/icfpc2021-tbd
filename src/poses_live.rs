@@ -60,23 +60,38 @@ pub struct Scraper {
 }
 
 #[derive(Debug)]
+#[allow(dead_code)]   // TODO: remove when scraper is done
+pub enum EvaluationResult {
+    Pending,  // hourglass
+    Invalid,  // cross
+    Valid { dislikes: i32 },
+}
+
+#[derive(Debug)]
 pub struct PoseInfo {
     pub id: String,
-    pub server_dislikes: i32,
-    // TODO: should be Option<i32>, for failed submissions and submissions under evaluation
+    pub er: EvaluationResult,
 }
 
 #[derive(Debug)]
 pub struct ProblemInfo {
-    valid_solutions: Vec<PoseInfo>,
+    poses: Vec<PoseInfo>,
 }
 
 impl ProblemInfo {
     pub fn highscore(&self) -> Option<&PoseInfo> {
-        self.valid_solutions.iter().min_by_key(|p| p.server_dislikes)
+        self.poses.iter()
+        .filter_map(|pi| match pi.er {
+            EvaluationResult::Valid { dislikes } => Some((dislikes, pi)),
+            EvaluationResult::Invalid => None,
+            EvaluationResult::Pending => None,
+        })
+        .min_by_key(|q| q.0)
+        .map(|q| q.1)
     }
 
     pub fn _latest(&self) -> Option<&PoseInfo> {
+        // can't be implemented right now because we only have valid submissions
         todo!()
     }
 }
@@ -98,13 +113,16 @@ impl Scraper {
         // yes, we use regex to parse HTML
         let re = regex::Regex::new("<tr><td><a href=\"/solutions/(.*?)\".*?</a></td><td>(\\d+)</td></tr>").unwrap();
 
-        let mut valid_solutions = vec![];
+        // TODO: detect crosses and hourglasses, not only valid solutions
+        let mut poses = vec![];
         for pose in re.captures_iter(&page) {
-            valid_solutions.push( PoseInfo {
+            poses.push( PoseInfo {
                 id: pose.get(1).unwrap().as_str().to_string(),
-                server_dislikes: pose.get(2).unwrap().as_str().parse::<i32>().unwrap(),
+                er: EvaluationResult::Valid {
+                    dislikes: pose.get(2).unwrap().as_str().parse::<i32>().unwrap(),
+                },
             });
         }
-        ProblemInfo { valid_solutions }
+        ProblemInfo { poses }
     }
 }
