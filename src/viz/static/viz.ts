@@ -230,7 +230,8 @@ async function main() {
 
     let last_nearby: number | null = null;
     canvas_figure.onmousemove = (e: MouseEvent) => {
-        console.log(canvas_to_grid(window_to_canvas([e.x, e.y])));
+        let w2g = canvas_to_grid(window_to_canvas([e.x, e.y]));
+        document.getElementById("current-mouse-pointer")!.innerText = w2g[0] + ", " + w2g[1];
         if (mouse_coord == null) {
             // mouse is not down, show the closest vertex
             if (last_nearby != null) {
