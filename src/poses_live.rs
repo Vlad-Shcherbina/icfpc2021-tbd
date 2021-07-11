@@ -53,6 +53,8 @@ fn scrape_poses() {
     let pi = scraper.problem_info(1);
     dbg!(&pi);
     dbg!(pi.highscore());
+    let sol = scraper.get_pose_by_id("b9a6c73d-dd2c-4a54-9f6e-75ea51d11c79".to_string());
+    dbg!(&sol);
 }
 
 pub struct Scraper {
@@ -134,5 +136,22 @@ impl Scraper {
         let re = regex::Regex::new(&format!("<tr><td><a href=\"/problems/{}\">{}</a></td><td>.*?</td><td>(\\d+)</td></tr>", problem_id, problem_id)).unwrap();
 
         re.captures(&page).unwrap().get(1).unwrap().as_str().parse::<i32>().unwrap()
+    }
+
+    pub fn get_pose_by_id(&mut self, pose_id: String) -> Option<Pose> {
+        let data = self.agent.get(&format!("https://poses.live/solutions/{}/download", pose_id))
+            .call();
+
+        match data {
+            Ok(data) => {
+                Some(serde_json::from_str(&data.into_string().unwrap()).unwrap())
+            }
+            Err(ureq::Error::Status(500, _)) => {
+                None
+            }
+            r => panic!("{:?}", r),
+        }
+
+
     }
 }
