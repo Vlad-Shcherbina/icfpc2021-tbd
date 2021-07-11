@@ -5,6 +5,8 @@ use crate::checker::length_range;
 use crate::prelude::*;
 use crate::shake::ShakeRequest;
 
+const COEFF: i64 = 2;
+
 pub fn daikuiri_shake(r: &ShakeRequest) -> Vec<Pt> {
     let mut vs = r.vertices.clone();
     let mut rng = rand::thread_rng();
@@ -16,7 +18,7 @@ pub fn daikuiri_shake(r: &ShakeRequest) -> Vec<Pt> {
                          r.problem.epsilon)
         }).collect();
 
-    for _ in 0..100 {
+    for _ in 0..r.param * COEFF * COEFF / 2 {
         let mut not_visited: Vec<usize> = vec![];
         for i in 0..r.selected.len() {
             if r.selected[i] { not_visited.push(i); }
@@ -75,7 +77,7 @@ fn shake_one(vs: &mut [Pt], i: usize, r: &ShakeRequest, ranges: &[(i64, i64)],
         let &(start, end) = &(*edges)[e];
         if start == i || end == i { adj_edges.push(e); }
     }
-    for _ in 0..100 {
+    for _ in 0..r.param * COEFF * COEFF / 2 {
         for &e in &adj_edges {
             let j = if edges[e].0 == i { edges[e].1 } else { edges[e].0 };
             let d = vs[i].dist2(vs[j]);
