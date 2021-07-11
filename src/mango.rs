@@ -33,7 +33,7 @@ fn deformation_limits(problem: &Problem, v1_id: usize, v2_id: usize) -> (i64, i6
     crate::checker::length_range(orig_d2, problem.epsilon)
 }
 
-fn available_positions(problem: &Problem, vertices: &[Pt], v_id: usize) -> Vec<Pt> {
+pub fn available_positions(problem: &Problem, vertices: &[Option<Pt>], v_id: usize) -> Vec<Pt> {
     let neighbours: Vec<_> = neighbours(&problem.figure.edges, v_id).collect();
     let borders = borders(&problem.hole);
     let mut available_positions = vec![];
@@ -41,21 +41,22 @@ fn available_positions(problem: &Problem, vertices: &[Pt], v_id: usize) -> Vec<P
         'l: for y in borders.min_y..=borders.max_y {
             let assumed_pos = Pt { x, y };
 
-            if assumed_pos == vertices[v_id] {
+            if Some(assumed_pos) == vertices[v_id] {
                 continue 'l;
             }
 
             for n_id in &neighbours {
-                let n = vertices[*n_id];
-                let (min_dist, max_dist) = deformation_limits(problem, v_id, *n_id);
-                let new_dist = assumed_pos.dist2(n);
-                if !(min_dist <= new_dist && new_dist <= max_dist) {
-                    // eprintln!("Drop {:?} by distance", assumed_pos);
-                    continue 'l;
-                }
-                if !segment_in_poly((n, assumed_pos), &problem.hole) {
-                    // eprintln!("Drop {:?} by intersection", assumed_pos);
-                    continue 'l;
+                if let Some(n) = vertices[*n_id] {
+                    let (min_dist, max_dist) = deformation_limits(problem, v_id, *n_id);
+                    let new_dist = assumed_pos.dist2(n);
+                    if !(min_dist <= new_dist && new_dist <= max_dist) {
+                        // eprintln!("Drop {:?} by distance", assumed_pos);
+                        continue 'l;
+                    }
+                    if !segment_in_poly((n, assumed_pos), &problem.hole) {
+                        // eprintln!("Drop {:?} by intersection", assumed_pos);
+                        continue 'l;
+                    }
                 }
             }
             available_positions.push(assumed_pos);
@@ -66,7 +67,7 @@ fn available_positions(problem: &Problem, vertices: &[Pt], v_id: usize) -> Vec<P
 
 pub fn mango_shake(r: &ShakeRequest) -> Vec<Pt> {
     let rng = &mut rand::thread_rng();
-    let mut result = r.vertices.clone();
+    let mut result: Vec<_> = r.vertices.iter().map(|pt| Some(*pt)).collect();
     let mut selected_idxs: Vec<_> = r.selected.iter().enumerate()
         .filter(|(_, b)| **b)
         .map(|(idx, _)| idx)
@@ -79,13 +80,13 @@ pub fn mango_shake(r: &ShakeRequest) -> Vec<Pt> {
         for v_id in &selected_idxs {
             let available_positions = available_positions(&r.problem, &result, *v_id);
             if !available_positions.is_empty() {
-                result[*v_id] = *available_positions.choose(rng).unwrap();
+                result[*v_id] = Some(*available_positions.choose(rng).unwrap());
                 success = true;
             }
         }
         iteration_count += 1;
         if success || iteration_count > 10 {
-            return result;
+            return result.iter().map(|pt| pt.unwrap()).collect();
         }
     }
 }

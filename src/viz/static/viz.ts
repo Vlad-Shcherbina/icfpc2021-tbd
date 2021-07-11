@@ -148,6 +148,7 @@ async function main() {
         "threshold",
         "daiquiri",
         "mojito",
+        "bruteforce",
     ];
     let shakerdiv = document.getElementById('shakers') as HTMLDivElement;
     for (let method of shakers) {

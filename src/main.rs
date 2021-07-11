@@ -24,6 +24,7 @@ mod threshold;
 mod daiquiri;
 mod summary;
 mod rail;
+mod bruteforce;
 
 #[linkme::distributed_slice]
 static ENTRY_POINTS: [(&'static str, fn())] = [..];

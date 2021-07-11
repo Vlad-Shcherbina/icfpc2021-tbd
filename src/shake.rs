@@ -21,6 +21,7 @@ pub fn shake(r: &ShakeRequest) -> Vec<Pt> {
         "threshold" => crate::threshold::threshold_shake(r),
         "daiquiri" => crate::daiquiri::daikuiri_shake(r, false),
         "mojito" => crate::daiquiri::daikuiri_shake(r, true),
+        "bruteforce" => crate::bruteforce::brutforce(r),
         s => panic!("{:?}", s),
     }
 }
