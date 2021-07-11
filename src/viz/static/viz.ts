@@ -25,7 +25,7 @@ let ctx_circles = canvas_circles.getContext("2d")!;
 let canvas_foci = document.getElementById("foci") as HTMLCanvasElement;
 let ctx_foci = canvas_foci.getContext("2d")!;
 
-// short-lived auxiliary drawing like selection boundary 
+// short-lived auxiliary drawing like selection boundary
 let canvas_auxi = document.getElementById("auxi") as HTMLCanvasElement;
 let ctx_auxi = canvas_auxi.getContext("2d")!;
 
@@ -107,8 +107,10 @@ async function main() {
         bonuses_to_use.innerHTML += `[${b.bonus} from ${b.from_problem}] `;
     }
 
-    pose = { vertices: JSON.parse(JSON.stringify(problem.figure.vertices)),
-              bonuses: [] };
+    pose = {
+        vertices: JSON.parse(JSON.stringify(problem.figure.vertices)),
+        bonuses: []
+    };
     selected = problem.figure.vertices.map(_ => false);
     frame = get_frame(problem);
     canvas_hole.width = canvas_hole.width;
@@ -197,7 +199,7 @@ async function main() {
             pose.vertices = await r.json();
             assert(pose.vertices.length == problem.figure.vertices.length);
             for (let b of shakerdiv.childNodes) (b as HTMLInputElement).disabled = false;
-            on_figure_change();           
+            on_figure_change();
         }
     }
 
@@ -228,6 +230,7 @@ async function main() {
 
     let last_nearby: number | null = null;
     canvas_figure.onmousemove = (e: MouseEvent) => {
+        console.log(canvas_to_grid(window_to_canvas([e.x, e.y])));
         if (mouse_coord == null) {
             // mouse is not down, show the closest vertex
             if (last_nearby != null) {
@@ -516,7 +519,6 @@ function draw_figure() {
     }
 }
 
-
 function draw_selected() {
     for (let i = 0; i < selected.length; i++) {
         draw_one_vertex(i, selected[i] ? CLR_SELECTED : CLR_DESELECTED);
@@ -593,7 +595,7 @@ function draw_foci() {
     ctx.fillStyle = fs0;
 }
 
-    
+
 function show_dislikes_and_bonuses() {
     let txt = document.getElementById("score")! as HTMLParagraphElement;
     txt.innerHTML = "Dislikes: ";
@@ -703,7 +705,7 @@ function move_selected([dx, dy]: GridPt) {
 }
 
 let dragged_vertex: number | any = null;
-function start_dragging_vertex(from: WindowPt)  {
+function start_dragging_vertex(from: WindowPt) {
     dragged_vertex = get_nearby_vertex_index(from);
 }
 
@@ -759,4 +761,3 @@ async function turn(angle: number) {
     assert(pose.vertices.length == problem.figure.vertices.length);
     on_figure_change();
 }
-
