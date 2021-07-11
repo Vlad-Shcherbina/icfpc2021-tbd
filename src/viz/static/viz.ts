@@ -84,6 +84,8 @@ async function show_problem_stats(problem_no: number) {
 }
 
 async function main() {
+    ctx_figure.fillText("If you can read it, check_pose runs too slow", 10, 10);
+
     window.addEventListener('hashchange', () => location.reload());
     let problem_no = 1;
     let { hash } = window.location;
@@ -98,8 +100,9 @@ async function main() {
               bonuses: [] };
     selected = problem.figure.vertices.map(_ => false);
     frame = get_frame(problem);
+    canvas_hole.width = canvas_hole.width;
+    draw_grid();
     draw_hole();
-    draw_grid(frame);
     await check_solution_on_server();
     on_figure_change();
 
@@ -256,7 +259,9 @@ function static_figure_change() {
 
 
 async function keyboard_handlers(e: KeyboardEvent) {
-    if (e.code == "KeyA" && !e.ctrlKey) {
+    // if (e.ctrlKey || e.metaKey) return;
+    if (document.activeElement?.tagName.toLowerCase() == "textarea") return;
+    if (e.code == "KeyA") {
         e.preventDefault();
         selected = pose.vertices.map(_ => true);
         draw_selected();
@@ -268,20 +273,20 @@ async function keyboard_handlers(e: KeyboardEvent) {
         draw_selected();
         return;
     }
-    if (e.code == "KeyC" && !e.ctrlKey) {
+    if (e.code == "KeyC") {
         e.preventDefault();
         let circles_checkbox = document.getElementById("show_circles") as HTMLInputElement;
         circles_checkbox.checked = !circles_checkbox.checked;
         draw_circles();
         return;
     }
-    if (e.code == "KeyZ" && !e.ctrlKey) {
+    if (e.code == "KeyZ") {
         e.preventDefault();
         undo();
         return;
     }
 
-    if ((e.code == "KeyM" || e.code == "KeyN") && !e.ctrlKey) {
+    if (e.code == "KeyM" || e.code == "KeyN") {
         let angle = 0;
         if (e.code == "KeyM") {
             angle = e.shiftKey ? 90 : 15;
@@ -383,7 +388,7 @@ function window_to_canvas(mouse_coord: WindowPt): CanvasPt {
 
 // ===== REDRAW =====
 
-function draw_grid(frame: Frame) {
+function draw_grid() {
     let ctx = ctx_hole;
     ctx.fillStyle = CLR_GRID;
     for (let x = frame.min_x; x < frame.max_x; x++) {
@@ -398,20 +403,20 @@ function draw_grid(frame: Frame) {
 
 
 function draw_hole() {
-    canvas_hole.width = canvas_hole.width;
     let ctx = ctx_hole;
 
     for (let p of problem.bonuses) {
         let [px, py] = grid_to_canvas(p.position);
         const r = 10;
+        console.log(p);
         if (p.bonus == "GLOBALIST") {
             ctx.fillStyle = CLR_GLOB_TARGET;
         }
         else if (p.bonus == "BREAK_A_LEG") {
-            ctx.fillStyle == CLR_BREAK_TARGET;
+            ctx.fillStyle = CLR_BREAK_TARGET;
         }
         else if (p.bonus == "WALLHACK") {
-            ctx.fillStyle == CLR_WALL_TARGET;
+            ctx.fillStyle = CLR_WALL_TARGET;
         }
         else {
             assert(false, p.bonus);
