@@ -145,11 +145,6 @@ async function main() {
         }, 2000);
     };
 
-    let reset_buttons = document.getElementById('reset-buttons') as HTMLButtonElement;
-    reset_buttons.onclick = function () {
-        for (let b of shakerdiv.childNodes) (b as HTMLInputElement).disabled = false;
-    };
-
     document.getElementById('our-submissions')!.innerHTML =
         `<p><a href="https://poses.live/problems/${problem_no}">our submissions</a></p>`;
 
@@ -191,6 +186,11 @@ async function main() {
             on_figure_change();           
         }
     }
+
+    let reset_buttons = document.getElementById('reset-buttons') as HTMLButtonElement;
+    reset_buttons.onclick = function () {
+        for (let b of shakerdiv.childNodes) (b as HTMLInputElement).disabled = false;
+    };
 
     // THIS IS WHERE THE MAGIC HAPPENS
 
@@ -468,7 +468,7 @@ function draw_figure() {
     canvas_figure.width = canvas_figure.width;
     let ctx = ctx_figure;
     ctx.lineWidth = 2;
-    let edges = derive_edged_from_pose();
+    let edges = server_check_result.edges;
     for (let i = 0; i < edges.length; i++) {
         let ok_length = true;
         ctx.setLineDash([]);
@@ -533,7 +533,7 @@ function draw_circles() {
     if (p == null) return;
 
     let adj_edges = [];
-    let edges = derive_edged_from_pose();
+    let edges = server_check_result.edges;
     for (let i = 0; i < edges.length; ++i) {
         if (edges[i][0] == p || edges[i][1] == p)
             adj_edges.push(i);
@@ -719,11 +719,6 @@ function check_for_enough_foci_and_send(_action: Actions) {
     } else {
         // TODO: query_server_with_action(action);
     }
-}
-
-function derive_edged_from_pose(): Pair[] {
-    // TODO : break a leg
-    return problem.figure.edges;
 }
 
 function undo() {

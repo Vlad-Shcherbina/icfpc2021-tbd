@@ -60,10 +60,12 @@ export interface CheckPoseRequest {
 }
 
 export interface CheckPoseResponse {
+    edges: Pair[],
     edge_statuses: EdgeStatus[],
     dislikes: number,
     valid: boolean,
     unlocked: boolean[],
+    bonus_globalist_sum: number | null,
 }
 
 export interface ShakeRequest {

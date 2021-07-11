@@ -11,10 +11,12 @@ pub struct CheckPoseRequest {
 #[derive(serde::Serialize)]
 #[derive(Debug)]
 pub struct CheckPoseResponse {
+    pub edges: Vec<(usize, usize)>,
     pub edge_statuses: Vec<EdgeStatus>,
     pub dislikes: i64,
     pub valid: bool,
     pub unlocked: Vec<bool>,
+    pub bonus_globalist_sum: Option<f32>
 }
 
 #[derive(serde::Serialize)]
@@ -98,6 +100,7 @@ pub fn get_dislikes(problem: &Problem, vertices: &[Pt]) -> i64 {
     dislikes
 }
 
+#[allow(clippy::needless_range_loop)]
 pub fn check_unlocked(problem: &Problem, vertices: &[Pt]) -> Vec<bool> {
     let mut unlocked: Vec<bool> = vec![false; problem.bonuses.len()];
     for v in vertices {
@@ -144,10 +147,12 @@ pub fn check_pose(problem: &Problem, pose: &Pose) -> CheckPoseResponse {
     let dislikes = get_dislikes(problem, vertices);
 
     CheckPoseResponse {
+        edges: problem.figure.edges.clone(),  // TODO: break a leg
         edge_statuses,
         dislikes,
         valid,
         unlocked,
+        bonus_globalist_sum: None // TODO: globalist
     }
 }
 
