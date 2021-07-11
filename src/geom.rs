@@ -47,6 +47,14 @@ impl From<(i64, i64)> for Pt {
     }
 }
 
+impl std::ops::Add for Pt {
+    type Output = Pt;
+
+    fn add(self, rhs: Self) -> Self::Output {
+        Pt { x: self.x + rhs.x, y: self.y + rhs.y }
+    }
+}
+
 impl std::ops::Sub for Pt {
     type Output = Pt;
 
