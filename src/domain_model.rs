@@ -27,6 +27,7 @@ pub enum BonusName {
     GLOBALIST,
     BREAK_A_LEG,
     WALLHACK,
+    SUPERFLEX,
 }
 
 #[derive(serde::Deserialize)]

@@ -28,7 +28,7 @@ fn project_path_test() {
 }
 
 pub fn all_problem_ids() -> impl Iterator<Item=i32> {
-    1..=106
+    1..=132
 }
 
 pub fn load_problem(problem_id: i32) -> Problem {
