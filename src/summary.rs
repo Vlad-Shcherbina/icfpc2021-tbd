@@ -1,3 +1,4 @@
+use std::collections::HashMap;
 use std::fmt::Write;
 use crate::prelude::*;
 use crate::geom::*;
@@ -34,8 +35,11 @@ fn summary() {
     writeln!(s, "<th class=diag><div>epsilon</div></th>").unwrap();
     writeln!(s, "<th class=diag><div>bounding box</div></th>").unwrap();
     writeln!(s, "<th class=diag><div>hole area</div></th>").unwrap();
+    writeln!(s, "<th class=diag><div>unlocks bonuses</div></th>").unwrap();
+    writeln!(s, "<th class=diag><div>gets bonuses</div></th>").unwrap();
     writeln!(s, "</tr>").unwrap();
 
+    let bonuslist = get_bonus_list();
     for problem_id in all_problem_ids() {
         dbg!(problem_id);
         let p = load_problem(problem_id);
@@ -73,11 +77,36 @@ fn summary() {
         }
         writeln!(s, "<td class=num>{}</td>", area).unwrap();
 
-        writeln!(s, "</tr>").unwrap();
+        writeln!(s, "<td class=num>").unwrap();
+        for b in p.bonuses {
+            writeln!(s, "{:?} for {} <br>", b.bonus, b.problem).unwrap();
+        }
+        writeln!(s, "</td>").unwrap();
+
+        writeln!(s, "<td class=num>").unwrap();
+        for b in bonuslist.get(&problem_id).unwrap_or(&vec![]) {
+            writeln!(s, "{}<br>", b).unwrap();
+        }
+        writeln!(s, "</td>").unwrap();
+
     }
     writeln!(s, "</table>").unwrap();
 
     let loc = "outputs/summary.html";
     std::fs::write(project_path(loc), s).unwrap();
     println!("see {}", loc);
+}
+
+fn get_bonus_list() -> HashMap<i32, Vec<String>> {
+    let mut bonuses: HashMap<i32, Vec<String>> = HashMap::new();
+    for problem_id in all_problem_ids() {
+        dbg!(problem_id);
+        let p = load_problem(problem_id);
+        for b in p.bonuses {
+            bonuses.entry(b.problem)
+                   .or_default()
+                   .push(format!("{:?} from {}", b.bonus, problem_id));
+        }
+    }
+    bonuses
 }
