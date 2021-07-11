@@ -329,6 +329,7 @@ async function keyboard_handlers(e: KeyboardEvent) {
     //     check_for_enough_foci_and_send(Actions.Rotate);
     // }
     else return;
+    if (e.shiftKey) { dx *= 10; dy *= 10; }
     e.preventDefault();
     move_selected([dx, dy]);
     on_figure_change();
