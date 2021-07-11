@@ -26,7 +26,7 @@ fn rail() {
 
     let mut best_dislikes = match pi.highscore() {
         Some(PoseInfo { er: EvaluationResult::Valid { dislikes }, .. }) => *dislikes,
-        _ => 1000_000_000,
+        _ => 1_000_000_000,
     };
     eprintln!("best dislikes so far: {}", best_dislikes);
 
@@ -58,7 +58,7 @@ fn rail() {
 
         if let Some((dislikes, pose)) = to_submit.as_ref() {
             if last_attempt.elapsed().as_secs_f64() > 30.0 {
-                match submit_pose(problem_id, &pose) {
+                match submit_pose(problem_id, pose) {
                     Ok(pose_id) => {
                         eprintln!("(dislikes: {}) submitted https://poses.live/solutions/{}", dislikes, pose_id);
                         to_submit = None;
