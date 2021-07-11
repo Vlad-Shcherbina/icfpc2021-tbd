@@ -97,9 +97,9 @@ fn step(problem: &Problem, vs: &mut Vec<Pt>, selected_idxs: &[usize], rng:  &mut
 
 fn threshold(i: i64, param: i64) -> i64 {
     //dbg!(i, param);
-    let nz = 100000;
+    let nz = 10000;
     if i < nz {
-        return (2.0 * param as f64 * (1.0 - (i as f64 / nz as f64))) as i64;
+        return (0.05 * param as f64 * (1.0 - (i as f64 / nz as f64))) as i64;
     } else {
         return 0;
     }
