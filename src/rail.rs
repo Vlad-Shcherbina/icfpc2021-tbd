@@ -32,6 +32,10 @@ fn rail() {
 
     let mut rng = rand::thread_rng();
 
+    let deltass: Vec<Vec<Pt>> = checker.edge_ranges.iter()
+        .map(|&(min_d, max_d)| deltas(min_d, max_d))
+        .collect();
+
     'outer: loop {
         eprintln!("------");
         let mut pts: Vec<Option<Pt>> = vec![None; p.figure.vertices.len()];
@@ -68,7 +72,7 @@ fn rail() {
                 let (min_d, max_d) = checker.edge_ranges[e_idx];
                 let placement = &mut placements[v2_idx];
                 if placement.is_empty() {
-                    for delta in deltas(min_d, max_d) {
+                    for &delta in &deltass[e_idx] {
                         let pt2 = pt + delta;
                         if checker.edge_in_hole(pt, pt2) {
                             placement.push(pt2);
@@ -98,6 +102,7 @@ fn rail() {
             }*/
 
             if pts.iter().all(|pt| pt.is_some()) {
+                dbg!(checker.edge_cache.len());
                 eprintln!("solved");
                 let pose = Pose {
                     vertices: pts.iter().map(|pt| pt.unwrap()).collect(),
