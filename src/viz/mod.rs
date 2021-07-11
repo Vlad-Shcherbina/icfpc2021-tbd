@@ -80,12 +80,13 @@ fn handler(_state: &Mutex<ServerState>, req: &Request, resp: ResponseBuilder) ->
         assert_eq!(req.method, "GET");
         let problem_id: i32 = problem_id.parse().unwrap();
 
-        let hs = crate::poses_live::get_problem_highscore(problem_id);
+        let mut scraper = crate::poses_live::Scraper::new();
+        let problem_info = scraper.problem_info(problem_id);
 
-        let body = match hs {
-            Some((pose_id, dislikes)) => format!(
+        let body = match problem_info.highscore() {
+            Some(pose_info) => format!(
                 r#"Least dislikes: {}, at <a href="https://poses.live/solutions/{}">{}</a>"#,
-                dislikes, pose_id, pose_id),
+                pose_info.server_dislikes, pose_info.id, pose_info.id),
             None => "No previous valid solutions".to_string(),
         };
 

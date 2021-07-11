@@ -1,7 +1,5 @@
 // A client library for their portal https://poses.live
 
-use std::collections::HashMap;
-
 use crate::prelude::*;
 
 const API_KEY: &str = "81acc597-be90-418c-90aa-0dfac878aeb0";
@@ -51,49 +49,62 @@ pub fn submit_pose(problem_id: i32, pose: &Pose) -> Result<String, String> {
 
 crate::entry_point!("scrape_poses", scrape_poses, _EP3);
 fn scrape_poses() {
-    let agent = ureq::agent();
-    let _page = agent.post("https://poses.live/login")
-         .set("Content-Type", "application/x-www-form-urlencoded")
-         .send_string("login.email=jm%40memorici.de&login.password=uy2c92JKQAtSRfb").unwrap()
-         .into_string().unwrap();
-    scrape_one_problem(&agent, 1);
+    let mut scraper = Scraper::new();
+    let pi = scraper.problem_info(1);
+    dbg!(&pi);
+    dbg!(pi.highscore());
 }
 
-pub fn scrape_problem_n(n: i32) -> HashMap<String, i32> {
-    let agent = ureq::agent();
-    let _page = agent.post("https://poses.live/login")
-         .set("Content-Type", "application/x-www-form-urlencoded")
-         .send_string("login.email=jm%40memorici.de&login.password=uy2c92JKQAtSRfb").unwrap()
-         .into_string().unwrap();
-
-    scrape_one_problem(&agent, n)
+pub struct Scraper {
+    agent: ureq::Agent,
 }
 
+#[derive(Debug)]
+pub struct PoseInfo {
+    pub id: String,
+    pub server_dislikes: i32,
+    // TODO: should be Option<i32>, for failed submissions and submissions under evaluation
+}
 
-fn scrape_one_problem(agent: &ureq::Agent, n: i32) -> HashMap<String, i32> {
-    let page = agent.get(&format!("https://poses.live/problems/{}", n))
-         .call().unwrap().into_string().unwrap();
+#[derive(Debug)]
+pub struct ProblemInfo {
+    valid_solutions: Vec<PoseInfo>,
+}
 
-    let mut poses = HashMap::new();
-
-    // yes, we use regex to parse HTML
-    let re = regex::Regex::new("<tr><td><a href=\"/solutions/(.*?)\".*?</a></td><td>(\\d+)</td></tr>").unwrap();
-    for pose in re.captures_iter(&page) {
-        poses.insert(
-            pose.get(1).unwrap().as_str().to_string(),
-            pose.get(2).unwrap().as_str().parse::<i32>().unwrap()
-        );
+impl ProblemInfo {
+    pub fn highscore(&self) -> Option<&PoseInfo> {
+        self.valid_solutions.iter().min_by_key(|p| p.server_dislikes)
     }
 
-    poses
-
-    //for (id,dislikes) in &poses {
-    //    println!("{}, {}", id, dislikes);
-    //}
-
+    pub fn _latest(&self) -> Option<&PoseInfo> {
+        todo!()
+    }
 }
 
-pub fn get_problem_highscore(n: i32) -> Option<(String, i32)> {
-    let poses = scrape_problem_n(n);
-    poses.iter().min_by(|a, b| a.1.cmp(b.1)).map(|(k, v)| (k.clone(), *v))
+impl Scraper {
+    pub fn new() -> Self {
+        let agent = ureq::agent();
+        let _page = agent.post("https://poses.live/login")
+             .set("Content-Type", "application/x-www-form-urlencoded")
+             .send_string("login.email=jm%40memorici.de&login.password=uy2c92JKQAtSRfb").unwrap()
+             .into_string().unwrap();
+        Scraper { agent }
+    }
+
+    pub fn problem_info(&mut self, problem_id: i32) -> ProblemInfo {
+        let page = self.agent.get(&format!("https://poses.live/problems/{}", problem_id))
+            .call().unwrap().into_string().unwrap();
+
+        // yes, we use regex to parse HTML
+        let re = regex::Regex::new("<tr><td><a href=\"/solutions/(.*?)\".*?</a></td><td>(\\d+)</td></tr>").unwrap();
+
+        let mut valid_solutions = vec![];
+        for pose in re.captures_iter(&page) {
+            valid_solutions.push( PoseInfo {
+                id: pose.get(1).unwrap().as_str().to_string(),
+                server_dislikes: pose.get(2).unwrap().as_str().parse::<i32>().unwrap(),
+            });
+        }
+        ProblemInfo { valid_solutions }
+    }
 }
