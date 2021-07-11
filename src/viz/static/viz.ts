@@ -138,7 +138,7 @@ async function main() {
         let r = await fetch('/api/get_pose/' + pose_id.value!);
         if (r.ok) {
             solution.value = await r.text();
-            pose.vertices = JSON.parse(solution.value!).vertices;
+            pose = JSON.parse(solution.value!);
             assert(pose.vertices.length == problem.figure.vertices.length);
             on_figure_change();
             pose_result.innerText = '';
