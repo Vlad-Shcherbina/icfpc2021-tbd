@@ -31,14 +31,6 @@ pub struct EdgeStatus {
     pub max_length: i64,
 }
 
-impl EdgeStatus {
-    fn is_valid(&self) -> bool {
-        self.fits_in_hole &&
-        self.min_length <= self.actual_length &&
-        self.actual_length <= self.max_length
-    }
-}
-
 // inclusive
 pub fn length_range(d: i64, eps: i64) -> (i64, i64) {
     let min_length = (d * (EPS_BASE - eps) + EPS_BASE - 1) / EPS_BASE;
@@ -131,6 +123,50 @@ pub fn check_unlocked(problem: &Problem, vertices: &[Pt]) -> Vec<bool> {
     unlocked
 }
 
+#[allow(clippy::needless_range_loop)]
+pub fn check_edges_in_hole(problem: &Problem, pose: &Pose, 
+        edge_statuses: &[EdgeStatus], checker: &Checker) -> bool {
+    let mut wallhack: Option<usize> = None;
+    for i in 0..edge_statuses.len() {
+        if edge_statuses[i].fits_in_hole { continue; }
+        if !pose.bonuses.iter().any(|b| b.bonus == BonusName::WALLHACK) { return false; }
+        let (v1, v2) = checker.edges[i];
+        let (fit1, fit2) = (pt_in_poly(pose.vertices[v1], &problem.hole),
+                            pt_in_poly(pose.vertices[v2], &problem.hole));
+        if fit1 == fit2 { return false; }
+        let newhack = if fit1 { v2 } else { v1 };
+        match wallhack {
+            None => wallhack = Some(newhack),
+            Some(a) => {
+                if a != newhack { return false; }
+            }
+        }
+    }
+    true
+}
+
+pub fn globalist_check_edge_lens(problem: &Problem, pose: &Pose, edge_statuses: &[EdgeStatus]) -> bool {
+    todo!();
+    // let mut eps = 0.;
+    // for e in edge_statuses {
+    //     eps += f64::abs(e.actual_length as f64 * 4. / e.original_length_x4 as f64 - 1.); 
+    // }
+    // let edges = problem.figure.edges.len() + pose.vertices.len() - problem.figure.vertices.len();
+    // eps * 1e6 <= edges as f64 * problem.epsilon as f64
+}
+
+pub fn check_edge_lens(problem: &Problem, pose: &Pose, edge_statuses: &[EdgeStatus]) -> bool {
+    if pose.bonuses.iter().any(|b| b.bonus == BonusName::GLOBALIST) {
+        return globalist_check_edge_lens(problem, pose, edge_statuses);
+    }
+    let mut cnt = 0;
+    for e in edge_statuses {
+        if e.min_length > e.actual_length 
+            || e.actual_length > e.max_length { cnt += 1; }
+    }
+    cnt == 0 || cnt == 1 && pose.bonuses.iter().any(|b| b.bonus == BonusName::SUPERFLEX)
+}
+
 pub fn check_pose(problem: &Problem, pose: &Pose) -> CheckPoseResponse {
     let mut checker = Checker::new(problem, &pose.bonuses);
 
@@ -154,9 +190,10 @@ pub fn check_pose(problem: &Problem, pose: &Pose) -> CheckPoseResponse {
             min_length,
             max_length,
         };
-        valid = valid && es.is_valid();
         edge_statuses.push(es);
     }
+    valid = valid && check_edge_lens(problem, pose, &edge_statuses);
+    valid = valid && check_edges_in_hole(problem, pose, &edge_statuses, &checker);
 
     for i in 0..pose.bonuses.len() {
         for j in 0..pose.bonuses.len() {

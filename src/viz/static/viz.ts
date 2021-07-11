@@ -102,7 +102,7 @@ async function main() {
             pose_id = ids[1];
         }
     }
-    let waiting_for_stats = show_problem_stats(problem_no);
+    show_problem_stats(problem_no);
     problem = await get_problem(problem_no);
 
     let bonuses_to_use = document.getElementById("bonus_to_use")!;
@@ -205,7 +205,6 @@ async function main() {
         for (let b of shakerdiv.childNodes) (b as HTMLInputElement).disabled = false;
     };
 
-    await waiting_for_stats;
     // THIS IS WHERE THE MAGIC HAPPENS
 
     // Keyboard events
@@ -630,8 +629,7 @@ function show_unlocked_bonuses() {
 let version_counter = 0;
 async function check_solution_on_server() {
     let vc = ++version_counter;
-    let rpose = { vertices: pose.vertices, bonuses: [] /* TODO*/ }
-    let req: CheckPoseRequest = { problem, pose: rpose };
+    let req: CheckPoseRequest = { problem, pose };
     let r = await fetch('/api/check_pose', {
         method: 'POST', body: new Blob([JSON.stringify(req)]),
     });
