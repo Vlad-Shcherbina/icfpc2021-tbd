@@ -36,11 +36,11 @@ impl Rank {
                 return false;
             }
         }
-        for ub in &other.unlocked_bonuses {
+        /*for ub in &other.unlocked_bonuses {
             if !self.unlocked_bonuses.iter().any(|q| q == ub) {
                 return false;
             }
-        }
+        }*/
 
         true
     }
