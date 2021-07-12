@@ -76,8 +76,8 @@ fn multishaker() {
             break;
         }
         
-        let mut stabilized = false;
-        while !stabilized {
+        let max_mojito_iterations = 10;
+        for _ in 0..max_mojito_iterations {
             eprintln!("Mojito loop...");
             let request = ShakeRequest {
                 problem: p.clone(),
@@ -87,7 +87,10 @@ fn multishaker() {
                 param: 5,
             };
             let new_pts = daiquiri::daikuiri_shake(&request, true);
-            stabilized = new_pts == pts;
+            if new_pts == pts {
+                // Mojito converged
+                break;
+            }
             pts = new_pts;
         }
     }

@@ -68,7 +68,7 @@ fn shake(problem: &Problem, vs: &mut Vec<Pt>, selected_idxs: &[usize], rng:  &mu
 
 pub fn greedy_shake(r: &ShakeRequest) -> Vec<Pt> {
     //assert!(r.problem.bonuses.is_empty());
-    dbg!(r.problem.figure.vertices.len(), r.problem.hole.len());
+    //dbg!(r.problem.figure.vertices.len(), r.problem.hole.len());
     let mut selected = r.selected.clone();
     if selected.iter().all(|&s| !s) {
         selected = vec![true; selected.len()];
