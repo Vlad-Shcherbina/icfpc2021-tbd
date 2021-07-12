@@ -33,6 +33,7 @@ export interface Frame {
 export interface EdgeStatus {
     fits_in_hole: boolean,
     actual_length: number,
+    original_length_x4: number,
     min_length: number,
     max_length: number,
 }

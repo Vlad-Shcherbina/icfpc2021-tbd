@@ -637,6 +637,7 @@ async function check_solution_on_server() {
     if (vc != version_counter) return;
 
     server_check_result = await r.json();
+    console.log(server_check_result.bonus_globalist_sum);
     static_figure_change();
 };
 
