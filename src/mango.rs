@@ -82,7 +82,7 @@ pub fn mango_shake(r: &ShakeRequest) -> Vec<Pt> {
 
     let mut success = false;
     let mut iteration_count = 0;
-    let mut checker = Checker::new(&r.problem, &vec![]);
+    let mut checker = Checker::new(&r.problem, &vec![], r.problem.figure.vertices.len());
     loop {
         selected_idxs.shuffle(rng);
         for v_id in &selected_idxs {

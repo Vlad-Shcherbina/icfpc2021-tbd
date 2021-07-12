@@ -13,7 +13,7 @@ pub fn ice_shake(r: &ShakeRequest) -> Vec<Pt> {
         vertices: r.vertices.clone(),
     };
 
-    let mut checker = Checker::new(&r.problem, &pose.bonuses);
+    let mut checker = Checker::new(&r.problem, &pose.bonuses, pose.vertices.len());
 
     let mut selected = r.selected.clone();
     if selected.iter().all(|&s| !s) {

@@ -27,7 +27,7 @@ fn rail_constrained() {
     let p = load_problem(problem_id);
     let bonuses = vec![];
 
-    let mut checker = Checker::new(&p, &bonuses);
+    let mut checker = Checker::new(&p, &bonuses, p.figure.vertices.len());
     let edges = checker.edges.clone();
     let mut inci: Vec<Vec<usize>> = vec![vec![]; edges.len()];
     for (i, &(start, end)) in edges.iter().enumerate() {

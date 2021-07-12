@@ -80,7 +80,7 @@ pub fn brutforce(r: &ShakeRequest) -> Vec<Pt> {
     v_ids.shuffle(rng);
     let mut h_pts = r.problem.hole.clone();
     h_pts.shuffle(rng);
-    let mut checker = Checker::new(&r.problem, &vec![]);
+    let mut checker = Checker::new(&r.problem, &vec![], r.problem.figure.vertices.len());
     for v_id in v_ids {
         for (h_id, pt) in h_pts.iter().enumerate() {
             eprintln!("Trying: v_id {:?} h_id {:?}", v_id, h_id);

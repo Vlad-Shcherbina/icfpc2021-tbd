@@ -51,7 +51,7 @@ pub struct Checker {
 }
 
 impl Checker {
-    pub fn new(p: &Problem, used_bonuses: &[PoseBonus]) -> Checker {
+    pub fn new(p: &Problem, used_bonuses: &[PoseBonus], pose_vertices_no: usize) -> Checker {
         let edge_ranges = p.figure.edges.iter()
             .map(|&(start, end)| {
                 let d = p.figure.vertices[start].dist2(p.figure.vertices[end]);
@@ -70,7 +70,7 @@ impl Checker {
         };
 
         if used(&bonus, &BonusName::BREAK_A_LEG) 
-            && check_valid_break_a_leg(bonus.as_ref().unwrap(), p, p.figure.vertices.len() + 1) {
+            && check_valid_break_a_leg(bonus.as_ref().unwrap(), p, pose_vertices_no) {
             let (v1, v2) = bonus.unwrap().edge.unwrap();
             let idx = checker.edges.iter().position(|&(p1, p2)| 
                 v1 == p1 && v2 == p2 || v1 == p2 && v2 == p1
@@ -217,7 +217,7 @@ pub fn no_glob_check_edge_lens(pose: &Pose, edge_statuses: &[EdgeStatus]) -> boo
 }
 
 pub fn check_pose(problem: &Problem, pose: &Pose) -> CheckPoseResponse {
-    let mut checker = Checker::new(problem, &pose.bonuses);
+    let mut checker = Checker::new(problem, &pose.bonuses, pose.vertices.len());
 
     let vertices = &pose.vertices;
 
@@ -225,6 +225,13 @@ pub fn check_pose(problem: &Problem, pose: &Pose) -> CheckPoseResponse {
     let mut valid = true;
     let mut unlocked = check_unlocked(problem, vertices);
     for i in 0..checker.edges.len() {
+        if checker.edges[i].0 >= vertices.len() || checker.edges[i].1 >= vertices.len() {
+            edge_statuses.push(EdgeStatus { 
+                fits_in_hole: false, actual_length: 0, original_length_x4: 0, 
+                min_length: 0, max_length: 0 });
+            valid = false;
+            continue;
+        }
         let pt1 = vertices[checker.edges[i].0];
         let pt2 = vertices[checker.edges[i].1];
 

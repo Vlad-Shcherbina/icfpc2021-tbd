@@ -103,6 +103,9 @@ fn summary() {
             None => "-".to_string(),
         };
 
+        // let mut latest;
+        // let mut used_bonuses;
+        // let mut unlocked_bonuses;
         let latest = match pi.latest() {
             Some(PoseInfo{id, er}) =>
             format!(r#"{}, <a href="http://127.0.0.1:8000/src/viz/static/viz.html#{}@{}">vis</a>"#,
@@ -113,6 +116,7 @@ fn summary() {
         writeln!(s, "<td class=num>{}</td>", best).unwrap();
         writeln!(s, "<td class=num>{}</td>", latest).unwrap();
 
+        
         writeln!(s, "<td class=num>last used</td>").unwrap();
         writeln!(s, "<td class=num>last unlocked</td>").unwrap();
     }
