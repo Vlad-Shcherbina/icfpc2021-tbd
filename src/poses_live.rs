@@ -1,5 +1,9 @@
 // A client library for their portal https://poses.live
 
+use std::collections::HashMap;
+use std::fs::File;
+use std::io::{Read, Write};
+
 use crate::prelude::*;
 
 const API_KEY: &str = "81acc597-be90-418c-90aa-0dfac878aeb0";
@@ -47,15 +51,53 @@ pub fn submit_pose(problem_id: i32, pose: &Pose) -> Result<String, String> {
     }
 }
 
-crate::entry_point!("scrape_poses", scrape_poses, _EP3);
-fn scrape_poses() {
+crate::entry_point!("scrape_poses_demo", scrape_poses_demo, _EP3);
+fn scrape_poses_demo() {
     let mut scraper = Scraper::new();
     let pi = scraper.problem_info(1);
     dbg!(&pi);
     dbg!(pi.highscore());
     dbg!(pi.latest());
-    let sol = scraper.get_pose_by_id("b9a6c73d-dd2c-4a54-9f6e-75ea51d11c79".to_string());
+    let sol = scraper.get_pose_by_id("b9a6c73d-dd2c-4a54-9f6e-75ea51d11c79");
     dbg!(&sol);
+}
+
+crate::entry_point!("scrape_cache", scrape_cache, _EP4);
+fn scrape_cache() {
+    const COUNT: i32 = 132;  // 132
+    let mut cache = match File::open(project_path("cache/server.cache")) {
+        Ok(mut file) => {
+            let mut buf = String::new();
+            file.read_to_string(&mut buf).unwrap();
+            serde_json::from_str(&buf).unwrap()
+        },
+        Err(_) => ProblemCache { problems: HashMap::new(), poses: HashMap::new() },
+    };
+    cache.problems = HashMap::new();
+
+    let mut scraper = Scraper::new();
+    for i in 1..=COUNT {
+        eprintln!("problem {}...", i);
+        let p = scraper.problem_info(i).clone();
+        cache.problems.insert(i, p.clone());
+        for ps in &p.poses {
+            if cache.poses.contains_key(&ps.id) { continue };
+            eprintln!("pose {}...", &ps.id);
+            let pose = scraper.get_pose_by_id(&ps.id);
+            if let None = pose { continue; }
+            let pci = PoseCacheItem{ pose: pose.unwrap(), eval: ps.er };
+            cache.poses.insert(ps.id.clone(), pci);
+        }
+    }    
+    let mut file = File::create(project_path("cache/server.cache")).unwrap();
+    file.write_all(&serde_json::to_vec(&cache).unwrap()).unwrap();
+}
+
+pub fn read_cache() -> ProblemCache {
+    let mut file = File::open(project_path("cache/server.cache")).unwrap();
+    let mut content = String::new();
+    file.read_to_string(&mut content).unwrap();
+    serde_json::from_str(&content).unwrap()
 }
 
 pub struct Scraper {
@@ -63,7 +105,8 @@ pub struct Scraper {
     global_highscore_page: Option<String>,
 }
 
-#[derive(Debug)]
+#[derive(serde::Deserialize, serde::Serialize)]
+#[derive(Debug, Clone, Copy)]
 pub enum EvaluationResult {
     Pending,  // hourglass
     Invalid,  // cross
@@ -80,16 +123,32 @@ impl std::fmt::Display for EvaluationResult {
     }
 }
 
-#[derive(Debug)]
+#[derive(serde::Deserialize, serde::Serialize)]
+#[derive(Debug, Clone)]
 pub struct PoseInfo {
     pub id: String,
     pub er: EvaluationResult,
 }
 
-#[derive(Debug)]
+#[derive(serde::Deserialize, serde::Serialize)]
+#[derive(Debug, Clone)]
 pub struct ProblemInfo {
     poses: Vec<PoseInfo>,
     global_highscore: i32,
+}
+
+#[derive(serde::Deserialize, serde::Serialize)]
+#[derive(Debug)]
+pub struct PoseCacheItem {
+    pub pose: Pose,
+    pub eval: EvaluationResult,
+}
+
+#[derive(serde::Deserialize, serde::Serialize)]
+#[derive(Debug)]
+pub struct ProblemCache {
+    pub problems: HashMap<i32, ProblemInfo>,
+    pub poses: HashMap<String, PoseCacheItem>,
 }
 
 impl ProblemInfo {
@@ -165,14 +224,18 @@ impl Scraper {
         re.captures(page).unwrap().get(1).unwrap().as_str().parse::<i32>().unwrap()
     }
 
-    pub fn get_pose_by_id(&mut self, pose_id: String) -> Option<Pose> {
+    pub fn get_pose_by_id(&mut self, pose_id: &str) -> Option<Pose> {
         let data = self.agent.get(&format!("https://poses.live/solutions/{}/download", pose_id))
             .call();
 
         match data {
-            Ok(data) => {
-                Some(serde_json::from_str(&data.into_string().unwrap()).unwrap())
-            }
+            Ok(d) => match serde_json::from_str(&d.into_string().unwrap()) {
+                Ok(a) => Some(a),                
+                Err(msg) => {
+                    eprintln!("Error {} in {}", msg, pose_id);
+                    None
+                }
+            },
             Err(ureq::Error::Status(404, _)) => {
                 None
             }
@@ -181,7 +244,5 @@ impl Scraper {
             }
             r => panic!("{:?}", r),
         }
-
-
     }
 }

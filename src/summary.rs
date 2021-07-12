@@ -42,7 +42,6 @@ fn summary() {
     writeln!(s, "<th class=diag><div>latest solution</div></th>").unwrap();
     writeln!(s, "</tr>").unwrap();
 
-    let mut scraper = Scraper::new();
     let bonuslist = get_bonus_list();
     for problem_id in all_problem_ids() {
         dbg!(problem_id);
@@ -93,7 +92,10 @@ fn summary() {
         }
         writeln!(s, "</td>").unwrap();
 
-        let pi = scraper.problem_info(problem_id);
+        // let mut scraper = Scraper::new();
+        // let pi = scraper.problem_info(problem_id);
+        let data = read_cache();
+        let pi = data.problems.get(&problem_id).unwrap();
 
         let best = match pi.highscore() {
             Some(PoseInfo{id, er}) =>

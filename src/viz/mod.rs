@@ -118,7 +118,7 @@ fn handler(_state: &Mutex<ServerState>, req: &Request, resp: ResponseBuilder) ->
         assert_eq!(req.method, "GET");
 
         let mut scraper = Scraper::new();
-        let pose = scraper.get_pose_by_id(pose_id.to_string());
+        let pose = scraper.get_pose_by_id(pose_id);
 
         return match pose {
             Some(valid_pose) => resp.code("200 OK").body(serde_json::to_vec(&valid_pose).unwrap()),
