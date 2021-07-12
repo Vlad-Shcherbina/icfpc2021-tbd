@@ -40,6 +40,8 @@ fn summary() {
     writeln!(s, "<th class=diag><div>gets bonuses</div></th>").unwrap();
     writeln!(s, "<th class=diag><div>best solution</div></th>").unwrap();
     writeln!(s, "<th class=diag><div>latest solution</div></th>").unwrap();
+    writeln!(s, "<th class=diag><div>last used bonuses</div></th>").unwrap();
+    writeln!(s, "<th class=diag><div>last unlocked bonuses</div></th>").unwrap();
     writeln!(s, "</tr>").unwrap();
 
     let bonuslist = get_bonus_list();
@@ -111,6 +113,8 @@ fn summary() {
         writeln!(s, "<td class=num>{}</td>", best).unwrap();
         writeln!(s, "<td class=num>{}</td>", latest).unwrap();
 
+        writeln!(s, "<td class=num>last used</td>").unwrap();
+        writeln!(s, "<td class=num>last unlocked</td>").unwrap();
     }
     writeln!(s, "</table>").unwrap();
 

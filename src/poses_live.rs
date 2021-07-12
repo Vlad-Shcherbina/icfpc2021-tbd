@@ -69,7 +69,10 @@ fn scrape_cache() {
         Ok(mut file) => {
             let mut buf = String::new();
             file.read_to_string(&mut buf).unwrap();
-            serde_json::from_str(&buf).unwrap()
+            match serde_json::from_str(&buf) {
+                Ok(x) => x,
+                Err(_) => ProblemCache { problems: HashMap::new(), poses: HashMap::new() },
+            }
         },
         Err(_) => ProblemCache { problems: HashMap::new(), poses: HashMap::new() },
     };
