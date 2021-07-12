@@ -52,10 +52,16 @@ pub struct ProblemTgtBonus {
 }
 
 #[derive(serde::Deserialize, serde::Serialize)]
-#[derive(Debug, Clone)]
+#[derive(Clone)]
 pub struct PoseBonus {
     pub bonus: BonusName,
     pub problem: u32,
+}
+
+impl std::fmt::Debug for PoseBonus {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}{}", self.problem, self.bonus.short_name())
+    }
 }
 
 #[derive(serde::Deserialize, serde::Serialize)]
@@ -65,6 +71,7 @@ pub struct Pose {
     pub vertices: Vec<Pt>,
 }
 
+#[derive(Clone, Copy, PartialEq)]
 pub struct UnlockedBonus {
     pub name: BonusName,
     pub problem_id: i32,

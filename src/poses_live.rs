@@ -133,7 +133,7 @@ pub struct PoseInfo {
 #[derive(serde::Deserialize, serde::Serialize)]
 #[derive(Debug, Clone)]
 pub struct ProblemInfo {
-    poses: Vec<PoseInfo>,
+    pub poses: Vec<PoseInfo>,
     global_highscore: i32,
 }
 
