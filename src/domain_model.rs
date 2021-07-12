@@ -73,7 +73,7 @@ pub struct PoseBonus {
 
 impl std::fmt::Debug for PoseBonus {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}{}", self.problem, self.bonus.short_name())
+        write!(f, "{}->{}", self.problem, self.bonus.short_name())
     }
 }
 
@@ -92,7 +92,7 @@ pub struct UnlockedBonus {
 
 impl std::fmt::Debug for UnlockedBonus {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}{}", self.name.short_name(), self.problem_id)
+        write!(f, "{}->{}", self.name.short_name(), self.problem_id)
     }
 }
 

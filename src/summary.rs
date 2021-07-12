@@ -1,5 +1,8 @@
 use std::collections::HashMap;
 use std::fmt::Write;
+use EvaluationResult::Valid;
+
+use crate::checker::check_pose;
 use crate::prelude::*;
 use crate::geom::*;
 use crate::poses_live::*;
@@ -40,8 +43,10 @@ fn summary() {
     writeln!(s, "<th class=diag><div>gets bonuses</div></th>").unwrap();
     writeln!(s, "<th class=diag><div>best solution</div></th>").unwrap();
     writeln!(s, "<th class=diag><div>latest solution</div></th>").unwrap();
-    writeln!(s, "<th class=diag><div>last used bonuses</div></th>").unwrap();
-    writeln!(s, "<th class=diag><div>last unlocked bonuses</div></th>").unwrap();
+    writeln!(s, "<th class=diag><div>best normalized</div></th>").unwrap();
+    writeln!(s, "<th class=diag><div>latest normalized</div></th>").unwrap();
+    writeln!(s, "<th class=diag><div>last uses bonuses</div></th>").unwrap();
+    writeln!(s, "<th class=diag><div>last unlocks bonuses</div></th>").unwrap();
     writeln!(s, "</tr>").unwrap();
 
     let bonuslist = get_bonus_list();
@@ -80,8 +85,8 @@ fn summary() {
         // writeln!(s, "<td class=num>{}</td>", area).unwrap();
 
         writeln!(s, "<td class=num>").unwrap();
-        for b in p.bonuses {
-            writeln!(s, "{} for {}, ", b.bonus.short_name(), b.problem).unwrap();
+        for b in &p.bonuses {
+            writeln!(s, "{}=>{}, ", b.bonus.short_name(), b.problem).unwrap();
         }
         writeln!(s, "</td>").unwrap();
 
@@ -103,22 +108,49 @@ fn summary() {
             None => "-".to_string(),
         };
 
-        // let mut latest;
-        // let mut used_bonuses;
-        // let mut unlocked_bonuses;
-        let latest = match pi.latest() {
-            Some(PoseInfo{id, er}) =>
-            format!(r#"{}, <a href="http://127.0.0.1:8000/src/viz/static/viz.html#{}@{}">vis</a>"#,
-                er, problem_id, id),
-            None => "-".to_string(),
-        };
+        let mut latest = String::new();
+        let mut used_bonuses = String::new();
+        let mut unlocked_bonuses = String::new();
+
+        match pi.latest() {
+            None => {
+                latest = "-".to_string();
+                used_bonuses = "-".to_string();
+                unlocked_bonuses = "-".to_string();
+            }
+            Some(PoseInfo{id, er}) => {
+                latest = format!(r#"{}, <a href="http://127.0.0.1:8000/src/viz/static/viz.html#{}@{}">vis</a>"#,
+                er, problem_id, id);
+                match er {
+                    Valid { dislikes: _ } => {
+                        let pose = data.poses.get(id).unwrap();
+                        for b in &pose.bonuses { used_bonuses += &format!("{}=>{}, ", 
+                                                b.problem,
+                                                b.bonus.short_name()); }
+                        let c = check_pose(&p, &pose);
+                        for i in 0..c.unlocked.len() {
+                            if !c.unlocked[i] { continue; }
+                            unlocked_bonuses += &format!("{}=>{}, ", 
+                                                p.bonuses[i].bonus.short_name(),
+                                                p.bonuses[i].problem);
+                        }
+                    }
+                    _ => {
+                        used_bonuses = "-".to_string();
+                        unlocked_bonuses = "-".to_string();
+                    }
+                }           
+            }
+        }
 
         writeln!(s, "<td class=num>{}</td>", best).unwrap();
         writeln!(s, "<td class=num>{}</td>", latest).unwrap();
 
-        
-        writeln!(s, "<td class=num>last used</td>").unwrap();
-        writeln!(s, "<td class=num>last unlocked</td>").unwrap();
+        writeln!(s, "<td class=num>{}</td>", best).unwrap();
+        writeln!(s, "<td class=num>{}</td>", latest).unwrap();
+
+        writeln!(s, "<td class=num>{}</td>", used_bonuses).unwrap();
+        writeln!(s, "<td class=num>{}</td>", unlocked_bonuses).unwrap();
     }
     writeln!(s, "</table>").unwrap();
 
@@ -134,7 +166,7 @@ fn get_bonus_list() -> HashMap<i32, Vec<String>> {
         for b in p.bonuses {
             bonuses.entry(b.problem)
                    .or_default()
-                   .push(format!("{} from {}", b.bonus.short_name(), problem_id));
+                   .push(format!("{}=>{}", problem_id, b.bonus.short_name()));
         }
     }
     bonuses
