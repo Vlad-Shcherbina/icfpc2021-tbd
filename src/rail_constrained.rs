@@ -39,7 +39,7 @@ fn rail_constrained() {
 
     //eprintln!("deltass");
     let deltass: Vec<Vec<Pt>> = checker.edge_ranges.iter()
-        .map(|&(min_d, max_d)| deltas(min_d, max_d))
+        .map(|&(min_d, max_d, _)| deltas(min_d, max_d))
         .collect();
 
     'outer: loop {
@@ -120,7 +120,7 @@ fn rail_constrained() {
                     continue;
                 }
 
-                let (min_d, max_d) = checker.edge_ranges[e_idx];
+                let (min_d, max_d, _) = checker.edge_ranges[e_idx];
                 let placement = &mut placements[v2_idx];
                 if placement.is_empty() {
                     for &delta in &deltass[e_idx] {

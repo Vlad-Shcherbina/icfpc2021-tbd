@@ -56,6 +56,7 @@ pub struct ProblemTgtBonus {
 pub struct PoseBonus {
     pub bonus: BonusName,
     pub problem: u32,
+    pub edge: Option<(usize, usize)>,
 }
 
 impl std::fmt::Debug for PoseBonus {

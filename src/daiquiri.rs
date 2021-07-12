@@ -11,7 +11,7 @@ pub fn daikuiri_shake(r: &ShakeRequest, mojito: bool) -> Vec<Pt> {
     let mut vs = r.vertices.clone();
     let mut rng = rand::thread_rng();
     let in_hole: Vec<bool> = vs.iter().map(|v| pt_in_poly(*v, &r.problem.hole)).collect();
-    let ranges: Vec<(i64, i64)> = r.problem.figure.edges.iter().map(
+    let ranges: Vec<(i64, i64, i64)> = r.problem.figure.edges.iter().map(
         |e| {
             let &(start, end) = e;
             length_range(r.problem.figure.vertices[start].dist2(
@@ -48,7 +48,7 @@ fn rand_permutation(a: &mut [usize], rng: &mut ThreadRng) {
     }
 }
 
-fn shake_one(vs: &mut [Pt], i: usize, r: &ShakeRequest, ranges: &[(i64, i64)], 
+fn shake_one(vs: &mut [Pt], i: usize, r: &ShakeRequest, ranges: &[(i64, i64, i64)], 
              rng: &mut ThreadRng, keep_in_hole: bool) {
     let mut adj_edges = vec![];
     let edges = &r.problem.figure.edges;

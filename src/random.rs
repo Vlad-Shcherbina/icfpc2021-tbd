@@ -45,7 +45,7 @@ impl Solver for RandomSolver {
                 let orig_d2 = vertices[start].dist2(vertices[end]);
                 let new_d2 = pose[start].dist2(pose[end]);
 
-                let (min_d2, max_d2) = crate::checker::length_range(orig_d2, problem.epsilon);
+                let (min_d2, max_d2, _) = crate::checker::length_range(orig_d2, problem.epsilon);
 
                 if new_d2 < min_d2 || new_d2 > max_d2 {
                     good = false;

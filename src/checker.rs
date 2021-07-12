@@ -33,17 +33,17 @@ pub struct EdgeStatus {
 }
 
 // inclusive
-pub fn length_range(d: i64, eps: i64) -> (i64, i64) {
+pub fn length_range(d: i64, eps: i64) -> (i64, i64, i64) {
     let min_length = (d * (EPS_BASE - eps) + EPS_BASE - 1) / EPS_BASE;
     let max_length = d * (EPS_BASE + eps) / EPS_BASE;
-    (min_length, max_length)
+    (min_length, max_length, d * 4)
 }
 
 // Precomputed data to quickly check pose constraints.
 pub struct Checker {
     pub problem: Problem,
     pub bbox: BBox,
-    pub edge_ranges: Vec<(i64, i64)>,
+    pub edge_ranges: Vec<(i64, i64, i64)>, // min, max, orig_x4
     pub edges: Vec<(usize, usize)>,
     pub edge_cache: HashMap<[i16; 4], bool>,
     pub neighbours_cache: HashMap<usize, Vec<usize>>,
@@ -57,16 +57,35 @@ impl Checker {
                 let d = p.figure.vertices[start].dist2(p.figure.vertices[end]);
                 length_range(d, p.epsilon)
             }).collect();
-
-        Checker {
+        
+        let bonus = if used_bonuses.is_empty() { None } else { Some(used_bonuses[0].clone()) };
+        let mut checker = Checker {
             problem: p.clone(),
             edges: p.figure.edges.clone(),
             bbox: BBox::from_pts(&p.hole),
             edge_ranges,
             edge_cache: HashMap::new(),
             neighbours_cache: HashMap::new(),
-            bonus: if used_bonuses.is_empty() { None } else { Some(used_bonuses[0].clone()) },
+            bonus: bonus.clone(),
+        };
+
+        if used(&bonus, &BonusName::BREAK_A_LEG) && check_valid_break_a_leg(&bonus.as_ref().unwrap(), p) {
+            let (v1, v2) = bonus.unwrap().edge.unwrap();
+            let idx = checker.edges.iter().position(|&(p1, p2)| 
+                v1 == p1 && v2 == p2 || v1 == p2 && v2 == p1
+            ).unwrap();
+            checker.edges.remove(idx);
+            checker.edge_ranges.remove(idx);
+            checker.edges.push((v1, p.figure.vertices.len()));
+            checker.edges.push((v2, p.figure.vertices.len()));
+            let p1x = p.figure.vertices[v1].x * 4;
+            let p1y = p.figure.vertices[v1].y * 4;
+            let p2x = p.figure.vertices[v2].x * 4;
+            let p2y = p.figure.vertices[v2].y * 4;
+
         }
+
+        checker
     }
 
     pub fn edge_in_hole(&mut self, mut pt1: Pt, mut pt2: Pt) -> bool {
@@ -91,6 +110,10 @@ impl Checker {
             neighbours(&problem.figure.edges, v_id).collect()
         })
     }
+}
+
+pub fn used(pb: &Option<PoseBonus>, bn: &BonusName) -> bool {
+    if let Some(PoseBonus { bonus: b, problem: _, edge: _ }) = pb { *b == *bn } else { false }
 }
 
 pub fn get_dislikes(problem: &Problem, vertices: &[Pt]) -> i64 {
@@ -128,9 +151,6 @@ pub fn list_unlocked_bonuses(problem: &Problem, vertices: &[Pt]) -> Vec<Unlocked
     .collect()
 }
 
-pub fn used_bonus(checker: &Checker, bn: &BonusName) -> bool {
-    if let Some(PoseBonus { bonus: b, problem: _ }) = checker.bonus { b == *bn } else { false }
-}
 
 #[allow(clippy::needless_range_loop)]
 pub fn check_edges_in_hole(problem: &Problem, pose: &Pose, 
@@ -138,7 +158,7 @@ pub fn check_edges_in_hole(problem: &Problem, pose: &Pose,
     let mut wallhack: Option<usize> = None;
     for i in 0..edge_statuses.len() {
         if edge_statuses[i].fits_in_hole { continue; }
-        if !used_bonus(checker, &BonusName::WALLHACK) { return false; }
+        if !used(&checker.bonus, &BonusName::WALLHACK) { return false; }
         let (v1, v2) = checker.edges[i];
         let (fit1, fit2) = (pt_in_poly(pose.vertices[v1], &problem.hole),
                             pt_in_poly(pose.vertices[v2], &problem.hole));
@@ -154,6 +174,17 @@ pub fn check_edges_in_hole(problem: &Problem, pose: &Pose,
     true
 }
 
+pub fn check_valid_break_a_leg(bonus: &PoseBonus, problem: &Problem) -> bool {
+    match bonus.edge {
+        None => false,
+        Some((v1, v2)) => {
+            problem.figure.edges.iter().any(|&(p1, p2)| 
+                v1 == p1 && v2 == p2 || v1 == p2 && v2 == p1
+            )
+        }
+    }
+}
+
 pub fn globalist_sum_len(edge_statuses: &[EdgeStatus]) -> f64 {
     let mut eps = 0.;
     for e in edge_statuses {
@@ -162,8 +193,8 @@ pub fn globalist_sum_len(edge_statuses: &[EdgeStatus]) -> f64 {
     eps * 1e6
 }
 
-pub fn globalist_check_edge_lens(problem: &Problem, edge_cnt: usize, sum_eps: f64) -> bool {
-    sum_eps <= edge_cnt as f64 * problem.epsilon as f64
+pub fn globalist_check_edge_lens(problem: &Problem, sum_eps: f64) -> bool {
+    sum_eps <= problem.figure.edges.len() as f64 * problem.epsilon as f64
 }
 
 pub fn no_glob_check_edge_lens(pose: &Pose, edge_statuses: &[EdgeStatus]) -> bool {
@@ -187,29 +218,27 @@ pub fn check_pose(problem: &Problem, pose: &Pose) -> CheckPoseResponse {
     for i in 0..problem.figure.edges.len() {
         let pt1 = vertices[problem.figure.edges[i].0];
         let pt2 = vertices[problem.figure.edges[i].1];
-        let or1 = problem.figure.vertices[problem.figure.edges[i].0];
-        let or2 = problem.figure.vertices[problem.figure.edges[i].1];
 
         let fits_in_hole = checker.edge_in_hole(pt1, pt2);
 
-        let (min_length, max_length) = checker.edge_ranges[i];
+        let (min_length, max_length, original_length_x4) = checker.edge_ranges[i];
 
         let es = EdgeStatus {
             fits_in_hole,
             actual_length: pt1.dist2(pt2),
-            original_length_x4: or1.dist2(or2) * 4,
+            original_length_x4,
             min_length,
             max_length,
         };
         edge_statuses.push(es);
     }
 
-    let bonus_globalist_sum = if used_bonus(&checker, &BonusName::GLOBALIST) {
+    let bonus_globalist_sum = if used(&checker.bonus, &BonusName::GLOBALIST) {
         Some(globalist_sum_len(&edge_statuses))
     }
     else { None };
-    valid = valid && if used_bonus(&checker, &BonusName::GLOBALIST) {
-        globalist_check_edge_lens(problem, checker.edges.len(), bonus_globalist_sum.unwrap())
+    valid = valid && if used(&checker.bonus, &BonusName::GLOBALIST) {
+        globalist_check_edge_lens(problem, bonus_globalist_sum.unwrap())
     }
     else {
         no_glob_check_edge_lens(pose, &edge_statuses)

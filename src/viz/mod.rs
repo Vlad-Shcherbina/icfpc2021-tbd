@@ -1,7 +1,7 @@
 use std::sync::{Arc, Mutex};
 use std::net::TcpListener;
 use crate::dev_server::{serve_forever, Request, ResponseBuilder, HandlerResult};
-use crate::domain_model::ProblemTgtBonus;
+use crate::domain_model::{ProblemTgtBonus};
 use crate::prelude::*;
 use crate::checker::{CheckPoseRequest, check_pose};
 use crate::shake::{ShakeRequest, shake};

@@ -161,7 +161,7 @@ impl EdgeInfo {
         }
     }
     fn new(checker: &mut Checker, edge_idx: usize, pt1: Pt, pt2: Pt) -> Self {
-        let (min_d, max_d) = checker.edge_ranges[edge_idx];
+        let (min_d, max_d, _) = checker.edge_ranges[edge_idx];
         let d = pt1.dist2(pt2);
         let length_penalty = if d < min_d {
             (min_d - d) as f64 / max_d as f64

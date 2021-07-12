@@ -22,7 +22,8 @@ fn orig_distance(problem: &Problem, v1_id: usize, v2_id: usize) -> i64 {
 
 fn deformation_limits(problem: &Problem, v1_id: usize, v2_id: usize) -> (i64, i64) {
     let orig_d2 = orig_distance(problem, v1_id, v2_id);
-    crate::checker::length_range(orig_d2, problem.epsilon)
+    let (min_d, max_d, _) = crate::checker::length_range(orig_d2, problem.epsilon);
+    (min_d, max_d)
 }
 
 pub fn available_positions(checker: &mut Checker, vertices: &[Option<Pt>], v_id: usize) -> Vec<Pt> {

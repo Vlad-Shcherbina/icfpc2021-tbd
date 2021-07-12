@@ -20,7 +20,7 @@ pub fn banana_shake(r: &ShakeRequest) -> Vec<Pt> {
                 score -= 1.0;
             }
             let orig_d = r.problem.figure.vertices[start].dist2(r.problem.figure.vertices[end]);
-            let (min_d, max_d) = length_range(orig_d, r.problem.epsilon);
+            let (min_d, max_d, _) = length_range(orig_d, r.problem.epsilon);
             let d = vs[start].dist2(vs[end]);
             if d < min_d {
                 score -= (min_d - d) as f64 / orig_d as f64;
