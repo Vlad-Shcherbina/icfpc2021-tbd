@@ -108,7 +108,7 @@ async function main() {
     let bonuses_to_use = document.getElementById("bonus_to_use")!;
     bonuses_to_use.innerHTML = "<b>Bonuses to use</b>: "
     for (let b of await get_tgt_bonuses(problem_no)) {
-        bonuses_to_use.innerHTML += `[${b.bonus} from ${b.from_problem}] `;
+        bonuses_to_use.innerHTML += `<br>{ "bonus": "${b.bonus}", "problem": ${b.from_problem} }`;
     }
 
     if (pose_id !== null) {

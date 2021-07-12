@@ -82,7 +82,7 @@ impl Checker {
             let p1y = p.figure.vertices[v1].y * 4;
             let p2x = p.figure.vertices[v2].x * 4;
             let p2y = p.figure.vertices[v2].y * 4;
-
+            
         }
 
         checker
