@@ -626,8 +626,11 @@ function show_unlocked_bonuses() {
 }
 
 function show_globalist() {
-    if (server_check_result.bonus_globalist_sum == null) return;
     let txt = document.getElementById("globalist")! as HTMLParagraphElement;
+    if (server_check_result.bonus_globalist_sum == null) {
+        txt.innerHTML = "";
+        return;
+    }
     txt.innerHTML = `<b>Globalist:</b> ${
         Math.ceil(server_check_result.bonus_globalist_sum).toLocaleString()
     }, limit: ${
