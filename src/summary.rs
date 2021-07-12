@@ -59,10 +59,7 @@ fn summary() {
         writeln!(s, "<td class=num>{}</td>", p.figure.edges.len()).unwrap();
         writeln!(s, "<td class=num>{}</td>", p.hole.len()).unwrap();
 
-        let weight = p.figure.vertices.len() * p.figure.edges.len() * p.hole.len();
-        let weight = (weight as f64 / 6.0).log2() * 1000.0;
-        let weight = weight.round();
-        writeln!(s, "<td class=num>{}</td>", weight).unwrap();
+        writeln!(s, "<td class=num>{}</td>", p.weight().round()).unwrap();
 
         writeln!(s, "<td class=num>{}</td>", p.epsilon).unwrap();
 

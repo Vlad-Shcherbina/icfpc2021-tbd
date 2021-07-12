@@ -20,6 +20,18 @@ pub struct Problem {
     pub epsilon: i64,
 }
 
+impl Problem {
+    pub fn weight(&self) -> f64 {
+        let w = self.figure.vertices.len() * self.figure.edges.len() * self.hole.len();
+        (w as f64 / 6.0).log2() * 1000.0
+    }
+
+    pub fn _normalized_score(&self, dislikes: i64, best_dislikes: i64) -> i64 {
+        let t = (best_dislikes as f64 + 1.0) / (dislikes as f64 + 1.0);
+        (t * self.weight()).ceil() as i64
+    }
+}
+
 #[derive(serde::Deserialize, serde::Serialize)]
 #[derive(Debug, Clone, Copy, PartialEq)]
 #[allow(non_camel_case_types, clippy::upper_case_acronyms)]
