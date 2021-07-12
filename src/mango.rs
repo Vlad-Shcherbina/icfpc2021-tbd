@@ -4,7 +4,7 @@ use crate::shake::ShakeRequest;
 use crate::prelude::{Pt, Problem};
 use crate::graph::neighbours;
 use std::cmp::max;
-use crate::geom::{segment_in_poly, bounding_box};
+use crate::geom::{segment_in_poly, bounding_box, BBox};
 use rand::prelude::SliceRandom;
 use crate::checker::Checker;
 
@@ -13,16 +13,6 @@ struct Borders {
     min_y: i64,
     max_x: i64,
     max_y: i64,
-}
-
-fn borders(hole: &[Pt]) -> Borders {
-    let (pt_min, pt_max) = bounding_box(hole).unwrap();
-    Borders {
-        min_x: pt_min.x,
-        max_x: pt_max.x,
-        min_y: pt_min.y,
-        max_y: pt_max.y
-    }
 }
 
 fn orig_distance(problem: &Problem, v1_id: usize, v2_id: usize) -> i64 {
@@ -35,19 +25,34 @@ fn deformation_limits(problem: &Problem, v1_id: usize, v2_id: usize) -> (i64, i6
 }
 
 pub fn available_positions(checker: &mut Checker, vertices: &[Option<Pt>], v_id: usize) -> Vec<Pt> {
-    let borders = borders(&checker.problem.hole);
     let mut available_positions = vec![];
-    for x in borders.min_x..=borders.max_x {
-        'l: for y in borders.min_y..=borders.max_y {
+
+    let neigbours = checker.neighbours(v_id).clone();
+    let mut bbox = checker.bbox.clone();
+
+    for n_id in &neigbours {
+        if let Some(n) = vertices[*n_id] {
+            let (_, max_dist) = deformation_limits(&checker.problem, v_id, *n_id);
+            bbox.intersect(&BBox {
+                min_x: n.x - max_dist,
+                max_x: n.x + max_dist,
+                min_y: n.y - max_dist,
+                max_y: n.y + max_dist,
+            });
+        }
+    }
+
+    for x in bbox.min_x..=bbox.max_x {
+        'l: for y in bbox.min_y..=bbox.max_y {
             let assumed_pos = Pt { x, y };
 
             if Some(assumed_pos) == vertices[v_id] {
                 continue 'l;
             }
 
-            for n_id in checker.neighbours(v_id).clone() {
-                if let Some(n) = vertices[n_id] {
-                    let (min_dist, max_dist) = deformation_limits(&checker.problem, v_id, n_id);
+            for n_id in &neigbours {
+                if let Some(n) = vertices[*n_id] {
+                    let (min_dist, max_dist) = deformation_limits(&checker.problem, v_id, *n_id);
                     let new_dist = assumed_pos.dist2(n);
                     if !(min_dist <= new_dist && new_dist <= max_dist) {
                         // eprintln!("Drop {:?} by distance", assumed_pos);

@@ -2,7 +2,7 @@ use std::collections::HashMap;
 use std::convert::TryInto;
 use crate::domain_model::BonusName;
 use crate::prelude::*;
-use crate::geom::{bounding_box, pt_in_poly, segment_in_poly};
+use crate::geom::{bounding_box, pt_in_poly, segment_in_poly, BBox};
 use crate::graph::neighbours;
 
 #[derive(serde::Deserialize)]
@@ -41,6 +41,7 @@ pub fn length_range(d: i64, eps: i64) -> (i64, i64) {
 // Precomputed data to quickly check pose constraints.
 pub struct Checker {
     pub problem: Problem,
+    pub bbox: BBox,
     pub edge_ranges: Vec<(i64, i64)>,
     pub edges: Vec<(usize, usize)>,
     pub inside: Vec<Pt>,
@@ -71,6 +72,7 @@ impl Checker {
         Checker {
             problem: p.clone(),
             edges: p.figure.edges.clone(),
+            bbox: BBox::from_pts(&p.hole),
             edge_ranges,
             inside,
             edge_cache: HashMap::new(),

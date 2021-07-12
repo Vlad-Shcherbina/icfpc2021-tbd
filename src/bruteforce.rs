@@ -6,32 +6,51 @@ use rand::prelude::SliceRandom;
 use crate::checker::{get_dislikes, Checker};
 use std::collections::HashSet;
 
+struct Meta {
+    max_available_positions: usize,
+    latest_in: usize,
+}
+
 fn go(checker: &mut Checker,
       order: &Vec<usize>,
       offset: usize,
-      places: &mut Vec<Option<Pt>>) -> Option<Vec<Pt>> {
+      places: &mut Vec<Option<Pt>>,
+      meta: &mut Meta) -> Option<Vec<Pt>> {
 
     if offset < order.len() {
         let current_id = order[offset];
 
         let mut vertices: Vec<_> = places.iter().cloned().filter_map(|pt| pt).collect();
         let mut available_positions = available_positions(checker, places, current_id);
-        available_positions.sort_by_key(|pt| {
-            vertices.push(*pt);
-            let dislikes = get_dislikes(&checker.problem, &vertices);
-            vertices.pop();
-            dislikes
-        });
+        // available_positions.sort_by_key(|pt| {
+        //     vertices.push(*pt);
+        //     let dislikes = get_dislikes(&checker.problem, &vertices);
+        //     vertices.pop();
+        //     dislikes
+        // });
 
-        // eprintln!("available_positions: {:?}", available_positions);
+        // eprintln!("available_positions: {:?}", available_positions.len());
+        // eprintln!("Offset: {:?}", offset);
+
+        // if available_positions.len() > meta.max_available_positions {
+        //     meta.max_available_positions = available_positions.len();
+        //     eprintln!("Offset: {:?}", offset);
+        //     eprintln!("Max available positions: {:?}", meta.max_available_positions);
+        // }
+
+        // if meta.latest_in != offset {
+        //     meta.latest_in = offset;
+        //     eprintln!("In: {:?}", offset);
+        // }
         for pt in available_positions.drain(0..) {
             places[current_id] = Some(pt);
-            let result = go(checker, order, offset + 1, places);
+            let result = go(checker, order, offset + 1, places, meta);
             if result.is_some() {
                 return result;
             }
             places[current_id] = None;
         }
+        // eprintln!("Out: {:?}", offset);
     }
 
     // eprintln!("places: {:?}", places);
@@ -47,7 +66,7 @@ fn brutforce_with(checker: &mut Checker, v_id: usize, pt: Pt) -> Option<Vec<Pt>>
     let mut order = bfs(&checker.problem.figure.edges, v_id).iter().cloned().skip(1).collect();
     let mut places: Vec<Option<Pt>> = vec![None; checker.problem.figure.vertices.len()];
     places[v_id] = Some(pt);
-    go(checker, &order, 0, &mut places)
+    go(checker, &order, 0, &mut places, &mut Meta { max_available_positions: 0, latest_in: 100500 })
 }
 
 pub fn brutforce(r: &ShakeRequest) -> Vec<Pt> {

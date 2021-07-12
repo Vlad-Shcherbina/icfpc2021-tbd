@@ -1,5 +1,7 @@
 #![allow(dead_code)]
 
+use std::cmp::{max, min};
+
 #[derive(serde::Serialize, serde::Deserialize)]
 #[serde(into="(i64, i64)")]
 #[serde(from="(i64, i64)")]
@@ -405,6 +407,44 @@ pub fn bounding_box(points: &[Pt]) -> Option<(Pt, Pt)> {
         None
     } else {
         Some((Pt::new(x_min, y_min), Pt::new(x_max, y_max)))
+    }
+}
+
+#[derive(Clone, Copy, PartialEq, Eq, Hash)]
+pub struct BBox {
+    pub min_x: i64,
+    pub max_x: i64,
+    pub min_y: i64,
+    pub max_y: i64,
+}
+
+impl BBox {
+    pub fn from_pts(pts: &[Pt]) -> Self {
+        let (pt_min, pt_max) = bounding_box(pts).unwrap();
+        BBox{
+            min_x: pt_min.x,
+            max_x: pt_max.x,
+            min_y: pt_min.y,
+            max_y: pt_max.y
+        }
+
+    }
+
+    pub fn intersect(&self, other: &Self) -> Option<BBox> {
+        let min_x = max(self.min_x, other.min_x);
+        let max_x = min(self.max_x, other.max_x);
+        if min_x > max_x { return None; }
+
+        let min_y = max(self.min_y, other.min_y);
+        let max_y = min(self.max_y, other.max_y);
+        if min_y > max_y { return None; }
+
+        return Some(BBox {
+            min_x,
+            max_x,
+            min_y,
+            max_y
+        });
     }
 }
 
