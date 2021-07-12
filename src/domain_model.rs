@@ -55,7 +55,7 @@ pub struct ProblemTgtBonus {
 #[derive(Clone)]
 pub struct PoseBonus {
     pub bonus: BonusName,
-    pub problem: u32,
+    pub problem: i32,
     pub edge: Option<(usize, usize)>,
 }
 

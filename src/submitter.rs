@@ -14,7 +14,7 @@ struct Rank {
 impl Rank {
     fn new(p: &Problem, pose: &Pose) -> Rank {
         Rank {
-            used_bonuses: vec![],  // TODO
+            used_bonuses: pose.bonuses.clone(),
             dislikes: get_dislikes(&p, &pose.vertices),
             unlocked_bonuses: list_unlocked_bonuses(p, &pose.vertices),
         }
@@ -29,7 +29,11 @@ impl Rank {
         if other.dislikes < self.dislikes {
             return false;
         }
-        // TODO: used_bonuses
+        for b in &self.used_bonuses {
+            if !other.used_bonuses.iter().any(|q| q.bonus == b.bonus) {
+                return false;
+            }
+        }
         for ub in &other.unlocked_bonuses {
             if !self.unlocked_bonuses.iter().any(|q| q == ub) {
                 return false;
