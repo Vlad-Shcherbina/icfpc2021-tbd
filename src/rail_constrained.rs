@@ -2,8 +2,7 @@ use rand::Rng;
 //use rand::seq::SliceRandom;
 use crate::prelude::*;
 use crate::checker::{Checker, get_dislikes};
-use crate::poses_live::submit_pose;
-use crate::poses_live::{Scraper, PoseInfo, EvaluationResult};
+use crate::submitter::Submitter;
 
 fn deltas(min_d: i64, max_d: i64) -> Vec<Pt> {
     let mut result = vec![];
@@ -16,64 +15,6 @@ fn deltas(min_d: i64, max_d: i64) -> Vec<Pt> {
         }
     }
     result
-}
-
-struct Submitter {
-    problem_id :i32,
-    best_dislikes: i64,
-    to_submit: Option<(i64, Pose)>,
-    last_attempt: std::time::Instant
-}
-
-impl Submitter {
-    fn new(problem_id: i32) -> Submitter {
-        let mut scraper = Scraper::new();
-        let pi = scraper.problem_info(problem_id);
-
-        let best_dislikes = match pi.highscore() {
-            Some(PoseInfo { er: EvaluationResult::Valid { dislikes }, .. }) => *dislikes,
-            _ => 1_000_000_000,
-        };
-        eprintln!("best dislikes so far: {}", best_dislikes);
-        let last_attempt = std::time::Instant::now();
-        Submitter {
-            problem_id,
-            best_dislikes,
-            to_submit: None,
-            last_attempt
-        }
-    }
-    fn update(&mut self, dislikes: i64, pose: &Pose) {
-        if self.best_dislikes > dislikes {
-            eprintln!("solved, {} dislikes", dislikes);
-            eprintln!("FOUND IMPROVEMENT, will try to submit soon");
-            self.best_dislikes = dislikes;
-            self.to_submit = Some((dislikes, pose.clone()));
-        }
-
-    }
-    fn try_submit(&mut self) -> bool {
-        if self.best_dislikes == 0 && self.to_submit.is_none() {
-            eprintln!("nothing to do, optimal solution found and submitted");
-            return true;
-        }
-
-        if let Some((dislikes, pose)) = self.to_submit.as_ref() {
-            if self.last_attempt.elapsed().as_secs_f64() > 30.0 {
-                match submit_pose(self.problem_id, pose) {
-                    Ok(pose_id) => {
-                        eprintln!("(dislikes: {}) submitted https://poses.live/solutions/{}", dislikes, pose_id);
-                        self.to_submit = None;
-                    }
-                    Err(e) => {
-                        eprintln!("{}", e);
-                    }
-                }
-                self.last_attempt = std::time::Instant::now();
-            }
-        }
-        false
-    }   
 }
 
 crate::entry_point!("rail_constrained", rail_constrained);

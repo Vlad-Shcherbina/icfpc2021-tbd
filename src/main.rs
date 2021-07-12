@@ -26,6 +26,7 @@ mod summary;
 mod rail;
 mod bruteforce;
 mod rail_constrained;
+mod submitter;
 
 
 #[linkme::distributed_slice]
