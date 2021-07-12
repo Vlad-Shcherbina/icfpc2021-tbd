@@ -7,14 +7,14 @@ use crate::poses_live::submit_pose;
 use crate::poses_live::{Scraper, EvaluationResult};
 
 #[derive(Debug, Clone)]
-struct Rank {
-    used_bonuses: Vec<PoseBonus>,
-    dislikes: i64,
-    unlocked_bonuses: Vec<UnlockedBonus>,
+pub struct Rank {
+    pub used_bonuses: Vec<PoseBonus>,
+    pub dislikes: i64,
+    pub unlocked_bonuses: Vec<UnlockedBonus>,
 }
 
 impl Rank {
-    fn new(p: &Problem, pose: &Pose) -> Rank {
+    pub fn new(p: &Problem, pose: &Pose) -> Rank {
         Rank {
             used_bonuses: pose.bonuses.clone(),
             dislikes: get_dislikes(&p, &pose.vertices),
@@ -27,7 +27,7 @@ impl Rank {
         self.dislikes - self.unlocked_bonuses.len() as i64 + self.used_bonuses.len() as i64
     }
 
-    fn dominates(&self, other: &Rank) -> bool {
+    pub fn dominates(&self, other: &Rank) -> bool {
         if other.dislikes < self.dislikes {
             return false;
         }
@@ -52,7 +52,7 @@ pub struct Submitter {
     front: Vec<(Rank, Option<Pose>)>,
 }
 
-fn pareto<T>(mut front: Vec<(Rank, T)>) -> Vec<(Rank, T)> {
+pub fn pareto<T>(mut front: Vec<(Rank, T)>) -> Vec<(Rank, T)> {
     front.sort_by_key(|(r, _)| r.sort_key());
     let mut res: Vec<(Rank, T)> = vec![];
     for (q, t) in front {
@@ -77,7 +77,9 @@ impl Submitter {
                 Some(p) => p,
                 None => continue,  // TODO: this shit is not defensive enough
             };
+            dbg!(&pp.id);
             let cpr = check_pose(&problem, &pose);
+            eprintln!("ok");
             if cpr.valid {
                 front.push((Rank::new(&problem, &pose), None));
             }
