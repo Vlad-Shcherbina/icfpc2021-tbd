@@ -1,4 +1,6 @@
-use crate::checker::{get_dislikes, list_unlocked_bonuses};
+#![allow(unused_imports)]
+
+use crate::checker::{check_pose, get_dislikes, list_unlocked_bonuses};
 use crate::domain_model::{UnlockedBonus};
 use crate::prelude::*;
 use crate::poses_live::submit_pose;
@@ -70,7 +72,16 @@ impl Submitter {
 
         let mut front: Vec<(Rank, Option<Pose>)> = vec![];
         for pp in &pi.poses {
-            match pp.er {
+            let pose = scraper.get_pose_by_id(&pp.id);
+            let pose = match pose {
+                Some(p) => p,
+                None => continue,  // TODO: this shit is not defensive enough
+            };
+            let cpr = check_pose(&problem, &pose);
+            if cpr.valid {
+                front.push((Rank::new(&problem, &pose), None));
+            }
+            /*match pp.er {
                 EvaluationResult::Pending => {}
                 EvaluationResult::Invalid => {}
                 EvaluationResult::Valid { dislikes: _ } => {
@@ -79,7 +90,7 @@ impl Submitter {
                         front.push((Rank::new(&problem, &pose), None));
                     }
                 }
-            }
+            }*/
         }
         for q in &front {
             eprintln!("{:?}", q.0);

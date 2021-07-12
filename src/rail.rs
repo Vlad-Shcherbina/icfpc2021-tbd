@@ -37,6 +37,7 @@ fn rail() {
         bonuses.push(PoseBonus {
             bonus: BonusName::SUPERFLEX,
             problem: 4242,
+            edge: None,
         });
     }
     dbg!(&bonuses);
