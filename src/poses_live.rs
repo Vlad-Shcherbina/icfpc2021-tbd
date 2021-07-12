@@ -93,7 +93,16 @@ fn scrape_cache() {
 }
 
 pub fn read_cache() -> ProblemCache {
-    let mut file = File::open(project_path("cache/server.cache")).unwrap();
+    let file = File::open(project_path("cache/server.cache"));
+    let mut file = match file {
+        Ok(file) => file,
+        Err(e) => {
+            eprintln!("{:?}", e);
+            eprintln!("Run the following command first:");
+            eprintln!("  cargo run scrape_cache");
+            panic!();
+        }
+    };
     let mut content = String::new();
     file.read_to_string(&mut content).unwrap();
     serde_json::from_str(&content).unwrap()
