@@ -100,6 +100,7 @@ fn multishaker() {
 
 
         // Use greedy shaker.
+        eprintln!("Greedy...");
         let request = ShakeRequest {
             problem: p.clone(),
             vertices: pts.clone(),
@@ -111,6 +112,7 @@ fn multishaker() {
         let pose = Pose{vertices: pts.clone(), bonuses: vec![]};
         submitter.update(&p, &pose);
 
+        eprintln!("Threshold...");
         let request = ShakeRequest {
             problem: p.clone(),
             vertices: pts.clone(),

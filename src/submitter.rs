@@ -140,7 +140,12 @@ impl Submitter {
                     }
                 }
                 self.last_attempt = std::time::Instant::now();
+            } else {
+                eprintln!("Waiting to submit, {}s left", 30.0 - self.last_attempt.elapsed().as_secs_f64())
             }
+        } else {
+                eprintln!("Nothing to submit")
+
         }
         false
     }
