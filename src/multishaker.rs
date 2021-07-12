@@ -67,7 +67,7 @@ fn center_of_mass(pts: &[Pt]) -> Pt {
 crate::entry_point!("multishaker", multishaker);
 fn multishaker() {
     let problem_id: i32 = std::env::args().nth(2).unwrap().parse().unwrap();
-    let aggressive = std::env::args().len() > 2;
+    let aggressive = (std::env::args().nth(3) != None);
     if aggressive {
         eprintln!("Applying aggressive transformations");
     }
