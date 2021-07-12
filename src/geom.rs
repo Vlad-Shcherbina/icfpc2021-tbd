@@ -364,6 +364,17 @@ fn test_segment_in_poly_bug() {
     check_segment_in_poly((Pt::new(110, 200), Pt::new(110, 210)), &poly, false);
     check_segment_in_poly((Pt::new(110, 200), Pt::new(109, 209)), &poly, false);
     check_segment_in_poly((Pt::new(108, 202), Pt::new(109, 209)), &poly, false);
+
+    let poly = vec![
+        Pt::new(0, 0),
+        Pt::new(4, 4),
+        Pt::new(1, 3),
+        Pt::new(0, 1),
+        Pt::new(-1, 3),
+        Pt::new(-4, 4),
+    ];
+    // TODO: another bug, should be false
+    check_segment_in_poly((Pt::new(-2, 3), Pt::new(2, 3)), &poly, true);
 }
 
 // Rotate a point around another point
