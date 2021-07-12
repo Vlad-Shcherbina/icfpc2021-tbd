@@ -1,7 +1,7 @@
 use rand::Rng;
 //use rand::seq::SliceRandom;
 use crate::prelude::*;
-use crate::checker::{Checker, get_dislikes, check_pose};
+use crate::checker::{check_pose};
 use crate::submitter::Submitter;
 use crate::daiquiri;
 use crate::shake::ShakeRequest;
@@ -9,7 +9,7 @@ use crate::geom::pt_in_poly;
 use crate::greedy;
 use crate::threshold;
 
-fn tuck(p: &Problem, pts: &mut [Pt], checker: &mut Checker, rng: &mut rand::RngCore) -> bool {
+fn tuck(p: &Problem, pts: &mut [Pt], rng: &mut dyn rand::RngCore) -> bool {
     loop {
         eprintln!("Tucking vertices...");
         let mut vertices_inside = vec![];
@@ -23,7 +23,7 @@ fn tuck(p: &Problem, pts: &mut [Pt], checker: &mut Checker, rng: &mut rand::RngC
         }
         assert!(!vertices_inside.is_empty());
         let pt_inside = pts[vertices_inside[rng.gen_range(0..vertices_inside.len())]];
-        if (!vertices_outside.is_empty()) {
+        if !vertices_outside.is_empty() {
             eprintln!("Vertices found.");
             for idx_outside in vertices_outside {
                 pts[idx_outside] = pt_inside;
@@ -63,9 +63,7 @@ fn multishaker() {
 
     
     let p = load_problem(problem_id);
-    let bonuses = vec![];
 
-    let mut checker = Checker::new(&p, &bonuses);
     let mut rng = rand::thread_rng();
 
     let mut pts = p.figure.vertices.clone();
@@ -73,7 +71,7 @@ fn multishaker() {
     // Make valid pose with daquiri.
     loop {
         eprintln!("Tuck/mojito...");
-        let valid = tuck(&p, &mut pts, &mut checker, &mut rng);
+        let valid = tuck(&p, &mut pts, &mut rng);
         if valid {
             break;
         }
@@ -89,12 +87,12 @@ fn multishaker() {
                 param: 5,
             };
             let new_pts = daiquiri::daikuiri_shake(&request, true);
-            stabilized = (new_pts == pts);
+            stabilized = new_pts == pts;
             pts = new_pts;
         }
     }
 
-    'outer: loop {
+    loop {
         if submitter.try_submit() {
             // Submitted best possible solution. Nothing to do.
             return;
@@ -111,7 +109,7 @@ fn multishaker() {
         };
         pts = greedy::greedy_shake(&request);
         let pose = Pose{vertices: pts.clone(), bonuses: vec![]};
-        submitter.update(get_dislikes(&p, &pts), &pose);
+        submitter.update(&p, &pose);
 
         let request = ShakeRequest {
             problem: p.clone(),
@@ -122,7 +120,7 @@ fn multishaker() {
         };
         pts = threshold::threshold_shake(&request);
         let pose = Pose{vertices: pts.clone(), bonuses: vec![]};
-        submitter.update(get_dislikes(&p, &pts), &pose);
+        submitter.update(&p, &pose);
 
         // Use threshold shaker.
     }
