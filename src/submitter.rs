@@ -1,4 +1,5 @@
-use crate::checker::get_dislikes;
+use crate::checker::{check_unlocked, get_dislikes, list_unlocked_bonuses};
+use crate::domain_model::BonusName;
 use crate::prelude::*;
 use crate::poses_live::submit_pose;
 use crate::poses_live::{Scraper, PoseInfo, EvaluationResult};
@@ -30,8 +31,10 @@ impl Submitter {
     }
     pub fn update(&mut self, p: &Problem, pose: &Pose) {
         let dislikes = get_dislikes(&p, &pose.vertices);
+        let unlocked_bonuses = list_unlocked_bonuses(p, &pose.vertices);
+
         if self.best_dislikes > dislikes {
-            eprintln!("solved, {} dislikes", dislikes);
+            eprintln!("solved, {} dislikes {:?}", dislikes, unlocked_bonuses);
             eprintln!("FOUND IMPROVEMENT, will try to submit soon");
             self.best_dislikes = dislikes;
             self.to_submit = Some((dislikes, pose.clone()));

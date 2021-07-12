@@ -21,7 +21,7 @@ pub struct Problem {
 }
 
 #[derive(serde::Deserialize, serde::Serialize)]
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, Copy, PartialEq)]
 #[allow(non_camel_case_types, clippy::upper_case_acronyms)]
 pub enum BonusName {
     GLOBALIST,
@@ -63,6 +63,17 @@ pub struct PoseBonus {
 pub struct Pose {
     #[serde(default)] pub bonuses: Vec<PoseBonus>,
     pub vertices: Vec<Pt>,
+}
+
+pub struct UnlockedBonus {
+    pub name: BonusName,
+    pub problem_id: i32,
+}
+
+impl std::fmt::Debug for UnlockedBonus {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}{}", self.name.short_name(), self.problem_id)
+    }
 }
 
 #[test]

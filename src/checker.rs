@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 use std::convert::TryInto;
-use crate::domain_model::BonusName;
+use crate::domain_model::{BonusName, UnlockedBonus};
 use crate::prelude::*;
 use crate::geom::{pt_in_poly, segment_in_poly, BBox};
 use crate::graph::neighbours;
@@ -110,6 +110,20 @@ pub fn check_unlocked(problem: &Problem, vertices: &[Pt]) -> Vec<bool> {
         }
     }
     unlocked
+}
+
+pub fn list_unlocked_bonuses(problem: &Problem, vertices: &[Pt]) -> Vec<UnlockedBonus> {
+    let unlocked = check_unlocked(problem, vertices);
+    unlocked.iter().zip(&problem.bonuses)
+    .filter_map(|(u, b)| if *u {
+        Some( UnlockedBonus {
+            problem_id: b.problem,
+            name: b.bonus,
+        })
+    } else {
+        None
+    })
+    .collect()
 }
 
 #[allow(clippy::needless_range_loop)]
