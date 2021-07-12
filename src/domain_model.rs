@@ -26,7 +26,7 @@ impl Problem {
         (w as f64 / 6.0).log2() * 1000.0
     }
 
-    pub fn normalized_score(&self, dislikes: i64, best_dislikes: i64) -> i64 {
+    pub fn normalized_score(&self, dislikes: i64, best_dislikes: i32) -> i64 {
         let t = (best_dislikes as f64 + 1.0) / (dislikes as f64 + 1.0);
         (t * self.weight()).ceil() as i64
     }

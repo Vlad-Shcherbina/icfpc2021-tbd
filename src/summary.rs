@@ -14,6 +14,7 @@ fn summary() {
     <style>
     table {
         margin-top: 50px;
+        border-collapse: collapse;
     }
     th.diag > div {
         transform: translate(5px, 0px) rotate(-30deg);
@@ -21,7 +22,7 @@ fn summary() {
         white-space: nowrap;
     }
     td {
-        border: solid 1px #ccc;
+        border: solid 1px #999;
     }
     td.num {
         text-align: right;
@@ -29,6 +30,7 @@ fn summary() {
     </style>
     "#).unwrap();
 
+    writeln!(s, "See the sum at the end of the table").unwrap();
     writeln!(s, "<table>").unwrap();
     writeln!(s, "<tr>").unwrap();
     writeln!(s, "<th class=diag><div>problem ID</div></th>").unwrap();
@@ -39,8 +41,8 @@ fn summary() {
     writeln!(s, "<th class=diag><div>epsilon</div></th>").unwrap();
     writeln!(s, "<th class=diag><div>bounding box</div></th>").unwrap();
     // writeln!(s, "<th class=diag><div>hole area</div></th>").unwrap();
-    writeln!(s, "<th class=diag><div>unlocks bonuses</div></th>").unwrap();
     writeln!(s, "<th class=diag><div>gets bonuses</div></th>").unwrap();
+    writeln!(s, "<th class=diag><div>unlocks bonuses</div></th>").unwrap();
     writeln!(s, "<th class=diag><div>best solution</div></th>").unwrap();
     writeln!(s, "<th class=diag><div>latest solution</div></th>").unwrap();
     writeln!(s, "<th class=diag><div>best normalized</div></th>").unwrap();
@@ -50,6 +52,10 @@ fn summary() {
     writeln!(s, "</tr>").unwrap();
 
     let bonuslist = get_bonus_list();
+
+    let mut best_norm_sum = 0;
+    let mut latest_norm_sum = 0;
+
     for problem_id in all_problem_ids() {
         dbg!(problem_id);
         let p = load_problem(problem_id);
@@ -85,14 +91,14 @@ fn summary() {
         // writeln!(s, "<td class=num>{}</td>", area).unwrap();
 
         writeln!(s, "<td class=num>").unwrap();
-        for b in &p.bonuses {
-            writeln!(s, "{}=>{}, ", b.bonus.short_name(), b.problem).unwrap();
+        for b in bonuslist.get(&problem_id).unwrap_or(&vec![]) {
+            writeln!(s, "{}, ", b).unwrap();
         }
         writeln!(s, "</td>").unwrap();
 
         writeln!(s, "<td class=num>").unwrap();
-        for b in bonuslist.get(&problem_id).unwrap_or(&vec![]) {
-            writeln!(s, "{}, ", b).unwrap();
+        for b in &p.bonuses {
+            writeln!(s, "{}=>{}, ", b.bonus.short_name(), b.problem).unwrap();
         }
         writeln!(s, "</td>").unwrap();
 
@@ -101,28 +107,51 @@ fn summary() {
         let data = read_cache();
         let pi = data.problems.get(&problem_id).unwrap();
 
-        let best = match pi.highscore() {
-            Some(PoseInfo{id, er}) =>
-                format!(r#"{}, <a href="http://127.0.0.1:8000/src/viz/static/viz.html#{}@{}">vis</a>"#,
-                    er, problem_id, id),
-            None => "-".to_string(),
+        let best;
+        let best_norm;
+        let mut bn_score = 0;
+
+        match pi.highscore() {
+            Some(PoseInfo{id, er}) => {
+                best = format!(r#"{}, <a href="http://127.0.0.1:8000/src/viz/static/viz.html#{}@{}">vis</a>"#,
+                    er, problem_id, id);
+                best_norm = match er {
+                    Valid { dislikes } => {
+                        bn_score = p.normalized_score(*dislikes, pi.global_highscore);
+                        best_norm_sum += bn_score;
+                        format!("{}", bn_score)
+                    }
+                    _ => "-".to_string(),
+                }
+            }
+            None => {
+                best = "-".to_string();
+                best_norm = "-".to_string();
+            }
         };
 
-        let mut latest = String::new();
+        let latest;
+        let latest_norm;
         let mut used_bonuses = String::new();
         let mut unlocked_bonuses = String::new();
+        let mut ln_score = 0;
 
         match pi.latest() {
             None => {
                 latest = "-".to_string();
+                latest_norm = "-".to_string();
                 used_bonuses = "-".to_string();
                 unlocked_bonuses = "-".to_string();
             }
             Some(PoseInfo{id, er}) => {
                 latest = format!(r#"{}, <a href="http://127.0.0.1:8000/src/viz/static/viz.html#{}@{}">vis</a>"#,
                 er, problem_id, id);
+
                 match er {
-                    Valid { dislikes: _ } => {
+                    Valid { dislikes } => {
+                        ln_score = p.normalized_score(*dislikes, pi.global_highscore);
+                        latest_norm_sum += ln_score;
+                        latest_norm = format!("{}", ln_score);
                         let pose = data.poses.get(id).unwrap();
                         for b in &pose.bonuses { used_bonuses += &format!("{}=>{}, ", 
                                                 b.problem,
@@ -136,6 +165,7 @@ fn summary() {
                         }
                     }
                     _ => {
+                        latest_norm = "-".to_string();
                         used_bonuses = "-".to_string();
                         unlocked_bonuses = "-".to_string();
                     }
@@ -146,13 +176,17 @@ fn summary() {
         writeln!(s, "<td class=num>{}</td>", best).unwrap();
         writeln!(s, "<td class=num>{}</td>", latest).unwrap();
 
-        writeln!(s, "<td class=num>{}</td>", best).unwrap();
-        writeln!(s, "<td class=num>{}</td>", latest).unwrap();
+        writeln!(s, "<td class=num>{}</td>", best_norm).unwrap();
+        writeln!(s, "<td class=num style=\"background: #{}\">{}</td>", 
+                if bn_score > ln_score { "FFDBD1" } else { "BCFFC4" },
+                latest_norm)
+                .unwrap();
 
         writeln!(s, "<td class=num>{}</td>", used_bonuses).unwrap();
         writeln!(s, "<td class=num>{}</td>", unlocked_bonuses).unwrap();
     }
     writeln!(s, "</table>").unwrap();
+    writeln!(s, "<p>Sum: best normalized: <b>{}</b>, latest normalized: <b>{}</b></b>", best_norm_sum, latest_norm_sum).unwrap();
 
     let loc = "outputs/summary.html";
     std::fs::write(project_path(loc), s).unwrap();

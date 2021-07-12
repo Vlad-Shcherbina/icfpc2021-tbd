@@ -197,7 +197,6 @@ pub fn check_valid_break_a_leg(bonus: &PoseBonus, problem: &Problem, vertex_cnt:
 pub fn globalist_sum_len(edge_statuses: &[EdgeStatus]) -> f64 {
     let mut eps = 0.;
     for e in edge_statuses {
-        eprintln!("{}, {}", e.actual_length * 4, e.original_length_x4);
         eps += f64::abs(e.actual_length as f64 * 4. / e.original_length_x4 as f64 - 1.); 
     }
     eps * 1e6
