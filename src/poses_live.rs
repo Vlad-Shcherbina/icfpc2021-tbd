@@ -90,7 +90,7 @@ fn scrape_cache() {
             if pose.is_none() { continue; }
             cache.poses.insert(ps.id.clone(), pose.unwrap());
         }
-    }    
+    }
     let mut file = File::create(project_path("cache/server.cache")).unwrap();
     file.write_all(&serde_json::to_vec(&cache).unwrap()).unwrap();
 }
@@ -109,6 +109,25 @@ pub fn read_cache() -> ProblemCache {
     let mut content = String::new();
     file.read_to_string(&mut content).unwrap();
     serde_json::from_str(&content).unwrap()
+}
+
+crate::entry_point!("resubmit_best", resubmit_best, _EP5);
+fn resubmit_best() {
+    let data = read_cache();
+    for problem_id in all_problem_ids() {
+        let pi = data.problems.get(&problem_id).unwrap();
+
+        match pi.highscore() {
+            Some(PoseInfo{id, er}) => match submit_pose(problem_id, data.poses.get(id).unwrap()) {
+                Ok(pose_id) => eprintln!("Problem {}: resubmitted {} at https://poses.live/solutions/{}", problem_id, er, pose_id),
+                Err(e) => eprintln!("Problem {}: {}", problem_id, e),
+            }
+            None => eprintln!("Problem {}: no previous valid submissions", problem_id),
+        };
+    }
+
+    // update the cache right away since all of it has changed
+    scrape_cache();
 }
 
 pub struct Scraper {
@@ -234,7 +253,7 @@ impl Scraper {
 
         match data {
             Ok(d) => match serde_json::from_str(&d.into_string().unwrap()) {
-                Ok(a) => Some(a),                
+                Ok(a) => Some(a),
                 Err(msg) => {
                     eprintln!("Error {} in {}", msg, pose_id);
                     None
