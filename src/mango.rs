@@ -1,4 +1,5 @@
 #![allow(unused_imports)]
+#![allow(dead_code)]
 
 use crate::shake::ShakeRequest;
 use crate::prelude::{Pt, Problem};
@@ -28,7 +29,7 @@ pub fn available_positions(checker: &mut Checker, vertices: &[Option<Pt>], v_id:
     let mut available_positions = vec![];
 
     let neigbours = checker.neighbours(v_id).clone();
-    let mut bbox = checker.bbox.clone();
+    let bbox = checker.bbox.clone();
 
     for n_id in &neigbours {
         if let Some(n) = vertices[*n_id] {
