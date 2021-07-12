@@ -125,6 +125,9 @@ pub fn used(pb: &Option<PoseBonus>, bn: &BonusName) -> bool {
 }
 
 pub fn get_dislikes(problem: &Problem, vertices: &[Pt]) -> i64 {
+    if vertices.is_empty() {
+        return 1_000_000_000;
+    }
     let mut dislikes = 0;
     for &h in &problem.hole {
         dislikes += vertices.iter().map(|v| v.dist2(h)).min().unwrap();
