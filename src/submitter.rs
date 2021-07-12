@@ -1,5 +1,5 @@
-use crate::checker::{check_unlocked, get_dislikes, list_unlocked_bonuses};
-use crate::domain_model::{BonusName, UnlockedBonus};
+use crate::checker::{get_dislikes, list_unlocked_bonuses};
+use crate::domain_model::{UnlockedBonus};
 use crate::prelude::*;
 use crate::poses_live::submit_pose;
 use crate::poses_live::{Scraper, PoseInfo, EvaluationResult};
@@ -71,7 +71,7 @@ impl Submitter {
             match pp.er {
                 EvaluationResult::Pending => {}
                 EvaluationResult::Invalid => {}
-                EvaluationResult::Valid { dislikes } => {
+                EvaluationResult::Valid { dislikes: _ } => {
                     let pose = scraper.get_pose_by_id(&pp.id).unwrap();
                     if pose.bonuses.is_empty() {
                         front.push((Rank::new(&problem, &pose), None));
