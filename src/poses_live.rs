@@ -84,7 +84,7 @@ fn scrape_cache() {
             if cache.poses.contains_key(&ps.id) { continue };
             eprintln!("pose {}...", &ps.id);
             let pose = scraper.get_pose_by_id(&ps.id);
-            if let None = pose { continue; }
+            if pose.is_none() { continue; }
             cache.poses.insert(ps.id.clone(), pose.unwrap());
         }
     }    

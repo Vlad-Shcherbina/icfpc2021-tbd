@@ -69,7 +69,8 @@ impl Checker {
             bonus: bonus.clone(),
         };
 
-        if used(&bonus, &BonusName::BREAK_A_LEG) && check_valid_break_a_leg(&bonus.as_ref().unwrap(), p) {
+        if used(&bonus, &BonusName::BREAK_A_LEG) 
+            && check_valid_break_a_leg(bonus.as_ref().unwrap(), p, p.figure.vertices.len() + 1) {
             let (v1, v2) = bonus.unwrap().edge.unwrap();
             let idx = checker.edges.iter().position(|&(p1, p2)| 
                 v1 == p1 && v2 == p2 || v1 == p2 && v2 == p1
@@ -78,11 +79,18 @@ impl Checker {
             checker.edge_ranges.remove(idx);
             checker.edges.push((v1, p.figure.vertices.len()));
             checker.edges.push((v2, p.figure.vertices.len()));
-            let p1x = p.figure.vertices[v1].x * 4;
-            let p1y = p.figure.vertices[v1].y * 4;
-            let p2x = p.figure.vertices[v2].x * 4;
-            let p2y = p.figure.vertices[v2].y * 4;
-            
+
+            let p1 = Pt { x: p.figure.vertices[v1].x * 2, y: p.figure.vertices[v1].y * 2 };
+            let p2 = Pt { x: p.figure.vertices[v2].x * 2, y: p.figure.vertices[v2].y * 2 };
+            let center = Pt { x: (p1.x + p2.x) / 2, y : (p1.y + p2.y) / 2 };
+            let d1 = p1.dist2(center);
+            let d2 = p2.dist2(center);
+            let min1 = (d1 * (EPS_BASE - p.epsilon) + 4 * EPS_BASE - 4 + 3) / (4 * EPS_BASE);
+            let max1 = d1 * (EPS_BASE + p.epsilon) / (4 * EPS_BASE);
+            let min2 = (d2 * (EPS_BASE - p.epsilon) + 4 * EPS_BASE - 4 + 3) / (4 * EPS_BASE);
+            let max2 = d2 * (EPS_BASE + p.epsilon) / (4 * EPS_BASE);
+            checker.edge_ranges.push((min1, max1, d1));
+            checker.edge_ranges.push((min2, max2, d2));
         }
 
         checker
@@ -174,7 +182,8 @@ pub fn check_edges_in_hole(problem: &Problem, pose: &Pose,
     true
 }
 
-pub fn check_valid_break_a_leg(bonus: &PoseBonus, problem: &Problem) -> bool {
+pub fn check_valid_break_a_leg(bonus: &PoseBonus, problem: &Problem, vertex_cnt: usize) -> bool {
+    if vertex_cnt != problem.figure.vertices.len() + 1 { return false; }
     match bonus.edge {
         None => false,
         Some((v1, v2)) => {
@@ -210,14 +219,13 @@ pub fn check_pose(problem: &Problem, pose: &Pose) -> CheckPoseResponse {
     let mut checker = Checker::new(problem, &pose.bonuses);
 
     let vertices = &pose.vertices;
-    assert_eq!(problem.figure.vertices.len(), vertices.len());
 
     let mut edge_statuses = vec![];
     let mut valid = true;
     let mut unlocked = check_unlocked(problem, vertices);
-    for i in 0..problem.figure.edges.len() {
-        let pt1 = vertices[problem.figure.edges[i].0];
-        let pt2 = vertices[problem.figure.edges[i].1];
+    for i in 0..checker.edges.len() {
+        let pt1 = vertices[checker.edges[i].0];
+        let pt2 = vertices[checker.edges[i].1];
 
         let fits_in_hole = checker.edge_in_hole(pt1, pt2);
 
@@ -244,8 +252,10 @@ pub fn check_pose(problem: &Problem, pose: &Pose) -> CheckPoseResponse {
         no_glob_check_edge_lens(pose, &edge_statuses)
     };
 
-    valid = valid && check_edges_in_hole(problem, pose, &edge_statuses, &checker);
-    valid = valid && pose.bonuses.len() <= 1;
+    valid = valid && pose.bonuses.len() <= 1
+                  && (!used(&checker.bonus, &BonusName::BREAK_A_LEG) 
+                  || check_valid_break_a_leg(&checker.bonus.clone().unwrap(), problem, pose.vertices.len()))
+                  && check_edges_in_hole(problem, pose, &edge_statuses, &checker);
 
     for _b in &problem.bonuses {
         unlocked.push(false);

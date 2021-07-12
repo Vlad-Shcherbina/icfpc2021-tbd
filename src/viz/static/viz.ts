@@ -136,7 +136,6 @@ async function main() {
         // console.log(solution.value);
         pose = JSON.parse(solution.value!);
         // console.log(figure.vertices.length, problem.figure.vertices.length);
-        assert(pose.vertices.length == problem.figure.vertices.length);
         // console.dir(figure.vertices);
         on_figure_change();
     };
