@@ -2,7 +2,7 @@ use crate::checker::{get_dislikes, list_unlocked_bonuses};
 use crate::domain_model::{UnlockedBonus};
 use crate::prelude::*;
 use crate::poses_live::submit_pose;
-use crate::poses_live::{Scraper, PoseInfo, EvaluationResult};
+use crate::poses_live::{Scraper, EvaluationResult};
 
 #[derive(Debug, Clone)]
 struct Rank {
@@ -42,8 +42,6 @@ impl Rank {
 
 pub struct Submitter {
     problem_id :i32,
-    best_dislikes: i64,
-    to_submit: Option<(i64, Pose)>,
     last_attempt: std::time::Instant,
     front: Vec<(Rank, Option<Pose>)>,
 }
@@ -88,16 +86,9 @@ impl Submitter {
             eprintln!("{:?}", q.0);
         }
 
-        let best_dislikes = match pi.highscore() {
-            Some(PoseInfo { er: EvaluationResult::Valid { dislikes }, .. }) => *dislikes,
-            _ => 1_000_000_000,
-        };
-        eprintln!("best dislikes so far: {}", best_dislikes);
         let last_attempt = std::time::Instant::now();
         Submitter {
             problem_id,
-            best_dislikes,
-            to_submit: None,
             last_attempt,
             front,
         }
@@ -121,11 +112,6 @@ impl Submitter {
         eprintln!("--");
     }
     pub fn try_submit(&mut self) -> bool {
-        if self.best_dislikes == 0 && self.to_submit.is_none() {
-            eprintln!("nothing to do, optimal solution found and submitted");
-            return true;
-        }
-
         let q = self.front.iter_mut().find(|(_, to_submit)| to_submit.is_some());
         if let Some((rank, pose)) = q{
             if self.last_attempt.elapsed().as_secs_f64() > 30.0 {
