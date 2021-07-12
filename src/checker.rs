@@ -241,6 +241,11 @@ pub fn check_pose(problem: &Problem, pose: &Pose) -> CheckPoseResponse {
         edge_statuses.push(es);
     }
 
+    valid = valid && pose.bonuses.len() <= 1
+    && (!used(&checker.bonus, &BonusName::BREAK_A_LEG) 
+    || check_valid_break_a_leg(&checker.bonus.clone().unwrap(), problem, pose.vertices.len()))
+    && check_edges_in_hole(problem, pose, &edge_statuses, &checker);
+
     let bonus_globalist_sum = if used(&checker.bonus, &BonusName::GLOBALIST) {
         Some(globalist_sum_len(&edge_statuses))
     }
@@ -251,11 +256,6 @@ pub fn check_pose(problem: &Problem, pose: &Pose) -> CheckPoseResponse {
     else {
         no_glob_check_edge_lens(pose, &edge_statuses)
     };
-
-    valid = valid && pose.bonuses.len() <= 1
-                  && (!used(&checker.bonus, &BonusName::BREAK_A_LEG) 
-                  || check_valid_break_a_leg(&checker.bonus.clone().unwrap(), problem, pose.vertices.len()))
-                  && check_edges_in_hole(problem, pose, &edge_statuses, &checker);
 
     for _b in &problem.bonuses {
         unlocked.push(false);
