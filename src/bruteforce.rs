@@ -1,3 +1,5 @@
+#![allow(unused_imports)]
+
 use crate::shake::ShakeRequest;
 use crate::prelude::{Problem, Pt};
 use crate::graph::bfs;

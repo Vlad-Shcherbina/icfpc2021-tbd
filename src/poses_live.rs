@@ -162,7 +162,7 @@ impl Scraper {
 
         let re = regex::Regex::new(&format!("<tr><td><a href=\"/problems/{}\">{}</a></td><td>.*?</td><td>(\\d+)</td></tr>", problem_id, problem_id)).unwrap();
 
-        re.captures(&page).unwrap().get(1).unwrap().as_str().parse::<i32>().unwrap()
+        re.captures(page).unwrap().get(1).unwrap().as_str().parse::<i32>().unwrap()
     }
 
     pub fn get_pose_by_id(&mut self, pose_id: String) -> Option<Pose> {

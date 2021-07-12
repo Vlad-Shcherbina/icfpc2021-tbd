@@ -134,7 +134,7 @@ pub fn check_edges_in_hole(problem: &Problem, pose: &Pose,
     true
 }
 
-pub fn globalist_check_edge_lens(problem: &Problem, pose: &Pose, edge_statuses: &[EdgeStatus]) -> bool {
+pub fn globalist_check_edge_lens(_problem: &Problem, _pose: &Pose, _edge_statuses: &[EdgeStatus]) -> bool {
     todo!();
     // let mut eps = 0.;
     // for e in edge_statuses {

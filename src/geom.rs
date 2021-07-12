@@ -279,7 +279,7 @@ pub fn segment_in_poly(seg: (Pt, Pt), poly: &[Pt]) -> bool {
         return true;
     }
 
-    let sign = poly_area_doubled(&poly).signum();
+    let sign = poly_area_doubled(poly).signum();
 
     for edge in poly_edges(poly) {
         match segment_intersection(seg, edge) {
@@ -321,6 +321,7 @@ fn qqqqqq(v1: Pt, v2: Pt, v3: Pt) -> i64 {
     let mut res = 1;
     for i in 0..3 {
         for j in 0..i {
+            #[allow(clippy::float_cmp)]
             if a[i] == a[j] {
                 return 0;
             }
