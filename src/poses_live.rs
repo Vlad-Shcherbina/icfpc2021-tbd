@@ -117,12 +117,17 @@ fn resubmit_best() {
     for problem_id in all_problem_ids() {
         let pi = data.problems.get(&problem_id).unwrap();
 
-        match pi.highscore() {
-            Some(PoseInfo{id, er}) => match submit_pose(problem_id, data.poses.get(id).unwrap()) {
-                Ok(pose_id) => eprintln!("Problem {}: resubmitted {} at https://poses.live/solutions/{}", problem_id, er, pose_id),
-                Err(e) => eprintln!("Problem {}: {}", problem_id, e),
-            }
-            None => eprintln!("Problem {}: no previous valid submissions", problem_id),
+        let hs = pi.bonusless_highscore();
+        let lt = pi.latest();
+
+        if hs != lt {
+            match hs {
+                Some(PoseInfo{id, er}) => match submit_pose(problem_id, data.poses.get(id).unwrap()) {
+                    Ok(pose_id) => eprintln!("Problem {}: resubmitted {} at https://poses.live/solutions/{}", problem_id, er, pose_id),
+                    Err(e) => eprintln!("Problem {}: {}", problem_id, e),
+                }
+                None => eprintln!("Problem {}: no previous valid submissions", problem_id),
+            };
         };
     }
 
@@ -136,7 +141,7 @@ pub struct Scraper {
 }
 
 #[derive(serde::Deserialize, serde::Serialize)]
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub enum EvaluationResult {
     Pending,  // hourglass
     Invalid,  // cross
@@ -154,7 +159,7 @@ impl std::fmt::Display for EvaluationResult {
 }
 
 #[derive(serde::Deserialize, serde::Serialize)]
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct PoseInfo {
     pub id: String,
     pub er: EvaluationResult,
@@ -179,6 +184,23 @@ impl ProblemInfo {
         self.poses.iter()
         .filter_map(|pi| match pi.er {
             EvaluationResult::Valid { dislikes } => Some((dislikes, pi)),
+            EvaluationResult::Invalid => None,
+            EvaluationResult::Pending => None,
+        })
+        .min_by_key(|q| q.0)
+        .map(|q| q.1)
+    }
+
+    pub fn bonusless_highscore(&self) -> Option<&PoseInfo> {
+        let data = read_cache();
+        self.poses.iter()
+        .filter_map(|pi| match pi.er {
+            EvaluationResult::Valid { dislikes } =>
+                if data.poses.get(&pi.id).unwrap().bonuses.is_empty() {
+                    Some((dislikes, pi))
+                } else {
+                    None
+                },
             EvaluationResult::Invalid => None,
             EvaluationResult::Pending => None,
         })
