@@ -1,6 +1,6 @@
 use rand::Rng;
 use crate::prelude::*;
-use crate::checker::{Checker, get_dislikes};
+use crate::checker::Checker;
 use crate::submitter::Submitter;
 
 fn deltas(min_d: i64, max_d: i64) -> Vec<Pt> {
@@ -114,8 +114,7 @@ fn rail() {
                     vertices: pts.iter().map(|pt| pt.unwrap()).collect(),
                     bonuses: bonuses.clone(),
                 };
-                let dislikes = get_dislikes(&p, &pose.vertices);
-                submitter.update(dislikes, &pose);
+                submitter.update(&p, &pose);
                 continue 'outer;
             }
         }

@@ -1,3 +1,4 @@
+use crate::checker::get_dislikes;
 use crate::prelude::*;
 use crate::poses_live::submit_pose;
 use crate::poses_live::{Scraper, PoseInfo, EvaluationResult};
@@ -27,7 +28,8 @@ impl Submitter {
             last_attempt
         }
     }
-    pub fn update(&mut self, dislikes: i64, pose: &Pose) {
+    pub fn update(&mut self, p: &Problem, pose: &Pose) {
+        let dislikes = get_dislikes(&p, &pose.vertices);
         if self.best_dislikes > dislikes {
             eprintln!("solved, {} dislikes", dislikes);
             eprintln!("FOUND IMPROVEMENT, will try to submit soon");
