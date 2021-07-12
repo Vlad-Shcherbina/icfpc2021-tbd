@@ -55,9 +55,22 @@ fn tuck(p: &Problem, pts: &mut [Pt], rng: &mut dyn rand::RngCore) -> bool {
     }
 }
 
+fn center_of_mass(pts: &[Pt]) -> Pt {
+    let sum_x = pts.iter().map(|pt| pt.x).sum::<i64>() as f64;
+    let sum_y = pts.iter().map(|pt| pt.y).sum::<i64>() as f64;
+    Pt {
+        x: (sum_x / pts.len() as f64) as i64,
+        y: (sum_y / pts.len() as f64) as i64
+    }
+}
+
 crate::entry_point!("multishaker", multishaker);
 fn multishaker() {
     let problem_id: i32 = std::env::args().nth(2).unwrap().parse().unwrap();
+    let aggressive = std::env::args().len() > 2;
+    if aggressive {
+        eprintln!("Applying aggressive transformations");
+    }
 
     let mut submitter = Submitter::new(problem_id);
 
@@ -67,6 +80,13 @@ fn multishaker() {
     let mut rng = rand::thread_rng();
 
     let mut pts = p.figure.vertices.clone();
+
+    if aggressive {
+        let cm_pts = center_of_mass(&pts);
+        let cm_hole = center_of_mass(&p.hole);
+        let diff = cm_hole - cm_pts;
+        pts = pts.iter().map(|pt| Pt{x: pt.x + diff.x, y: pt.y + diff.y}).collect();
+    }
 
     // Make valid pose with daquiri.
     loop {

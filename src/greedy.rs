@@ -94,9 +94,9 @@ pub fn greedy_shake(r: &ShakeRequest) -> Vec<Pt> {
     let convergence_cutoff = r.param*50;
     let mut i = 0;
     loop {
-        if i % 10 == 0 {
-            dbg!(i);
-        }
+        //if i % 10 == 0 {
+        //    dbg!(i);
+        //}
         expand(&r.problem, &mut cur_vs, &selected_idxs, &hole_checker);
         //dbg!("Shake");
         let cur_dislikes = shake(&r.problem, &mut cur_vs, &selected_idxs, &mut rng, &hole_checker);
