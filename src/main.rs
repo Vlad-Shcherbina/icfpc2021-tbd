@@ -27,7 +27,7 @@ mod rail;
 mod bruteforce;
 mod rail_constrained;
 mod submitter;
-
+mod multishaker;
 
 #[linkme::distributed_slice]
 static ENTRY_POINTS: [(&'static str, fn())] = [..];
