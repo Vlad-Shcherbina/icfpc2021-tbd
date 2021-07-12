@@ -108,7 +108,7 @@ async function main() {
     let bonuses_to_use = document.getElementById("bonus_to_use")!;
     bonuses_to_use.innerHTML = "<b>Bonuses to use</b>: "
     for (let b of await get_tgt_bonuses(problem_no)) {
-        bonuses_to_use.innerHTML += `<br>{ "bonus": "${b.bonus}", "problem": ${b.from_problem} }`;
+        bonuses_to_use.innerHTML += `<br>{ "bonus": "${b.bonus}", "problem": ${b.from_problem}, "edge": null }`;
     }
 
     if (pose_id !== null) {
@@ -289,10 +289,12 @@ main();
 // ===== HANDLERS =====
 
 // Request server for info
-function on_figure_change() {
+async function on_figure_change() {
     history.push(JSON.parse(JSON.stringify(pose)));
-    check_solution_on_server();
     static_figure_change();
+    await check_solution_on_server();
+    static_figure_change();
+    show_globalist();
 }
 
 // Redraw without server requests
@@ -621,6 +623,16 @@ function show_unlocked_bonuses() {
         txt.innerHTML += `[${b.bonus} for ${b.problem}`;
         txt.innerHTML += '] ';
     }
+}
+
+function show_globalist() {
+    if (server_check_result.bonus_globalist_sum == null) return;
+    let txt = document.getElementById("globalist")! as HTMLParagraphElement;
+    txt.innerHTML = `<b>Globalist:</b> ${
+        Math.ceil(server_check_result.bonus_globalist_sum).toLocaleString()
+    }, limit: ${
+        (server_check_result.edges.length * problem.epsilon).toLocaleString()
+    }`;
 }
 
 // ===== INTERACTION =====
