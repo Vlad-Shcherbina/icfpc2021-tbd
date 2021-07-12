@@ -35,7 +35,7 @@ fn summary() {
     writeln!(s, "<th class=diag><div>scoring weight</div></th>").unwrap();
     writeln!(s, "<th class=diag><div>epsilon</div></th>").unwrap();
     writeln!(s, "<th class=diag><div>bounding box</div></th>").unwrap();
-    writeln!(s, "<th class=diag><div>hole area</div></th>").unwrap();
+    // writeln!(s, "<th class=diag><div>hole area</div></th>").unwrap();
     writeln!(s, "<th class=diag><div>unlocks bonuses</div></th>").unwrap();
     writeln!(s, "<th class=diag><div>gets bonuses</div></th>").unwrap();
     writeln!(s, "<th class=diag><div>best solution</div></th>").unwrap();
@@ -70,15 +70,15 @@ fn summary() {
         let bb_size = bb.1 - bb.0;
         writeln!(s, "<td class=num>{} x {}</td>", bb_size.x, bb_size.y).unwrap();
 
-        let mut area = 0;
-        for x in bb.0.x..=bb.1.x {
-            for y in bb.0.y..=bb.1.y {
-                if pt_in_poly(Pt::new(x, y), &p.hole) {
-                    area += 1;
-                }
-            }
-        }
-        writeln!(s, "<td class=num>{}</td>", area).unwrap();
+        // let mut area = 0;
+        // for x in bb.0.x..=bb.1.x {
+        //     for y in bb.0.y..=bb.1.y {
+        //         if pt_in_poly(Pt::new(x, y), &p.hole) {
+        //             area += 1;
+        //         }
+        //     }
+        // }
+        // writeln!(s, "<td class=num>{}</td>", area).unwrap();
 
         writeln!(s, "<td class=num>").unwrap();
         for b in p.bonuses {
