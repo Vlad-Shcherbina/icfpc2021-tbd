@@ -85,8 +85,7 @@ fn scrape_cache() {
             eprintln!("pose {}...", &ps.id);
             let pose = scraper.get_pose_by_id(&ps.id);
             if let None = pose { continue; }
-            let pci = PoseCacheItem{ pose: pose.unwrap(), eval: ps.er };
-            cache.poses.insert(ps.id.clone(), pci);
+            cache.poses.insert(ps.id.clone(), pose.unwrap());
         }
     }    
     let mut file = File::create(project_path("cache/server.cache")).unwrap();
@@ -139,16 +138,9 @@ pub struct ProblemInfo {
 
 #[derive(serde::Deserialize, serde::Serialize)]
 #[derive(Debug)]
-pub struct PoseCacheItem {
-    pub pose: Pose,
-    pub eval: EvaluationResult,
-}
-
-#[derive(serde::Deserialize, serde::Serialize)]
-#[derive(Debug)]
 pub struct ProblemCache {
     pub problems: HashMap<i32, ProblemInfo>,
-    pub poses: HashMap<String, PoseCacheItem>,
+    pub poses: HashMap<String, Pose>,
 }
 
 impl ProblemInfo {
