@@ -265,6 +265,22 @@ fn test_pt_in_poly() {
     check_pt_in_poly(Pt::new(105, 195), triangle, false);
 }
 
+pub fn pt_in_segment(pt: Pt, seg: (Pt, Pt)) -> bool {
+    if pt.x < seg.0.x && pt.x < seg.1.x {
+        return false;
+    }
+    if pt.y < seg.0.y && pt.y < seg.1.y {
+        return false;
+    }
+    if pt.x > seg.0.x && pt.x > seg.1.x {
+        return false;
+    }
+    if pt.y > seg.0.y && pt.y > seg.1.y {
+        return false;
+    }
+    (seg.0 - pt).cross(seg.0 - seg.1) == 0
+}
+
 // including boundary
 pub fn segment_in_poly(seg: (Pt, Pt), poly: &[Pt]) -> bool {
     // TODO: This check is incorrect in some cases.
@@ -307,6 +323,25 @@ pub fn segment_in_poly(seg: (Pt, Pt), poly: &[Pt]) -> bool {
             let d1 = poly[i1] - poly[i];
             let d2 = poly[i2] - poly[i];
             let d = b - a;
+            if sign * qqqqqq(d1, d, d2) < 0 {
+                return false;
+            }
+        }
+    }
+
+    for i in 0..poly.len() {
+        if !pt_in_segment(poly[i], seg) {
+            continue;
+        }
+        let i1 = if i == 0 { poly.len() - 1 } else { i - 1 };
+        let i2 = if i == poly.len() - 1 { 0 } else { i + 1 };
+        for &other in &[seg.0, seg.1] {
+            if other == poly[i] {
+                continue;
+            }
+            let d1 = poly[i1] - poly[i];
+            let d2 = poly[i2] - poly[i];
+            let d = other - poly[i];
             if sign * qqqqqq(d1, d, d2) < 0 {
                 return false;
             }
@@ -373,8 +408,7 @@ fn test_segment_in_poly_bug() {
         Pt::new(-1, 3),
         Pt::new(-4, 4),
     ];
-    // TODO: another bug, should be false
-    check_segment_in_poly((Pt::new(-2, 3), Pt::new(2, 3)), &poly, true);
+    check_segment_in_poly((Pt::new(-2, 3), Pt::new(2, 3)), &poly, false);
 }
 
 // Rotate a point around another point
