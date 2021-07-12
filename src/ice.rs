@@ -2,7 +2,7 @@
 
 use rand::Rng;
 use crate::checker::Checker;
-use crate::geom::segment_in_poly;
+use crate::geom::{segment_in_poly, bounding_box, pt_in_poly};
 use crate::prelude::*;
 use crate::shake::ShakeRequest;
 
@@ -50,6 +50,18 @@ pub fn ice_shake(r: &ShakeRequest) -> Vec<Pt> {
 
     let mut rng = rand::thread_rng();
     let num_steps = 500_000;
+
+    let (pt_min, pt_max) = bounding_box(&r.problem.hole).unwrap();
+    let mut inside = vec![];
+    for x in pt_min.x..=pt_max.x {
+        for y in pt_min.y..=pt_max.y {
+            let pt = Pt::new(x, y);
+            if pt_in_poly(pt, &r.problem.hole) {
+                inside.push(pt);
+            }
+        }
+    }
+
     for step in 0..num_steps {
         let threshold = (num_steps - step) as f64 / num_steps as f64;
         if step % (num_steps / 10 + 1) == 0 {
@@ -72,7 +84,7 @@ pub fn ice_shake(r: &ShakeRequest) -> Vec<Pt> {
             x: old_pt.x + rng.gen_range(-1..=1),
             y: old_pt.y + rng.gen_range(-1..=1),
         };*/
-        let new_pt = checker.inside[rng.gen_range(0..checker.inside.len())];
+        let new_pt = inside[rng.gen_range(0..inside.len())];
         pose.vertices[v_idx] = new_pt;
 
         let old_e_total = e_total;

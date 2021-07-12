@@ -2,7 +2,7 @@ use std::collections::HashMap;
 use std::convert::TryInto;
 use crate::domain_model::BonusName;
 use crate::prelude::*;
-use crate::geom::{bounding_box, pt_in_poly, segment_in_poly, BBox};
+use crate::geom::{pt_in_poly, segment_in_poly, BBox};
 use crate::graph::neighbours;
 
 #[derive(serde::Deserialize)]
@@ -44,7 +44,6 @@ pub struct Checker {
     pub bbox: BBox,
     pub edge_ranges: Vec<(i64, i64)>,
     pub edges: Vec<(usize, usize)>,
-    pub inside: Vec<Pt>,
     pub edge_cache: HashMap<[i16; 4], bool>,
     pub neighbours_cache: HashMap<usize, Vec<usize>>,
 }
@@ -58,23 +57,11 @@ impl Checker {
                 length_range(d, p.epsilon)
             }).collect();
 
-        let (pt_min, pt_max) = bounding_box(&p.hole).unwrap();
-        let mut inside = vec![];
-        for x in pt_min.x..=pt_max.x {
-            for y in pt_min.y..=pt_max.y {
-                let pt = Pt::new(x, y);
-                if pt_in_poly(pt, &p.hole) {
-                    inside.push(pt);
-                }
-            }
-        }
-
         Checker {
             problem: p.clone(),
             edges: p.figure.edges.clone(),
             bbox: BBox::from_pts(&p.hole),
             edge_ranges,
-            inside,
             edge_cache: HashMap::new(),
             neighbours_cache: HashMap::new(),
         }
