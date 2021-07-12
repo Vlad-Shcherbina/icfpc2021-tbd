@@ -1,8 +1,7 @@
 use rand::Rng;
 use crate::prelude::*;
 use crate::checker::{Checker, get_dislikes};
-use crate::poses_live::submit_pose;
-use crate::poses_live::{Scraper, PoseInfo, EvaluationResult};
+use crate::submitter::Submitter;
 
 fn deltas(min_d: i64, max_d: i64) -> Vec<Pt> {
     let mut result = vec![];
@@ -21,17 +20,7 @@ crate::entry_point!("rail", rail);
 fn rail() {
     let problem_id: i32 = std::env::args().nth(2).unwrap().parse().unwrap();
 
-    let mut scraper = Scraper::new();
-    let pi = scraper.problem_info(problem_id);
-
-    let mut best_dislikes = match pi.highscore() {
-        Some(PoseInfo { er: EvaluationResult::Valid { dislikes }, .. }) => *dislikes,
-        _ => 1_000_000_000,
-    };
-    eprintln!("best dislikes so far: {}", best_dislikes);
-
-    let mut to_submit: Option<(i64, Pose)> = None;
-    let mut last_attempt = std::time::Instant::now();
+    let mut submitter = Submitter::new(problem_id);
 
     let p = load_problem(problem_id);
     let bonuses = vec![];
@@ -51,24 +40,8 @@ fn rail() {
         .collect();
 
     'outer: loop {
-        if best_dislikes == 0 && to_submit.is_none() {
-            eprintln!("nothing to do, optimal solution found and submitted");
+        if submitter.try_submit() {
             return;
-        }
-
-        if let Some((dislikes, pose)) = to_submit.as_ref() {
-            if last_attempt.elapsed().as_secs_f64() > 30.0 {
-                match submit_pose(problem_id, pose) {
-                    Ok(pose_id) => {
-                        eprintln!("(dislikes: {}) submitted https://poses.live/solutions/{}", dislikes, pose_id);
-                        to_submit = None;
-                    }
-                    Err(e) => {
-                        eprintln!("{}", e);
-                    }
-                }
-                last_attempt = std::time::Instant::now();
-            }
         }
 
         // eprintln!("------");
@@ -142,12 +115,7 @@ fn rail() {
                     bonuses: bonuses.clone(),
                 };
                 let dislikes = get_dislikes(&p, &pose.vertices);
-                if dislikes < best_dislikes {
-                    eprintln!("solved, {} dislikes", dislikes);
-                    eprintln!("FOUND IMPROVEMENT, will try to submit soon");
-                    best_dislikes = dislikes;
-                    to_submit = Some((dislikes, pose));
-                }
+                submitter.update(dislikes, &pose);
                 continue 'outer;
             }
         }
