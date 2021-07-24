@@ -70,7 +70,7 @@ fn rail_constrained() {
                     // Those that are unconstrained or those that contain corner.
                     //dbg!(vertice_idx, &placements[vertice_idx]);
                     if placements[vertice_idx].is_empty()
-                        || !placements[vertice_idx].iter().find(|point| **point == p.hole[corner]).is_none() {
+                        || placements[vertice_idx].iter().any(|point| *point == p.hole[corner]) {
                             corner_placements[corner].push(vertice_idx);
                     }
                 }

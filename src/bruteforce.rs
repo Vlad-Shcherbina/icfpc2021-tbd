@@ -17,7 +17,7 @@ struct Meta {
 }
 
 fn go(checker: &mut Checker,
-      order: &Vec<usize>,
+      order: &[usize],
       offset: usize,
       places: &mut Vec<Option<Pt>>,
       meta: &mut Meta) -> Option<Vec<Pt>> {
@@ -25,7 +25,7 @@ fn go(checker: &mut Checker,
     if offset < order.len() {
         let current_id = order[offset];
 
-        let mut vertices: Vec<_> = places.iter().cloned().filter_map(|pt| pt).collect();
+        let mut vertices: Vec<_> = places.to_vec();
         let mut available_positions = available_positions(checker, places, current_id);
         // available_positions.sort_by_key(|pt| {
         //     vertices.push(*pt);
@@ -68,7 +68,7 @@ fn go(checker: &mut Checker,
 }
 
 fn brutforce_with(checker: &mut Checker, v_id: usize, pt: Pt) -> Option<Vec<Pt>> {
-    let mut order = bfs(&checker.problem.figure.edges, v_id).iter().cloned().skip(1).collect();
+    let mut order = bfs(&checker.problem.figure.edges, v_id)[1..].to_vec();
     let mut places: Vec<Option<Pt>> = vec![None; checker.problem.figure.vertices.len()];
     places[v_id] = Some(pt);
     go(checker, &order, 0, &mut places, &mut Meta { max_available_positions: 0, latest_in: 100500 })
@@ -80,7 +80,7 @@ pub fn brutforce(r: &ShakeRequest) -> Vec<Pt> {
     v_ids.shuffle(rng);
     let mut h_pts = r.problem.hole.clone();
     h_pts.shuffle(rng);
-    let mut checker = Checker::new(&r.problem, &vec![], r.problem.figure.vertices.len());
+    let mut checker = Checker::new(&r.problem, &[], r.problem.figure.vertices.len());
     for v_id in v_ids {
         for (h_id, pt) in h_pts.iter().enumerate() {
             eprintln!("Trying: v_id {:?} h_id {:?}", v_id, h_id);

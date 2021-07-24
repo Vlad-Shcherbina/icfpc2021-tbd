@@ -485,12 +485,12 @@ impl BBox {
         let max_y = min(self.max_y, other.max_y);
         if min_y > max_y { return None; }
 
-        return Some(BBox {
+        Some(BBox {
             min_x,
             max_x,
             min_y,
             max_y
-        });
+        })
     }
 }
 

@@ -30,7 +30,7 @@ pub fn available_positions(checker: &mut Checker, vertices: &[Option<Pt>], v_id:
     let mut available_positions = vec![];
 
     let neigbours = checker.neighbours(v_id).clone();
-    let bbox = checker.bbox.clone();
+    let bbox = checker.bbox;
 
     for n_id in &neigbours {
         if let Some(n) = vertices[*n_id] {
@@ -82,7 +82,7 @@ pub fn mango_shake(r: &ShakeRequest) -> Vec<Pt> {
 
     let mut success = false;
     let mut iteration_count = 0;
-    let mut checker = Checker::new(&r.problem, &vec![], r.problem.figure.vertices.len());
+    let mut checker = Checker::new(&r.problem, &[], r.problem.figure.vertices.len());
     loop {
         selected_idxs.shuffle(rng);
         for v_id in &selected_idxs {

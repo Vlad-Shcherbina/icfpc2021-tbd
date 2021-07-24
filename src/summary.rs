@@ -156,7 +156,7 @@ fn summary() {
                         for b in &pose.bonuses { used_bonuses += &format!("{}=>{}, ", 
                                                 b.problem,
                                                 b.bonus.short_name()); }
-                        let c = check_pose(&p, &pose);
+                        let c = check_pose(&p, pose);
                         for i in 0..c.unlocked.len() {
                             if !c.unlocked[i] { continue; }
                             unlocked_bonuses += &format!("{}=>{}, ", 

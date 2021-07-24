@@ -17,7 +17,7 @@ impl Rank {
     pub fn new(p: &Problem, pose: &Pose) -> Rank {
         Rank {
             used_bonuses: pose.bonuses.clone(),
-            dislikes: get_dislikes(&p, &pose.vertices),
+            dislikes: get_dislikes(p, &pose.vertices),
             unlocked_bonuses: list_unlocked_bonuses(p, &pose.vertices),
         }
     }
@@ -61,7 +61,7 @@ pub fn pareto<T>(mut front: Vec<(Rank, T)>) -> Vec<(Rank, T)> {
         }
         res.push((q, t));
     }
-    return res
+    res
 }
 
 impl Submitter {
