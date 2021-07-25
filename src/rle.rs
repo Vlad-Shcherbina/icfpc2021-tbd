@@ -114,6 +114,10 @@ impl Set1D {
 	fn one_run(a: i64, b: i64) -> Set1D {
 		Set1D{runs: vec![Run{a, b}]}
 	}
+
+	fn from_pairs(pairs: &[(i64, i64)]) -> Set1D {
+		Set1D { runs: pairs.iter().map(|&(a, b)| Run { a, b }).collect() }
+	}
 }
 
 #[derive(Eq, PartialEq, Debug)]
@@ -224,59 +228,60 @@ impl Set2D {
 	}
 }
 
+fn check_union_1_d(a: &[(i64, i64)], b: &[(i64, i64)], expected: &[(i64, i64)]) {
+	let a = Set1D::from_pairs(a);
+	let b = Set1D::from_pairs(b);
+	let expected = Set1D::from_pairs(expected);
+	assert_eq!(a.union(&b), expected);
+	assert_eq!(b.union(&a), expected);
+}
+
 #[test]
 fn test_union_1_d() {
-	let a = Set1D{runs: vec![]};
-	let b = Set1D{runs: vec![
-		Run{a: 0, b: 10},
-		Run{a: 11, b: 20},
-		Run{a: 30, b: 40}
-	]};
-	let c = Set1D{runs: vec![
-		Run{a: 5, b: 12},
-		Run{a: 35, b: 37},
-		Run{a: 45, b: 47},
-		Run{a: 50, b: 55}
-	]};
-	assert_eq!(a.union(&a), a);
-	assert_eq!(a.union(&b), b);
-	assert_eq!(b.union(&a), b);
-	assert_eq!(b.union(&c), Set1D{runs: vec![
-		Run{a: 0, b: 20},
-		Run{a: 30, b: 40},
-		Run{a: 45, b: 47},
-		Run{a: 50, b: 55}
-	]})
+	let b = [(0, 10), (11, 20), (30, 40)];
+	let c = [(5, 12), (35, 37), (45, 47), (50, 55)];
+
+	check_union_1_d(&[], &[], &[]);
+	check_union_1_d(&b, &b, &b);
+	check_union_1_d(&c, &c, &c);
+	check_union_1_d(&[], &b, &b);
+	check_union_1_d(&b, &c,
+		&[(0, 20), (30, 40), (45, 47), (50, 55)]);
+
+	check_union_1_d(&[(10, 20)], &[(20, 30)], &[(10, 30)]);
+
+	check_union_1_d(
+		&[(10, 100)],
+		&[(5, 20), (30, 40), (90, 110)],
+		&[(5, 110)]);
+}
+
+fn check_intersection_1_d(a: &[(i64, i64)], b: &[(i64, i64)], expected: &[(i64, i64)]) {
+	let a = Set1D::from_pairs(a);
+	let b = Set1D::from_pairs(b);
+	let expected = Set1D::from_pairs(expected);
+	assert_eq!(a.intersection(&b), expected);
+	assert_eq!(b.intersection(&a), expected);
 }
 
 #[test]
 fn test_intersection_1_d() {
-	let a = Set1D{runs: vec![]};
-	let b = Set1D{runs: vec![
-		Run{a: 0, b: 10},
-		Run{a: 11, b: 20},
-		Run{a: 30, b: 40},
-		Run{a: 48, b: 50},
-		Run{a: 50, b: 52},
-		Run{a: 54, b: 56},
-		Run{a: 65, b: 70}
-	]};
-	let c = Set1D{runs: vec![
-		Run{a: 5, b: 12},
-		Run{a: 35, b: 37},
-		Run{a: 45, b: 47},
-		Run{a: 50, b: 60}
-	]};
-	assert_eq!(a.intersection(&a), a);
-	assert_eq!(a.intersection(&b), a);
-	assert_eq!(b.intersection(&a), a);
-	assert_eq!(b.intersection(&c), Set1D{runs: vec![
-		Run{a: 5, b: 10},
-		Run{a: 11, b: 12},
-		Run{a: 35, b: 37},
-		Run{a: 50, b: 52},
-		Run{a: 54, b:56}
-	]})
+	let b = [(0, 10), (11, 20), (30, 40), (48, 50), (50, 52), (54, 56), (65, 70)];
+	let c = [(5, 12), (35, 37), (45, 47), (50, 60)];
+
+	check_intersection_1_d(&[], &[], &[]);
+	check_intersection_1_d(&[], &b, &[]);
+	check_intersection_1_d(&b, &b, &b);
+	check_intersection_1_d(&c, &c, &c);
+	check_intersection_1_d(&b, &c,
+		&[(5, 10), (11, 12), (35, 37), (50, 52), (54, 56)]);
+
+	check_intersection_1_d(&[(10, 20)], &[(20, 30)], &[]);
+
+	check_intersection_1_d(
+		&[(10, 100)],
+		&[(5, 20), (30, 40), (90, 110)],
+		&[(10, 20), (30, 40), (90, 100)]);
 }
 
 // picked up from rail.rs (deltas()) for testing
