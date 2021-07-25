@@ -1,3 +1,6 @@
+#![allow(unused_imports)]
+#![allow(dead_code)]
+
 use std::iter::Peekable;
 use integer_sqrt::IntegerSquareRoot;
 use crate::geom::Pt;
