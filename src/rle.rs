@@ -5,6 +5,7 @@ use std::iter::Peekable;
 use integer_sqrt::IntegerSquareRoot;
 use crate::geom::Pt;
 use std::collections::HashSet;
+use std::cmp::Ordering;
 
 // Invariants:
 // In Run: [a, b) where a < b
@@ -101,6 +102,73 @@ impl Set1D {
 				None => return Set1D{runs}
 			}
 		}
+	}
+
+	pub fn alternative_union(&self, other: &Set1D) -> Set1D {
+		self.covered_by_at_least_n(other, 1)
+	}
+
+	pub fn alternative_intersection(&self, other: &Set1D) -> Set1D {
+		self.covered_by_at_least_n(other, 2)
+	}
+
+	fn covered_by_at_least_n(&self, other: &Set1D, n: i32) -> Set1D {
+		fn iter_ends(s: &Set1D) -> impl Iterator<Item=(i64, i32)> + '_ {
+			s.runs.iter()
+			.flat_map(|r| 
+				std::iter::once((r.a, 1)).chain(
+					std::iter::once((r.b, -1))))
+		}
+		let mut ends1 = iter_ends(self);
+		let mut ends2 = iter_ends(other);
+
+		let mut cnt = 0;
+		let mut a = None;
+		let mut runs = vec![];
+		let mut oe1 = ends1.next();
+		let mut oe2 = ends2.next();
+		loop {
+			let (x, delta) = match (oe1, oe2) {
+				(None, None) => break,
+				(Some(e1), None) => {
+					oe1 = ends1.next();
+					e1
+				}
+				(None, Some(e2)) => {
+					oe2 = ends2.next();
+					e2
+				}
+				(Some(e1), Some(e2)) => match e1.0.cmp(&e2.0) {
+					Ordering::Less => {
+						oe1 = ends1.next();
+						e1
+					}
+					Ordering::Greater => {
+						oe2 = ends2.next();
+						e2
+					}
+					Ordering::Equal => {
+						oe1 = ends1.next();
+						oe2 = ends2.next();
+						(e1.0, e1.1 + e2.1)
+					}
+				}
+			};
+			let prev_cnt = cnt;
+			cnt += delta;
+			if cnt >= n && prev_cnt < n {
+				assert_eq!(a, None);
+				a = Some(x);
+			}
+			if cnt < n && prev_cnt >= n {
+				runs.push(Run {
+					a: a.take().unwrap(),
+					b: x,
+				});
+			}
+		}
+		assert_eq!(a, None);
+		Set1D { runs }
 	}
 
 	fn is_empty(&self) -> bool {
@@ -234,6 +302,8 @@ fn check_union_1_d(a: &[(i64, i64)], b: &[(i64, i64)], expected: &[(i64, i64)]) 
 	let expected = Set1D::from_pairs(expected);
 	assert_eq!(a.union(&b), expected);
 	assert_eq!(b.union(&a), expected);
+	assert_eq!(a.alternative_union(&b), expected);
+	assert_eq!(b.alternative_union(&a), expected);
 }
 
 #[test]
@@ -262,6 +332,8 @@ fn check_intersection_1_d(a: &[(i64, i64)], b: &[(i64, i64)], expected: &[(i64, 
 	let expected = Set1D::from_pairs(expected);
 	assert_eq!(a.intersection(&b), expected);
 	assert_eq!(b.intersection(&a), expected);
+	assert_eq!(a.alternative_intersection(&b), expected);
+	assert_eq!(b.alternative_intersection(&a), expected);
 }
 
 #[test]
