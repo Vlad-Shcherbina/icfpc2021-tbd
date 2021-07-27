@@ -1,0 +1,5459 @@
+
+    <style>
+        table {
+            margin-top: 100px;
+        }
+        th.diag > div {
+            transform: translate(5px, 0px) rotate(-30deg);
+            width: 25px;
+            white-space: nowrap;
+        }
+        td {
+            /*border: solid 1px red;*/
+        }
+    </style>
+    
+<table>
+<tr>
+<th class="diag"><div>cargo check from scratch</div></th>
+<th class="diag"><div>cargo build</div></th>
+<th class="diag"><div>cargo check incremental</div></th>
+<th class="diag"><div>cargo build incremental</div></th>
+</tr>
+<tr>
+<td>50.17</td>
+<td>51.24</td>
+<td>0.85</td>
+<td>3.93</td>
+<td title="diff --git a/Cargo.toml b/Cargo.toml
+index fc5f67b..67a396d 100644
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -17,3 +17,4 @@ ureq = { version = &quot;*&quot;, default-features = false, features = [&quot;tls&quot;, &quot;cookies&quot;]
+ regex = &quot;1.5&quot;
+ ndarray = &quot;*&quot;
+ integer-sqrt = &quot;*&quot;
++postgres = &quot;*&quot;
+\ No newline at end of file
+">toml</td>
+<td title="diff --git a/Cargo.lock b/Cargo.lock
+index 6ba95b7..a66928e 100644
+--- a/Cargo.lock
++++ b/Cargo.lock
+@@ -11,6 +11,17 @@ dependencies = [
+  &quot;memchr&quot;,
+ ]
+ 
++[[package]]
++name = &quot;async-trait&quot;
++version = &quot;0.1.50&quot;
++source = &quot;registry+https://github.com/rust-lang/crates.io-index&quot;
++checksum = &quot;0b98e84bbb4cbcdd97da190ba0c58a1bb0de2c1fdf67d159e192ed766aeca722&quot;
++dependencies = [
++ &quot;proc-macro2&quot;,
++ &quot;quote&quot;,
++ &quot;syn&quot;,
++]
++
+ [[package]]
+ name = &quot;autocfg&quot;
+ version = &quot;1.0.1&quot;
+@@ -29,6 +40,21 @@ version = &quot;0.13.0&quot;
+ source = &quot;registry+https://github.com/rust-lang/crates.io-index&quot;
+ checksum = &quot;904dfeac50f3cdaba28fc6f57fdcddb75f49ed61346676a78c4ffe55877802fd&quot;
+ 
++[[package]]
++name = &quot;bitflags&quot;
++version = &quot;1.2.1&quot;
++source = &quot;registry+https://github.com/rust-lang/crates.io-index&quot;
++checksum = &quot;cf1de2fe8c75bc145a2f577add951f8134889b4795d47466a54a5c846d691693&quot;
++
++[[package]]
++name = &quot;block-buffer&quot;
++version = &quot;0.9.0&quot;
++source = &quot;registry+https://github.com/rust-lang/crates.io-index&quot;
++checksum = &quot;4152116fd6e9dadb291ae18fc1ec3575ed6d84c29642d97890f4b4a3417297e4&quot;
++dependencies = [
++ &quot;generic-array&quot;,
++]
++
+ [[package]]
+ name = &quot;bumpalo&quot;
+ version = &quot;3.7.0&quot;
+@@ -51,6 +77,12 @@ dependencies = [
+  &quot;iovec&quot;,
+ ]
+ 
++[[package]]
++name = &quot;bytes&quot;
++version = &quot;1.0.1&quot;
++source = &quot;registry+https://github.com/rust-lang/crates.io-index&quot;
++checksum = &quot;b700ce4376041dcd0a327fd0097c41095743c4c8af8887265942faf1100bd040&quot;
++
+ [[package]]
+ name = &quot;cc&quot;
+ version = &quot;1.0.68&quot;
+@@ -117,12 +149,46 @@ dependencies = [
+  &quot;url&quot;,
+ ]
+ 
++[[package]]
++name = &quot;cpufeatures&quot;
++version = &quot;0.1.5&quot;
++source = &quot;registry+https://github.com/rust-lang/crates.io-index&quot;
++checksum = &quot;66c99696f6c9dd7f35d486b9d04d7e6e202aa3e8c40d553f2fdf5e7e0c6a71ef&quot;
++dependencies = [
++ &quot;libc&quot;,
++]
++
++[[package]]
++name = &quot;crypto-mac&quot;
++version = &quot;0.10.1&quot;
++source = &quot;registry+https://github.com/rust-lang/crates.io-index&quot;
++checksum = &quot;bff07008ec701e8028e2ceb8f83f0e4274ee62bd2dbdc4fefff2e9a91824081a&quot;
++dependencies = [
++ &quot;generic-array&quot;,
++ &quot;subtle&quot;,
++]
++
++[[package]]
++name = &quot;digest&quot;
++version = &quot;0.9.0&quot;
++source = &quot;registry+https://github.com/rust-lang/crates.io-index&quot;
++checksum = &quot;d3dd60d1080a57a05ab032377049e0591415d2b31afd7028356dbf3cc6dcb066&quot;
++dependencies = [
++ &quot;generic-array&quot;,
++]
++
+ [[package]]
+ name = &quot;discard&quot;
+ version = &quot;1.0.4&quot;
+ source = &quot;registry+https://github.com/rust-lang/crates.io-index&quot;
+ checksum = &quot;212d0f5754cb6769937f4501cc0e67f4f4483c8d2c3e1e922ee9edbe4ab4c7c0&quot;
+ 
++[[package]]
++name = &quot;fallible-iterator&quot;
++version = &quot;0.2.0&quot;
++source = &quot;registry+https://github.com/rust-lang/crates.io-index&quot;
++checksum = &quot;4443176a9f2c162692bd3d352d745ef9413eec5782a80d8fd6f8a1ac692a07f7&quot;
++
+ [[package]]
+ name = &quot;fnv&quot;
+ version = &quot;1.0.7&quot;
+@@ -139,6 +205,110 @@ dependencies = [
+  &quot;percent-encoding&quot;,
+ ]
+ 
++[[package]]
++name = &quot;futures&quot;
++version = &quot;0.3.16&quot;
++source = &quot;registry+https://github.com/rust-lang/crates.io-index&quot;
++checksum = &quot;1adc00f486adfc9ce99f77d717836f0c5aa84965eb0b4f051f4e83f7cab53f8b&quot;
++dependencies = [
++ &quot;futures-channel&quot;,
++ &quot;futures-core&quot;,
++ &quot;futures-executor&quot;,
++ &quot;futures-io&quot;,
++ &quot;futures-sink&quot;,
++ &quot;futures-task&quot;,
++ &quot;futures-util&quot;,
++]
++
++[[package]]
++name = &quot;futures-channel&quot;
++version = &quot;0.3.16&quot;
++source = &quot;registry+https://github.com/rust-lang/crates.io-index&quot;
++checksum = &quot;74ed2411805f6e4e3d9bc904c95d5d423b89b3b25dc0250aa74729de20629ff9&quot;
++dependencies = [
++ &quot;futures-core&quot;,
++ &quot;futures-sink&quot;,
++]
++
++[[package]]
++name = &quot;futures-core&quot;
++version = &quot;0.3.16&quot;
++source = &quot;registry+https://github.com/rust-lang/crates.io-index&quot;
++checksum = &quot;af51b1b4a7fdff033703db39de8802c673eb91855f2e0d47dcf3bf2c0ef01f99&quot;
++
++[[package]]
++name = &quot;futures-executor&quot;
++version = &quot;0.3.16&quot;
++source = &quot;registry+https://github.com/rust-lang/crates.io-index&quot;
++checksum = &quot;4d0d535a57b87e1ae31437b892713aee90cd2d7b0ee48727cd11fc72ef54761c&quot;
++dependencies = [
++ &quot;futures-core&quot;,
++ &quot;futures-task&quot;,
++ &quot;futures-util&quot;,
++]
++
++[[package]]
++name = &quot;futures-io&quot;
++version = &quot;0.3.16&quot;
++source = &quot;registry+https://github.com/rust-lang/crates.io-index&quot;
++checksum = &quot;0b0e06c393068f3a6ef246c75cdca793d6a46347e75286933e5e75fd2fd11582&quot;
++
++[[package]]
++name = &quot;futures-macro&quot;
++version = &quot;0.3.16&quot;
++source = &quot;registry+https://github.com/rust-lang/crates.io-index&quot;
++checksum = &quot;c54913bae956fb8df7f4dc6fc90362aa72e69148e3f39041fbe8742d21e0ac57&quot;
++dependencies = [
++ &quot;autocfg&quot;,
++ &quot;proc-macro-hack&quot;,
++ &quot;proc-macro2&quot;,
++ &quot;quote&quot;,
++ &quot;syn&quot;,
++]
++
++[[package]]
++name = &quot;futures-sink&quot;
++version = &quot;0.3.16&quot;
++source = &quot;registry+https://github.com/rust-lang/crates.io-index&quot;
++checksum = &quot;c0f30aaa67363d119812743aa5f33c201a7a66329f97d1a887022971feea4b53&quot;
++
++[[package]]
++name = &quot;futures-task&quot;
++version = &quot;0.3.16&quot;
++source = &quot;registry+https://github.com/rust-lang/crates.io-index&quot;
++checksum = &quot;bbe54a98670017f3be909561f6ad13e810d9a51f3f061b902062ca3da80799f2&quot;
++
++[[package]]
++name = &quot;futures-util&quot;
++version = &quot;0.3.16&quot;
++source = &quot;registry+https://github.com/rust-lang/crates.io-index&quot;
++checksum = &quot;67eb846bfd58e44a8481a00049e82c43e0ccb5d61f8dc071057cb19249dd4d78&quot;
++dependencies = [
++ &quot;autocfg&quot;,
++ &quot;futures-channel&quot;,
++ &quot;futures-core&quot;,
++ &quot;futures-io&quot;,
++ &quot;futures-macro&quot;,
++ &quot;futures-sink&quot;,
++ &quot;futures-task&quot;,
++ &quot;memchr&quot;,
++ &quot;pin-project-lite&quot;,
++ &quot;pin-utils&quot;,
++ &quot;proc-macro-hack&quot;,
++ &quot;proc-macro-nested&quot;,
++ &quot;slab&quot;,
++]
++
++[[package]]
++name = &quot;generic-array&quot;
++version = &quot;0.14.4&quot;
++source = &quot;registry+https://github.com/rust-lang/crates.io-index&quot;
++checksum = &quot;501466ecc8a30d1d3b7fc9229b122b2ce8ed6e9d9223f1138d4babb253e51817&quot;
++dependencies = [
++ &quot;typenum&quot;,
++ &quot;version_check&quot;,
++]
++
+ [[package]]
+ name = &quot;getrandom&quot;
+ version = &quot;0.2.3&quot;
+@@ -165,13 +335,23 @@ dependencies = [
+  &quot;libc&quot;,
+ ]
+ 
++[[package]]
++name = &quot;hmac&quot;
++version = &quot;0.10.1&quot;
++source = &quot;registry+https://github.com/rust-lang/crates.io-index&quot;
++checksum = &quot;c1441c6b1e930e2817404b5046f1f989899143a12bf92de603b69f4e0aee1e15&quot;
++dependencies = [
++ &quot;crypto-mac&quot;,
++ &quot;digest&quot;,
++]
++
+ [[package]]
+ name = &quot;http&quot;
+ version = &quot;0.1.21&quot;
+ source = &quot;registry+https://github.com/rust-lang/crates.io-index&quot;
+ checksum = &quot;d6ccf5ede3a895d8856620237b2f02972c1bbc78d2965ad7fe8838d4a0ed41f0&quot;
+ dependencies = [
+- &quot;bytes&quot;,
++ &quot;bytes 0.4.12&quot;,
+  &quot;fnv&quot;,
+  &quot;itoa&quot;,
+ ]
+@@ -191,6 +371,7 @@ dependencies = [
+  &quot;integer-sqrt&quot;,
+  &quot;linkme&quot;,
+  &quot;ndarray&quot;,
++ &quot;postgres&quot;,
+  &quot;rand&quot;,
+  &quot;regex&quot;,
+  &quot;serde&quot;,
+@@ -220,6 +401,15 @@ dependencies = [
+  &quot;hashbrown&quot;,
+ ]
+ 
++[[package]]
++name = &quot;instant&quot;
++version = &quot;0.1.10&quot;
++source = &quot;registry+https://github.com/rust-lang/crates.io-index&quot;
++checksum = &quot;bee0328b1209d157ef001c94dd85b4f8f64139adb0eac2659f4b08382b2f474d&quot;
++dependencies = [
++ &quot;cfg-if&quot;,
++]
++
+ [[package]]
+ name = &quot;integer-sqrt&quot;
+ version = &quot;0.1.5&quot;
+@@ -285,6 +475,15 @@ dependencies = [
+  &quot;syn&quot;,
+ ]
+ 
++[[package]]
++name = &quot;lock_api&quot;
++version = &quot;0.4.4&quot;
++source = &quot;registry+https://github.com/rust-lang/crates.io-index&quot;
++checksum = &quot;0382880606dff6d15c9476c416d18690b72742aa7b605bb6dd6ec9030fbf07eb&quot;
++dependencies = [
++ &quot;scopeguard&quot;,
++]
++
+ [[package]]
+ name = &quot;log&quot;
+ version = &quot;0.3.9&quot;
+@@ -318,12 +517,45 @@ dependencies = [
+  &quot;rawpointer&quot;,
+ ]
+ 
++[[package]]
++name = &quot;md-5&quot;
++version = &quot;0.9.1&quot;
++source = &quot;registry+https://github.com/rust-lang/crates.io-index&quot;
++checksum = &quot;7b5a279bb9607f9f53c22d496eade00d138d1bdcccd07d74650387cf94942a15&quot;
++dependencies = [
++ &quot;block-buffer&quot;,
++ &quot;digest&quot;,
++ &quot;opaque-debug&quot;,
++]
++
+ [[package]]
+ name = &quot;memchr&quot;
+ version = &quot;2.4.0&quot;
+ source = &quot;registry+https://github.com/rust-lang/crates.io-index&quot;
+ checksum = &quot;b16bd47d9e329435e309c58469fe0791c2d0d1ba96ec0954152a5ae2b04387dc&quot;
+ 
++[[package]]
++name = &quot;mio&quot;
++version = &quot;0.7.13&quot;
++source = &quot;registry+https://github.com/rust-lang/crates.io-index&quot;
++checksum = &quot;8c2bdb6314ec10835cd3293dd268473a835c02b7b352e788be788b3c6ca6bb16&quot;
++dependencies = [
++ &quot;libc&quot;,
++ &quot;log 0.4.14&quot;,
++ &quot;miow&quot;,
++ &quot;ntapi&quot;,
++ &quot;winapi&quot;,
++]
++
++[[package]]
++name = &quot;miow&quot;
++version = &quot;0.3.7&quot;
++source = &quot;registry+https://github.com/rust-lang/crates.io-index&quot;
++checksum = &quot;b9f1c5b025cda876f66ef43a113f91ebc9f4ccef34843000e0adf6ebbab84e21&quot;
++dependencies = [
++ &quot;winapi&quot;,
++]
++
+ [[package]]
+ name = &quot;ndarray&quot;
+ version = &quot;0.15.3&quot;
+@@ -337,6 +569,15 @@ dependencies = [
+  &quot;rawpointer&quot;,
+ ]
+ 
++[[package]]
++name = &quot;ntapi&quot;
++version = &quot;0.3.6&quot;
++source = &quot;registry+https://github.com/rust-lang/crates.io-index&quot;
++checksum = &quot;3f6bb902e437b6d86e03cce10a7e2af662292c5dfef23b65899ea3ac9354ad44&quot;
++dependencies = [
++ &quot;winapi&quot;,
++]
++
+ [[package]]
+ name = &quot;num-complex&quot;
+ version = &quot;0.4.0&quot;
+@@ -381,12 +622,116 @@ version = &quot;1.8.0&quot;
+ source = &quot;registry+https://github.com/rust-lang/crates.io-index&quot;
+ checksum = &quot;692fcb63b64b1758029e0a96ee63e049ce8c5948587f2f7208df04625e5f6b56&quot;
+ 
++[[package]]
++name = &quot;opaque-debug&quot;
++version = &quot;0.3.0&quot;
++source = &quot;registry+https://github.com/rust-lang/crates.io-index&quot;
++checksum = &quot;624a8340c38c1b80fd549087862da4ba43e08858af025b236e509b6649fc13d5&quot;
++
++[[package]]
++name = &quot;parking_lot&quot;
++version = &quot;0.11.1&quot;
++source = &quot;registry+https://github.com/rust-lang/crates.io-index&quot;
++checksum = &quot;6d7744ac029df22dca6284efe4e898991d28e3085c706c972bcd7da4a27a15eb&quot;
++dependencies = [
++ &quot;instant&quot;,
++ &quot;lock_api&quot;,
++ &quot;parking_lot_core&quot;,
++]
++
++[[package]]
++name = &quot;parking_lot_core&quot;
++version = &quot;0.8.3&quot;
++source = &quot;registry+https://github.com/rust-lang/crates.io-index&quot;
++checksum = &quot;fa7a782938e745763fe6907fc6ba86946d72f49fe7e21de074e08128a99fb018&quot;
++dependencies = [
++ &quot;cfg-if&quot;,
++ &quot;instant&quot;,
++ &quot;libc&quot;,
++ &quot;redox_syscall&quot;,
++ &quot;smallvec&quot;,
++ &quot;winapi&quot;,
++]
++
+ [[package]]
+ name = &quot;percent-encoding&quot;
+ version = &quot;2.1.0&quot;
+ source = &quot;registry+https://github.com/rust-lang/crates.io-index&quot;
+ checksum = &quot;d4fd5641d01c8f18a23da7b6fe29298ff4b55afcccdf78973b24cf3175fee32e&quot;
+ 
++[[package]]
++name = &quot;phf&quot;
++version = &quot;0.8.0&quot;
++source = &quot;registry+https://github.com/rust-lang/crates.io-index&quot;
++checksum = &quot;3dfb61232e34fcb633f43d12c58f83c1df82962dcdfa565a4e866ffc17dafe12&quot;
++dependencies = [
++ &quot;phf_shared&quot;,
++]
++
++[[package]]
++name = &quot;phf_shared&quot;
++version = &quot;0.8.0&quot;
++source = &quot;registry+https://github.com/rust-lang/crates.io-index&quot;
++checksum = &quot;c00cf8b9eafe68dde5e9eaa2cef8ee84a9336a47d566ec55ca16589633b65af7&quot;
++dependencies = [
++ &quot;siphasher&quot;,
++]
++
++[[package]]
++name = &quot;pin-project-lite&quot;
++version = &quot;0.2.7&quot;
++source = &quot;registry+https://github.com/rust-lang/crates.io-index&quot;
++checksum = &quot;8d31d11c69a6b52a174b42bdc0c30e5e11670f90788b2c471c31c1d17d449443&quot;
++
++[[package]]
++name = &quot;pin-utils&quot;
++version = &quot;0.1.0&quot;
++source = &quot;registry+https://github.com/rust-lang/crates.io-index&quot;
++checksum = &quot;8b870d8c151b6f2fb93e84a13146138f05d02ed11c7e7c54f8826aaaf7c9f184&quot;
++
++[[package]]
++name = &quot;postgres&quot;
++version = &quot;0.19.1&quot;
++source = &quot;registry+https://github.com/rust-lang/crates.io-index&quot;
++checksum = &quot;c7871ee579860d8183f542e387b176a25f2656b9fb5211e045397f745a68d1c2&quot;
++dependencies = [
++ &quot;bytes 1.0.1&quot;,
++ &quot;fallible-iterator&quot;,
++ &quot;futures&quot;,
++ &quot;log 0.4.14&quot;,
++ &quot;tokio&quot;,
++ &quot;tokio-postgres&quot;,
++]
++
++[[package]]
++name = &quot;postgres-protocol&quot;
++version = &quot;0.6.1&quot;
++source = &quot;registry+https://github.com/rust-lang/crates.io-index&quot;
++checksum = &quot;ff3e0f70d32e20923cabf2df02913be7c1842d4c772db8065c00fcfdd1d1bff3&quot;
++dependencies = [
++ &quot;base64&quot;,
++ &quot;byteorder&quot;,
++ &quot;bytes 1.0.1&quot;,
++ &quot;fallible-iterator&quot;,
++ &quot;hmac&quot;,
++ &quot;md-5&quot;,
++ &quot;memchr&quot;,
++ &quot;rand&quot;,
++ &quot;sha2&quot;,
++ &quot;stringprep&quot;,
++]
++
++[[package]]
++name = &quot;postgres-types&quot;
++version = &quot;0.2.1&quot;
++source = &quot;registry+https://github.com/rust-lang/crates.io-index&quot;
++checksum = &quot;430f4131e1b7657b0cd9a2b0c3408d77c9a43a042d300b8c77f981dffcc43a2f&quot;
++dependencies = [
++ &quot;bytes 1.0.1&quot;,
++ &quot;fallible-iterator&quot;,
++ &quot;postgres-protocol&quot;,
++]
++
+ [[package]]
+ name = &quot;ppv-lite86&quot;
+ version = &quot;0.2.10&quot;
+@@ -399,6 +744,12 @@ version = &quot;0.5.19&quot;
+ source = &quot;registry+https://github.com/rust-lang/crates.io-index&quot;
+ checksum = &quot;dbf0c48bc1d91375ae5c3cd81e3722dff1abcf81a30960240640d223f59fe0e5&quot;
+ 
++[[package]]
++name = &quot;proc-macro-nested&quot;
++version = &quot;0.1.7&quot;
++source = &quot;registry+https://github.com/rust-lang/crates.io-index&quot;
++checksum = &quot;bc881b2c22681370c6a780e47af9840ef841837bc98118431d4e1868bd0c1086&quot;
++
+ [[package]]
+ name = &quot;proc-macro2&quot;
+ version = &quot;1.0.27&quot;
+@@ -473,6 +824,15 @@ version = &quot;0.2.1&quot;
+ source = &quot;registry+https://github.com/rust-lang/crates.io-index&quot;
+ checksum = &quot;60a357793950651c4ed0f3f52338f53b2f809f32d83a07f72909fa13e4c6c1e3&quot;
+ 
++[[package]]
++name = &quot;redox_syscall&quot;
++version = &quot;0.2.9&quot;
++source = &quot;registry+https://github.com/rust-lang/crates.io-index&quot;
++checksum = &quot;5ab49abadf3f9e1c4bc499e8845e152ad87d2ad2d30371841171169e9d75feee&quot;
++dependencies = [
++ &quot;bitflags&quot;,
++]
++
+ [[package]]
+ name = &quot;regex&quot;
+ version = &quot;1.5.4&quot;
+@@ -539,6 +899,12 @@ version = &quot;0.1.9&quot;
+ source = &quot;registry+https://github.com/rust-lang/crates.io-index&quot;
+ checksum = &quot;1d51f5df5af43ab3f1360b429fa5e0152ac5ce8c0bd6485cae490332e96846a8&quot;
+ 
++[[package]]
++name = &quot;scopeguard&quot;
++version = &quot;1.1.0&quot;
++source = &quot;registry+https://github.com/rust-lang/crates.io-index&quot;
++checksum = &quot;d29ab0c6d3fc0ee92fe66e2d99f700eab17a8d57d1c1d3b748380fb20baa78cd&quot;
++
+ [[package]]
+ name = &quot;sct&quot;
+ version = &quot;0.6.1&quot;
+@@ -601,6 +967,19 @@ version = &quot;0.6.0&quot;
+ source = &quot;registry+https://github.com/rust-lang/crates.io-index&quot;
+ checksum = &quot;2579985fda508104f7587689507983eadd6a6e84dd35d6d115361f530916fa0d&quot;
+ 
++[[package]]
++name = &quot;sha2&quot;
++version = &quot;0.9.5&quot;
++source = &quot;registry+https://github.com/rust-lang/crates.io-index&quot;
++checksum = &quot;b362ae5752fd2137731f9fa25fd4d9058af34666ca1966fb969119cc35719f12&quot;
++dependencies = [
++ &quot;block-buffer&quot;,
++ &quot;cfg-if&quot;,
++ &quot;cpufeatures&quot;,
++ &quot;digest&quot;,
++ &quot;opaque-debug&quot;,
++]
++
+ [[package]]
+ name = &quot;simple-server&quot;
+ version = &quot;0.4.0&quot;
+@@ -615,6 +994,34 @@ dependencies = [
+  &quot;time 0.1.44&quot;,
+ ]
+ 
++[[package]]
++name = &quot;siphasher&quot;
++version = &quot;0.3.6&quot;
++source = &quot;registry+https://github.com/rust-lang/crates.io-index&quot;
++checksum = &quot;729a25c17d72b06c68cb47955d44fda88ad2d3e7d77e025663fdd69b93dd71a1&quot;
++
++[[package]]
++name = &quot;slab&quot;
++version = &quot;0.4.3&quot;
++source = &quot;registry+https://github.com/rust-lang/crates.io-index&quot;
++checksum = &quot;f173ac3d1a7e3b28003f40de0b5ce7fe2710f9b9dc3fc38664cebee46b3b6527&quot;
++
++[[package]]
++name = &quot;smallvec&quot;
++version = &quot;1.6.1&quot;
++source = &quot;registry+https://github.com/rust-lang/crates.io-index&quot;
++checksum = &quot;fe0f37c9e8f3c5a4a66ad655a93c74daac4ad00c441533bf5c6e7990bb42604e&quot;
++
++[[package]]
++name = &quot;socket2&quot;
++version = &quot;0.4.0&quot;
++source = &quot;registry+https://github.com/rust-lang/crates.io-index&quot;
++checksum = &quot;9e3dfc207c526015c632472a77be09cf1b6e46866581aecae5cc38fb4235dea2&quot;
++dependencies = [
++ &quot;libc&quot;,
++ &quot;winapi&quot;,
++]
++
+ [[package]]
+ name = &quot;spin&quot;
+ version = &quot;0.5.2&quot;
+@@ -679,6 +1086,22 @@ version = &quot;0.1.5&quot;
+ source = &quot;registry+https://github.com/rust-lang/crates.io-index&quot;
+ checksum = &quot;213701ba3370744dcd1a12960caa4843b3d68b4d1c0a5d575e0d65b2ee9d16c0&quot;
+ 
++[[package]]
++name = &quot;stringprep&quot;
++version = &quot;0.1.2&quot;
++source = &quot;registry+https://github.com/rust-lang/crates.io-index&quot;
++checksum = &quot;8ee348cb74b87454fff4b551cbf727025810a004f88aeacae7f85b87f4e9a1c1&quot;
++dependencies = [
++ &quot;unicode-bidi&quot;,
++ &quot;unicode-normalization&quot;,
++]
++
++[[package]]
++name = &quot;subtle&quot;
++version = &quot;2.4.1&quot;
++source = &quot;registry+https://github.com/rust-lang/crates.io-index&quot;
++checksum = &quot;6bdef32e8150c2a081110b42772ffe7d7c9032b606bc226c8260fd97e0976601&quot;
++
+ [[package]]
+ name = &quot;syn&quot;
+ version = &quot;1.0.73&quot;
+@@ -754,6 +1177,64 @@ version = &quot;0.1.0&quot;
+ source = &quot;registry+https://github.com/rust-lang/crates.io-index&quot;
+ checksum = &quot;cda74da7e1a664f795bb1f8a87ec406fb89a02522cf6e50620d016add6dbbf5c&quot;
+ 
++[[package]]
++name = &quot;tokio&quot;
++version = &quot;1.9.0&quot;
++source = &quot;registry+https://github.com/rust-lang/crates.io-index&quot;
++checksum = &quot;4b7b349f11a7047e6d1276853e612d152f5e8a352c61917887cc2169e2366b4c&quot;
++dependencies = [
++ &quot;autocfg&quot;,
++ &quot;bytes 1.0.1&quot;,
++ &quot;libc&quot;,
++ &quot;memchr&quot;,
++ &quot;mio&quot;,
++ &quot;pin-project-lite&quot;,
++ &quot;winapi&quot;,
++]
++
++[[package]]
++name = &quot;tokio-postgres&quot;
++version = &quot;0.7.2&quot;
++source = &quot;registry+https://github.com/rust-lang/crates.io-index&quot;
++checksum = &quot;2d2b1383c7e4fb9a09e292c7c6afb7da54418d53b045f1c1fac7a911411a2b8b&quot;
++dependencies = [
++ &quot;async-trait&quot;,
++ &quot;byteorder&quot;,
++ &quot;bytes 1.0.1&quot;,
++ &quot;fallible-iterator&quot;,
++ &quot;futures&quot;,
++ &quot;log 0.4.14&quot;,
++ &quot;parking_lot&quot;,
++ &quot;percent-encoding&quot;,
++ &quot;phf&quot;,
++ &quot;pin-project-lite&quot;,
++ &quot;postgres-protocol&quot;,
++ &quot;postgres-types&quot;,
++ &quot;socket2&quot;,
++ &quot;tokio&quot;,
++ &quot;tokio-util&quot;,
++]
++
++[[package]]
++name = &quot;tokio-util&quot;
++version = &quot;0.6.7&quot;
++source = &quot;registry+https://github.com/rust-lang/crates.io-index&quot;
++checksum = &quot;1caa0b0c8d94a049db56b5acf8cba99dc0623aab1b26d5b5f5e2d945846b3592&quot;
++dependencies = [
++ &quot;bytes 1.0.1&quot;,
++ &quot;futures-core&quot;,
++ &quot;futures-sink&quot;,
++ &quot;log 0.4.14&quot;,
++ &quot;pin-project-lite&quot;,
++ &quot;tokio&quot;,
++]
++
++[[package]]
++name = &quot;typenum&quot;
++version = &quot;1.13.0&quot;
++source = &quot;registry+https://github.com/rust-lang/crates.io-index&quot;
++checksum = &quot;879f6906492a7cd215bfa4cf595b600146ccfac0c79bcbd1f3000162af5e8b06&quot;
++
+ [[package]]
+ name = &quot;unicode-bidi&quot;
+ version = &quot;0.3.5&quot;
+">lock</td>
+<td title="Add postgres dependency just for lulz
+
+"><a href="https://github.com/Vlad-Shcherbina/icfpc2021-tbd/commit/efbf55f39721fd892c0ae9354da54e48978b03b5">Add postgres dependency just for lulz</a></td>
+<td>Vlad Shcherbina</td>
+</tr>
+<tr>
+<td>40.00</td>
+<td>38.78</td>
+<td>0.83</td>
+<td>4.11</td>
+<td></td>
+<td></td>
+<td title="Alternative implementation of RLE union and intersection
+
+# Subject line (50 chars, no trailing period) ---#
+# Long description after a blank line, 72 chars. ----------------------#
+
+"><a href="https://github.com/Vlad-Shcherbina/icfpc2021-tbd/commit/f16d1dca45ffde7e4049ebd273b5c6838c2cb097">Alternative implementation of RLE union and intersection</a></td>
+<td>Vlad Shcherbina</td>
+</tr>
+<tr>
+<td>39.61</td>
+<td>38.69</td>
+<td>0.84</td>
+<td>4.13</td>
+<td></td>
+<td></td>
+<td title="Refactor RLE union and intersection tests
+
+And add some more tests.
+
+# Subject line (50 chars, no trailing period) ---#
+# Long description after a blank line, 72 chars. ----------------------#
+
+"><a href="https://github.com/Vlad-Shcherbina/icfpc2021-tbd/commit/cdf43d0315dc93da6454472f787d954e5e98c0b1">Refactor RLE union and intersection tests</a></td>
+<td>Vlad Shcherbina</td>
+</tr>
+<tr>
+<td>40.01</td>
+<td>39.05</td>
+<td>0.84</td>
+<td>4.17</td>
+<td></td>
+<td></td>
+<td title="Silence dead code warnings
+# Subject line (50 chars, no trailing period) ---#
+# Long description after a blank line, 72 chars. ----------------------#
+
+"><a href="https://github.com/Vlad-Shcherbina/icfpc2021-tbd/commit/1433630fe250cd8a2604b6ffe1753fd0893fa08b">Silence dead code warnings</a></td>
+<td>Vlad Shcherbina</td>
+</tr>
+<tr>
+<td>40.57</td>
+<td>39.35</td>
+<td>0.83</td>
+<td>4.17</td>
+<td></td>
+<td></td>
+<td title="Unfinished global bonus planner
+
+"><a href="https://github.com/Vlad-Shcherbina/icfpc2021-tbd/commit/0ec714f23f5735a3884b3d9663027c5a671deeea">Unfinished global bonus planner</a></td>
+<td>Vlad Shcherbina</td>
+</tr>
+<tr>
+<td>39.89</td>
+<td>38.55</td>
+<td>0.83</td>
+<td>4.05</td>
+<td></td>
+<td></td>
+<td title="Fix clippy warnings everywhere.
+
+"><a href="https://github.com/Vlad-Shcherbina/icfpc2021-tbd/commit/38652c207d1f4d0a407a1b3faa91c50cfe5838c5">Fix clippy warnings everywhere.</a></td>
+<td>Sergey Matveev</td>
+</tr>
+<tr>
+<td>39.76</td>
+<td>39.13</td>
+<td>0.83</td>
+<td>4.10</td>
+<td title="diff --git a/Cargo.toml b/Cargo.toml
+index 00ed45e..fc5f67b 100644
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -16,3 +16,4 @@ chrono = { version = &quot;0.4&quot;, features = [&quot;serde&quot;] }
+ ureq = { version = &quot;*&quot;, default-features = false, features = [&quot;tls&quot;, &quot;cookies&quot;] }
+ regex = &quot;1.5&quot;
+ ndarray = &quot;*&quot;
++integer-sqrt = &quot;*&quot;
+">toml</td>
+<td title="diff --git a/Cargo.lock b/Cargo.lock
+index b0cd474..6ba95b7 100644
+--- a/Cargo.lock
++++ b/Cargo.lock
+@@ -188,6 +188,7 @@ version = &quot;0.1.0&quot;
+ dependencies = [
+  &quot;chrono&quot;,
+  &quot;http&quot;,
++ &quot;integer-sqrt&quot;,
+  &quot;linkme&quot;,
+  &quot;ndarray&quot;,
+  &quot;rand&quot;,
+@@ -219,6 +220,15 @@ dependencies = [
+  &quot;hashbrown&quot;,
+ ]
+ 
++[[package]]
++name = &quot;integer-sqrt&quot;
++version = &quot;0.1.5&quot;
++source = &quot;registry+https://github.com/rust-lang/crates.io-index&quot;
++checksum = &quot;276ec31bcb4a9ee45f58bec6f9ec700ae4cf4f4f8f2fa7e06cb406bd5ffdd770&quot;
++dependencies = [
++ &quot;num-traits&quot;,
++]
++
+ [[package]]
+ name = &quot;iovec&quot;
+ version = &quot;0.1.4&quot;
+">lock</td>
+<td title="Implement RLE encoding for sets.
+
+Also implements union, intersection and a ring constructor.
+
+"><a href="https://github.com/Vlad-Shcherbina/icfpc2021-tbd/commit/87d825c8c3261fbf3cca90e88afe58949e2bd8c1">Implement RLE encoding for sets.</a></td>
+<td>Sergey Matveev</td>
+</tr>
+<tr>
+<td>39.72</td>
+<td>38.86</td>
+<td>0.82</td>
+<td>4.09</td>
+<td></td>
+<td></td>
+<td title="Aggressive was always on in multishaker, fixed.
+
+"><a href="https://github.com/Vlad-Shcherbina/icfpc2021-tbd/commit/ab170dd8d53e39f518ae1e62b4c51d2effb5d7f1">Aggressive was always on in multishaker, fixed.</a></td>
+<td>Sergey Matveev</td>
+</tr>
+<tr>
+<td>39.73</td>
+<td>39.02</td>
+<td>0.81</td>
+<td>4.06</td>
+<td></td>
+<td></td>
+<td title="Skip bonus grubbing
+
+"><a href="https://github.com/Vlad-Shcherbina/icfpc2021-tbd/commit/407c6b4548a78bb9d1cfef8892f9bdc41031ea4f">Skip bonus grubbing</a></td>
+<td>Vlad Shcherbina</td>
+</tr>
+<tr>
+<td>39.81</td>
+<td>38.50</td>
+<td>0.81</td>
+<td>4.05</td>
+<td></td>
+<td></td>
+<td title="stuff
+
+"><a href="https://github.com/Vlad-Shcherbina/icfpc2021-tbd/commit/14ffb6e2e58ca45bc90d75361a2cfb4d94e476ce">stuff</a></td>
+<td>Vlad Shcherbina</td>
+</tr>
+<tr>
+<td>39.53</td>
+<td>38.76</td>
+<td>0.81</td>
+<td>4.05</td>
+<td></td>
+<td></td>
+<td title="Multishaker: add aggressive mode.
+
+Enable by submitting an extra command line argument (any argument).
+Shifts the figure to center-of-mass of the hole.
+
+Also, eliminate the log spam from greedy shaker.
+
+"><a href="https://github.com/Vlad-Shcherbina/icfpc2021-tbd/commit/9b91b23ef69c2ed19c77a41978ef010a4896021f">Multishaker: add aggressive mode.</a></td>
+<td>Sergey Matveev</td>
+</tr>
+<tr>
+<td>39.75</td>
+<td>38.22</td>
+<td>0.81</td>
+<td>4.05</td>
+<td></td>
+<td></td>
+<td title="two more cols in summary table
+
+"><a href="https://github.com/Vlad-Shcherbina/icfpc2021-tbd/commit/456aea82f25e17b6fd3c670aa4a197619d8745b3">two more cols in summary table</a></td>
+<td>caudate_julie</td>
+</tr>
+<tr>
+<td>40.06</td>
+<td>38.67</td>
+<td>0.81</td>
+<td>4.07</td>
+<td></td>
+<td></td>
+<td title="public
+
+"><a href="https://github.com/Vlad-Shcherbina/icfpc2021-tbd/commit/fa016c4051a87b85112ea3634f1cd609f95cdf17">public</a></td>
+<td>Vlad Shcherbina</td>
+</tr>
+<tr>
+<td>39.90</td>
+<td>38.98</td>
+<td>0.82</td>
+<td>4.08</td>
+<td></td>
+<td></td>
+<td title="resubmit_best only poses without bonuses
+
+"><a href="https://github.com/Vlad-Shcherbina/icfpc2021-tbd/commit/680c7860dab31669b98f464a10cd507fc7c7cfb5">resubmit_best only poses without bonuses</a></td>
+<td>Ilona</td>
+</tr>
+<tr>
+<td>39.78</td>
+<td>38.49</td>
+<td>0.81</td>
+<td>4.11</td>
+<td></td>
+<td></td>
+<td title="two bonus rows to summary
+
+"><a href="https://github.com/Vlad-Shcherbina/icfpc2021-tbd/commit/12daebb7017bc7a24ccb7a2a2988ee707c6a9fe6">two bonus rows to summary</a></td>
+<td>caudate_julie</td>
+</tr>
+<tr>
+<td>39.55</td>
+<td>38.60</td>
+<td>0.81</td>
+<td>4.09</td>
+<td></td>
+<td></td>
+<td title="Multishaker now slightly less likely to infinite cycle.
+
+"><a href="https://github.com/Vlad-Shcherbina/icfpc2021-tbd/commit/c683b92964a06a1cfeef966bcfd89a48ce93c116">Multishaker now slightly less likely to infinite cycle.</a></td>
+<td>Sergey Matveev</td>
+</tr>
+<tr>
+<td>40.05</td>
+<td>39.39</td>
+<td>0.82</td>
+<td>4.16</td>
+<td></td>
+<td></td>
+<td title="Improved reporting in multishaker
+
+"><a href="https://github.com/Vlad-Shcherbina/icfpc2021-tbd/commit/32a6b242549569f4cf35e34a645b3e0a04d0fb83">Improved reporting in multishaker</a></td>
+<td>Sergey Matveev</td>
+</tr>
+<tr>
+<td>39.67</td>
+<td>38.58</td>
+<td>0.83</td>
+<td>4.13</td>
+<td></td>
+<td></td>
+<td title="fix checker failure on malformed tasks
+
+"><a href="https://github.com/Vlad-Shcherbina/icfpc2021-tbd/commit/124333f67f0ce7fc3efc1ea576318995bc3fb0fc">fix checker failure on malformed tasks</a></td>
+<td>caudate_julie</td>
+</tr>
+<tr>
+<td>39.97</td>
+<td>38.31</td>
+<td>0.82</td>
+<td>4.09</td>
+<td></td>
+<td></td>
+<td title="big red button of resubmitting previous best
+
+"><a href="https://github.com/Vlad-Shcherbina/icfpc2021-tbd/commit/dd39e4c93e6bf1854c1cf08ec3e71b384d992862">big red button of resubmitting previous best</a></td>
+<td>Ilona</td>
+</tr>
+<tr>
+<td>39.60</td>
+<td>38.50</td>
+<td>0.81</td>
+<td>4.00</td>
+<td></td>
+<td></td>
+<td title="fix bug when cache file is broken
+
+"><a href="https://github.com/Vlad-Shcherbina/icfpc2021-tbd/commit/57219d2648fe202049d1b482980f551db44370d5">fix bug when cache file is broken</a></td>
+<td>caudate_julie</td>
+</tr>
+<tr>
+<td>39.46</td>
+<td>38.08</td>
+<td>0.82</td>
+<td>4.06</td>
+<td></td>
+<td></td>
+<td title="Factor out problem weight
+
+"><a href="https://github.com/Vlad-Shcherbina/icfpc2021-tbd/commit/a1edff774e92c1a1b5738eba2b9b0ca796dc76fd">Factor out problem weight</a></td>
+<td>Vlad Shcherbina</td>
+</tr>
+<tr>
+<td>39.58</td>
+<td>39.02</td>
+<td>0.80</td>
+<td>4.03</td>
+<td></td>
+<td></td>
+<td title="viz show and hide globalist score
+
+"><a href="https://github.com/Vlad-Shcherbina/icfpc2021-tbd/commit/9de2c5f96fbef86a4414083f25d1e9e86a20158b">viz show and hide globalist score</a></td>
+<td>caudate_julie</td>
+</tr>
+<tr>
+<td>40.29</td>
+<td>39.01</td>
+<td>0.84</td>
+<td>4.15</td>
+<td></td>
+<td></td>
+<td title="viz show globalist score
+
+"><a href="https://github.com/Vlad-Shcherbina/icfpc2021-tbd/commit/65512f53f353b64df2e291132a527c55d2706cfa">viz show globalist score</a></td>
+<td>caudate_julie</td>
+</tr>
+<tr>
+<td>40.75</td>
+<td>38.95</td>
+<td>0.82</td>
+<td>4.18</td>
+<td></td>
+<td></td>
+<td title="Fix another &quot;edge&quot; case
+
+"><a href="https://github.com/Vlad-Shcherbina/icfpc2021-tbd/commit/77d4f01e2f0b10ceb739c1c46a60573e6bcdff9a">Fix another "edge" case</a></td>
+<td>Vlad Shcherbina</td>
+</tr>
+<tr>
+<td>40.18</td>
+<td>39.08</td>
+<td>0.82</td>
+<td>4.20</td>
+<td></td>
+<td></td>
+<td title="Expose another segment_in_poly() edge case
+
+"><a href="https://github.com/Vlad-Shcherbina/icfpc2021-tbd/commit/4366e154f4b92b89c219f0e87818f3a7bdb64783">Expose another segment_in_poly() edge case</a></td>
+<td>Vlad Shcherbina</td>
+</tr>
+<tr>
+<td>40.17</td>
+<td>39.57</td>
+<td>0.84</td>
+<td>4.17</td>
+<td></td>
+<td></td>
+<td title="fix bugs in checking broken leg
+
+"><a href="https://github.com/Vlad-Shcherbina/icfpc2021-tbd/commit/94aba6ace841c1931c1b27a759112903e3c8a437">fix bugs in checking broken leg</a></td>
+<td>caudate_julie</td>
+</tr>
+<tr>
+<td>40.21</td>
+<td>39.29</td>
+<td>0.84</td>
+<td>4.19</td>
+<td></td>
+<td></td>
+<td title="checker understands broken leg
+
+"><a href="https://github.com/Vlad-Shcherbina/icfpc2021-tbd/commit/d7fa5762a2602111039f1f67b4eb271a4be88cf5">checker understands broken leg</a></td>
+<td>caudate_julie</td>
+</tr>
+<tr>
+<td>40.54</td>
+<td>38.96</td>
+<td>0.83</td>
+<td>4.19</td>
+<td></td>
+<td></td>
+<td title="Submitter understands existing poses that use bonuses
+
+"><a href="https://github.com/Vlad-Shcherbina/icfpc2021-tbd/commit/e89e2bf9d18eb2667422cc862092d5ea658b8a28">Submitter understands existing poses that use bonuses</a></td>
+<td>Vlad Shcherbina</td>
+</tr>
+<tr>
+<td>-</td>
+<td>-</td>
+<td>-</td>
+<td>-</td>
+<td></td>
+<td></td>
+<td title="Rail can use SUPERFLEX
+
+"><a href="https://github.com/Vlad-Shcherbina/icfpc2021-tbd/commit/21bcac8431a44e90f7c607b6fbcea87a2882921c">Rail can use SUPERFLEX</a></td>
+<td>Vlad Shcherbina</td>
+</tr>
+<tr>
+<td>40.27</td>
+<td>38.82</td>
+<td>0.81</td>
+<td>4.15</td>
+<td></td>
+<td></td>
+<td title="Viz show bonuses to use as json
+
+"><a href="https://github.com/Vlad-Shcherbina/icfpc2021-tbd/commit/69d0428ca0c9e6b280fd882694f24f19112a76d2">Viz show bonuses to use as json</a></td>
+<td>caudate_julie</td>
+</tr>
+<tr>
+<td>40.04</td>
+<td>38.95</td>
+<td>0.83</td>
+<td>4.20</td>
+<td></td>
+<td></td>
+<td title="add third value to length_ranges
+
+"><a href="https://github.com/Vlad-Shcherbina/icfpc2021-tbd/commit/4ae7e5bda60958694215f7528c4ed3f76980b7fe">add third value to length_ranges</a></td>
+<td>caudate_julie</td>
+</tr>
+<tr>
+<td>40.02</td>
+<td>38.61</td>
+<td>0.82</td>
+<td>4.12</td>
+<td></td>
+<td></td>
+<td title="Delete unused fields from submitter
+
+"><a href="https://github.com/Vlad-Shcherbina/icfpc2021-tbd/commit/2f37bc5f0b41443f7d2e0adaa5800688192a9b63">Delete unused fields from submitter</a></td>
+<td>Vlad Shcherbina</td>
+</tr>
+<tr>
+<td>39.93</td>
+<td>38.69</td>
+<td>0.81</td>
+<td>4.14</td>
+<td></td>
+<td></td>
+<td title="Checker understands globalist bonus
+
+"><a href="https://github.com/Vlad-Shcherbina/icfpc2021-tbd/commit/6b3813faace7d8e663c01c5ec00caadce8542244">Checker understands globalist bonus</a></td>
+<td>caudate_julie</td>
+</tr>
+<tr>
+<td>39.88</td>
+<td>38.62</td>
+<td>0.83</td>
+<td>4.18</td>
+<td></td>
+<td></td>
+<td title="Remove hole area computation from summary (too slow)
+
+"><a href="https://github.com/Vlad-Shcherbina/icfpc2021-tbd/commit/0b6f72a10dc5ef6b904c59f52ea81d1a5b7d623f">Remove hole area computation from summary (too slow)</a></td>
+<td>Vlad Shcherbina</td>
+</tr>
+<tr>
+<td>39.59</td>
+<td>38.92</td>
+<td>0.83</td>
+<td>4.21</td>
+<td></td>
+<td></td>
+<td title="Error message when there is no solution cache
+
+"><a href="https://github.com/Vlad-Shcherbina/icfpc2021-tbd/commit/4b43afc3680d0a023ec26500c8bccf680bfb9af3">Error message when there is no solution cache</a></td>
+<td>Vlad Shcherbina</td>
+</tr>
+<tr>
+<td>43.26</td>
+<td>41.88</td>
+<td>0.86</td>
+<td>4.28</td>
+<td></td>
+<td></td>
+<td title="Delete PoseCacheItem, because its evaluation result could be stale
+
+"><a href="https://github.com/Vlad-Shcherbina/icfpc2021-tbd/commit/53d9830ee903a56c704f4c355b98887b73f315a2">Delete PoseCacheItem, because its evaluation result could be stale</a></td>
+<td>Vlad Shcherbina</td>
+</tr>
+<tr>
+<td>43.76</td>
+<td>42.76</td>
+<td>0.90</td>
+<td>4.60</td>
+<td></td>
+<td></td>
+<td title="Fix broken merge &amp; fix lint in multishaker
+
+"><a href="https://github.com/Vlad-Shcherbina/icfpc2021-tbd/commit/6c241f3507f44392bc90d1823c04c74a377ffc62">Fix broken merge & fix lint in multishaker</a></td>
+<td>Sergey Matveev</td>
+</tr>
+<tr>
+<td>-</td>
+<td>-</td>
+<td>-</td>
+<td>-</td>
+<td></td>
+<td></td>
+<td title="Add multishaker.
+
+Multishaker is a SOLVER made as a composition of three shakers. It replicates the
+process I&#x27;ve been using to get good scores in visualizer:
+
+- try to get a valid shape inside the hole by moving the offending vertices inside and
+applying mojito until (hopefully) stabilized
+- alternate between greedy and threshold.
+
+"><a href="https://github.com/Vlad-Shcherbina/icfpc2021-tbd/commit/a74a269e9d3078aa0c197804d654e49f21dcfa4b">Add multishaker.</a></td>
+<td>Sergey Matveev</td>
+</tr>
+<tr>
+<td>39.97</td>
+<td>38.26</td>
+<td>0.82</td>
+<td>3.93</td>
+<td></td>
+<td></td>
+<td title="Fix warnings
+
+"><a href="https://github.com/Vlad-Shcherbina/icfpc2021-tbd/commit/137c6b818cb8ca436e3ece29eba23b273cf08c80">Fix warnings</a></td>
+<td>Vlad Shcherbina</td>
+</tr>
+<tr>
+<td>39.54</td>
+<td>39.46</td>
+<td>0.78</td>
+<td>4.09</td>
+<td></td>
+<td></td>
+<td title="Pareto frontier in submitter
+
+Not it not only minimizes dislikes, but also tries to grab bonuses.
+
+"><a href="https://github.com/Vlad-Shcherbina/icfpc2021-tbd/commit/8ebddab8ed7f6a239d530ef943d680bcd9a66cdf">Pareto frontier in submitter</a></td>
+<td>Vlad Shcherbina</td>
+</tr>
+<tr>
+<td>39.62</td>
+<td>38.97</td>
+<td>0.81</td>
+<td>4.16</td>
+<td></td>
+<td></td>
+<td title="Solution cache
+
+"><a href="https://github.com/Vlad-Shcherbina/icfpc2021-tbd/commit/54fcf9446c5f955b2962cc5edb1cc1f3dd2d52c7">Solution cache</a></td>
+<td>caudate_julie</td>
+</tr>
+<tr>
+<td>39.60</td>
+<td>37.64</td>
+<td>0.75</td>
+<td>4.11</td>
+<td></td>
+<td></td>
+<td title="UnlockedBonus
+
+"><a href="https://github.com/Vlad-Shcherbina/icfpc2021-tbd/commit/66b0c6513148ea2d21090a98016e73b8cc4c05b0">UnlockedBonus</a></td>
+<td>Vlad Shcherbina</td>
+</tr>
+<tr>
+<td>39.55</td>
+<td>37.76</td>
+<td>0.74</td>
+<td>3.90</td>
+<td></td>
+<td></td>
+<td title="Compute dislikes in submitter
+
+"><a href="https://github.com/Vlad-Shcherbina/icfpc2021-tbd/commit/68f5367724013df8137fe564ec5d9fff233e7d5d">Compute dislikes in submitter</a></td>
+<td>Vlad Shcherbina</td>
+</tr>
+<tr>
+<td>39.88</td>
+<td>38.14</td>
+<td>0.77</td>
+<td>3.95</td>
+<td></td>
+<td></td>
+<td title="Switch rail to Submitter
+
+"><a href="https://github.com/Vlad-Shcherbina/icfpc2021-tbd/commit/0e13e31d766db211d7b17e4ab3311a55a6123159">Switch rail to Submitter</a></td>
+<td>Vlad Shcherbina</td>
+</tr>
+<tr>
+<td>39.66</td>
+<td>37.91</td>
+<td>0.75</td>
+<td>3.90</td>
+<td></td>
+<td></td>
+<td title="Fix warnings
+
+"><a href="https://github.com/Vlad-Shcherbina/icfpc2021-tbd/commit/8286564e250d9bc85e3ad76385767387751a77bf">Fix warnings</a></td>
+<td>Vlad Shcherbina</td>
+</tr>
+<tr>
+<td>39.63</td>
+<td>38.23</td>
+<td>0.75</td>
+<td>3.87</td>
+<td></td>
+<td></td>
+<td title="Move Submitter to a separate module
+
+"><a href="https://github.com/Vlad-Shcherbina/icfpc2021-tbd/commit/8eac2ba4e7b8ae1594c71125795b176de4ff97c3">Move Submitter to a separate module</a></td>
+<td>Vlad Shcherbina</td>
+</tr>
+<tr>
+<td>39.75</td>
+<td>38.11</td>
+<td>0.74</td>
+<td>3.92</td>
+<td></td>
+<td></td>
+<td title="Clippy
+
+"><a href="https://github.com/Vlad-Shcherbina/icfpc2021-tbd/commit/d3488348c019ba16e3f138f948bbb8c302d5adad">Clippy</a></td>
+<td>Vlad Shcherbina</td>
+</tr>
+<tr>
+<td>39.67</td>
+<td>37.76</td>
+<td>0.76</td>
+<td>3.75</td>
+<td></td>
+<td></td>
+<td title="Remove &quot;inside&quot; precomputation from Checker (too slow and only used in ice shaker)
+
+"><a href="https://github.com/Vlad-Shcherbina/icfpc2021-tbd/commit/1dd2ab0ee342221767dca1e21a85dd3b71f46f0d">Remove "inside" precomputation from Checker (too slow and only used in ice shaker)</a></td>
+<td>Vlad Shcherbina</td>
+</tr>
+<tr>
+<td>39.59</td>
+<td>38.09</td>
+<td>0.74</td>
+<td>3.96</td>
+<td></td>
+<td></td>
+<td title="small optimizations for bruteforce
+
+"><a href="https://github.com/Vlad-Shcherbina/icfpc2021-tbd/commit/3c9d2f27bb387f67a2590e3f2256b57d8f50dcfd">small optimizations for bruteforce</a></td>
+<td>Pavel.Sergeev</td>
+</tr>
+<tr>
+<td>40.03</td>
+<td>37.90</td>
+<td>0.74</td>
+<td>4.00</td>
+<td></td>
+<td></td>
+<td title="Denser summary table; global highscore page caching in Scraper
+
+"><a href="https://github.com/Vlad-Shcherbina/icfpc2021-tbd/commit/a10b1fcbb6303f78d7b3a35167b3e6077025c810">Denser summary table; global highscore page caching in Scraper</a></td>
+<td>Vlad Shcherbina</td>
+</tr>
+<tr>
+<td>39.50</td>
+<td>38.08</td>
+<td>0.75</td>
+<td>4.02</td>
+<td></td>
+<td></td>
+<td title="Checker understands wallhack and superflex
+
+"><a href="https://github.com/Vlad-Shcherbina/icfpc2021-tbd/commit/a655081635e2d2ab60a69dc202b3d105f0ca9aff">Checker understands wallhack and superflex</a></td>
+<td>caudate_julie</td>
+</tr>
+<tr>
+<td>39.39</td>
+<td>38.23</td>
+<td>0.74</td>
+<td>3.85</td>
+<td></td>
+<td></td>
+<td title="Add rail_constrained solver.
+
+A copy-paste + refactor of rail which also tries to stick to hole corners as much as possible.
+
+"><a href="https://github.com/Vlad-Shcherbina/icfpc2021-tbd/commit/ef02c880924087ef429428e23215c0a583609817">Add rail_constrained solver.</a></td>
+<td>Sergey Matveev</td>
+</tr>
+<tr>
+<td>39.99</td>
+<td>38.39</td>
+<td>0.71</td>
+<td>3.74</td>
+<td></td>
+<td></td>
+<td title="neighbours cache
+
+"><a href="https://github.com/Vlad-Shcherbina/icfpc2021-tbd/commit/22043b664f9f988014cc6d452c721e391f064c9d">neighbours cache</a></td>
+<td>Pavel.Sergeev</td>
+</tr>
+<tr>
+<td>39.09</td>
+<td>37.94</td>
+<td>0.71</td>
+<td>3.81</td>
+<td></td>
+<td></td>
+<td title="fix bruteforce; now it correct but slow
+
+"><a href="https://github.com/Vlad-Shcherbina/icfpc2021-tbd/commit/606307c44c74b1a554e93d13e81927f9305e22ca">fix bruteforce; now it correct but slow</a></td>
+<td>Pavel.Sergeev</td>
+</tr>
+<tr>
+<td>39.17</td>
+<td>38.07</td>
+<td>0.73</td>
+<td>3.87</td>
+<td></td>
+<td></td>
+<td title="brutforce sort by candidate positions by dislikes
+
+"><a href="https://github.com/Vlad-Shcherbina/icfpc2021-tbd/commit/5057ae579a98f09c280dc69fc774621e779a8cc2">brutforce sort by candidate positions by dislikes</a></td>
+<td>Pavel.Sergeev</td>
+</tr>
+<tr>
+<td>39.07</td>
+<td>38.35</td>
+<td>0.72</td>
+<td>3.81</td>
+<td></td>
+<td></td>
+<td title="Fix segment_in_poly() even more
+
+"><a href="https://github.com/Vlad-Shcherbina/icfpc2021-tbd/commit/679fa4fa8e2b69226da35187706ab67eb162f326">Fix segment_in_poly() even more</a></td>
+<td>Vlad Shcherbina</td>
+</tr>
+<tr>
+<td>39.40</td>
+<td>37.96</td>
+<td>0.72</td>
+<td>3.81</td>
+<td></td>
+<td></td>
+<td title="Partial fix for the segment_in_poly()
+
+"><a href="https://github.com/Vlad-Shcherbina/icfpc2021-tbd/commit/a7b75934fae2e0b9b8c81270da71f4b4347a37c9">Partial fix for the segment_in_poly()</a></td>
+<td>Vlad Shcherbina</td>
+</tr>
+<tr>
+<td>39.84</td>
+<td>37.44</td>
+<td>0.72</td>
+<td>3.85</td>
+<td></td>
+<td></td>
+<td title="Fix flicker when loading by pose ID, fix losing pose bonuses
+
+"><a href="https://github.com/Vlad-Shcherbina/icfpc2021-tbd/commit/1076cb059807967a8da38f3883667d3c45d9f804">Fix flicker when loading by pose ID, fix losing pose bonuses</a></td>
+<td>Vlad Shcherbina</td>
+</tr>
+<tr>
+<td>39.93</td>
+<td>37.84</td>
+<td>0.74</td>
+<td>3.85</td>
+<td></td>
+<td></td>
+<td title="Make pose.bonus field optional (because we have submissions that don&#x27;t have it)
+
+"><a href="https://github.com/Vlad-Shcherbina/icfpc2021-tbd/commit/cfed4635733ab077d18b7b09a91c8db0613322cd">Make pose.bonus field optional (because we have submissions that don't have it)</a></td>
+<td>Vlad Shcherbina</td>
+</tr>
+<tr>
+<td>39.48</td>
+<td>37.58</td>
+<td>0.75</td>
+<td>3.86</td>
+<td></td>
+<td></td>
+<td title="checker invalidates bonus duplication
+
+"><a href="https://github.com/Vlad-Shcherbina/icfpc2021-tbd/commit/aabbafd9668a9b1534e7dffbabd57b06723d6fba">checker invalidates bonus duplication</a></td>
+<td>caudate_julie</td>
+</tr>
+<tr>
+<td>39.41</td>
+<td>38.17</td>
+<td>0.72</td>
+<td>3.81</td>
+<td></td>
+<td></td>
+<td title="pose from url keeps bonuses
+
+"><a href="https://github.com/Vlad-Shcherbina/icfpc2021-tbd/commit/b4de802452fde8c1a9954f0f77edc276c8e29af9">pose from url keeps bonuses</a></td>
+<td>caudate_julie</td>
+</tr>
+<tr>
+<td>39.53</td>
+<td>37.96</td>
+<td>0.71</td>
+<td>3.76</td>
+<td></td>
+<td></td>
+<td title="Viz: pose ids as part of url
+
+"><a href="https://github.com/Vlad-Shcherbina/icfpc2021-tbd/commit/c1feca22f5c743f9585af8577498f46f29f76eaf">Viz: pose ids as part of url</a></td>
+<td>Ilona</td>
+</tr>
+<tr>
+<td>39.17</td>
+<td>38.46</td>
+<td>0.73</td>
+<td>3.80</td>
+<td></td>
+<td></td>
+<td title="Clippy
+
+"><a href="https://github.com/Vlad-Shcherbina/icfpc2021-tbd/commit/0bb863f49fd65275dd32bbd9b4b7804ac6f15859">Clippy</a></td>
+<td>Vlad Shcherbina</td>
+</tr>
+<tr>
+<td>39.61</td>
+<td>37.47</td>
+<td>0.72</td>
+<td>3.77</td>
+<td></td>
+<td></td>
+<td title="Tests to capture buggy segment_in_poly() behavior
+
+"><a href="https://github.com/Vlad-Shcherbina/icfpc2021-tbd/commit/c72d579657c672e035953e34606c371751fa97cd">Tests to capture buggy segment_in_poly() behavior</a></td>
+<td>Vlad Shcherbina</td>
+</tr>
+<tr>
+<td>40.22</td>
+<td>37.33</td>
+<td>0.71</td>
+<td>3.85</td>
+<td></td>
+<td></td>
+<td title="pose_from_id does not lose bonuses
+
+"><a href="https://github.com/Vlad-Shcherbina/icfpc2021-tbd/commit/3ccb7a1ca6c9350d56cb87c3b223c1d4d18adf85">pose_from_id does not lose bonuses</a></td>
+<td>caudate_julie</td>
+</tr>
+<tr>
+<td>39.79</td>
+<td>37.74</td>
+<td>0.72</td>
+<td>3.99</td>
+<td></td>
+<td></td>
+<td title="Add best and latest scores to table
+
+"><a href="https://github.com/Vlad-Shcherbina/icfpc2021-tbd/commit/d4bbbcc576e4c021a351d612850ae590595b4059">Add best and latest scores to table</a></td>
+<td>Ilona</td>
+</tr>
+<tr>
+<td>39.71</td>
+<td>37.82</td>
+<td>0.71</td>
+<td>3.84</td>
+<td></td>
+<td></td>
+<td title="Viz text area does not lose bonuses
+
+"><a href="https://github.com/Vlad-Shcherbina/icfpc2021-tbd/commit/e30b0773bc528c19fa4279f0f523118314ef8a60">Viz text area does not lose bonuses</a></td>
+<td>caudate_julie</td>
+</tr>
+<tr>
+<td>39.62</td>
+<td>37.57</td>
+<td>0.72</td>
+<td>3.74</td>
+<td></td>
+<td></td>
+<td title="Scrape all solutions, not only valid ones
+
+"><a href="https://github.com/Vlad-Shcherbina/icfpc2021-tbd/commit/0b0bf79387846913cc03a1ddceae3fee95088163">Scrape all solutions, not only valid ones</a></td>
+<td>Ilona</td>
+</tr>
+<tr>
+<td>40.54</td>
+<td>38.20</td>
+<td>0.72</td>
+<td>3.90</td>
+<td></td>
+<td></td>
+<td title="Reduce edge cache memory usage four times
+
+"><a href="https://github.com/Vlad-Shcherbina/icfpc2021-tbd/commit/5dbf039d9000551895a7458211eeebf85ab4eb01">Reduce edge cache memory usage four times</a></td>
+<td>Vlad Shcherbina</td>
+</tr>
+<tr>
+<td>39.76</td>
+<td>37.80</td>
+<td>0.72</td>
+<td>3.86</td>
+<td></td>
+<td></td>
+<td title="fix reporting error
+
+"><a href="https://github.com/Vlad-Shcherbina/icfpc2021-tbd/commit/37285cbaabb5b4ff070b31b9fccf6371825198ff">fix reporting error</a></td>
+<td>Ilona</td>
+</tr>
+<tr>
+<td>39.62</td>
+<td>38.31</td>
+<td>0.75</td>
+<td>3.95</td>
+<td></td>
+<td></td>
+<td title="improve error reporting on getting poses
+
+"><a href="https://github.com/Vlad-Shcherbina/icfpc2021-tbd/commit/c1f7141b7be545b67a34ba142eff8b4b3ebeaac9">improve error reporting on getting poses</a></td>
+<td>Ilona</td>
+</tr>
+<tr>
+<td>39.66</td>
+<td>38.31</td>
+<td>0.72</td>
+<td>3.87</td>
+<td></td>
+<td></td>
+<td title="Improve performance in greedy and threshold shakers.
+
+Use bounding boxes to speed up filtering of position candidates.
+Improves performance or large problems such as #90.
+Somehow worsens performance on smaller problems.
+
+"><a href="https://github.com/Vlad-Shcherbina/icfpc2021-tbd/commit/e342346defab8af19e3fa442a5079dd599f2f32b">Improve performance in greedy and threshold shakers.</a></td>
+<td>Sergey Matveev</td>
+</tr>
+<tr>
+<td>37.76</td>
+<td>35.14</td>
+<td>0.67</td>
+<td>3.35</td>
+<td></td>
+<td></td>
+<td title="Problem: hard to read coordinates from the console
+
+Solution: add `Pointing at (x,y)` to the UI
+
+"><a href="https://github.com/Vlad-Shcherbina/icfpc2021-tbd/commit/431bca3ae9f66b772f1021322f9555d10a98d845">Problem: hard to read coordinates from the console</a></td>
+<td>jonn</td>
+</tr>
+<tr>
+<td>36.68</td>
+<td>35.24</td>
+<td>0.66</td>
+<td>3.30</td>
+<td></td>
+<td></td>
+<td title="Problem: hard to know where does the mouse point
+
+Solution:
+
+ - Print stuff to console.
+
+"><a href="https://github.com/Vlad-Shcherbina/icfpc2021-tbd/commit/7c222ad9ed4f5052ae22abdca42e7f7202e96bda">Problem: hard to know where does the mouse point</a></td>
+<td>jonn</td>
+</tr>
+<tr>
+<td>36.72</td>
+<td>35.67</td>
+<td>0.67</td>
+<td>3.29</td>
+<td></td>
+<td></td>
+<td title="Viz: add loading pose by id
+
+"><a href="https://github.com/Vlad-Shcherbina/icfpc2021-tbd/commit/0a564f105ab2682a37353f248e2b5609c527b919">Viz: add loading pose by id</a></td>
+<td>Ilona</td>
+</tr>
+<tr>
+<td>37.11</td>
+<td>35.59</td>
+<td>0.60</td>
+<td>2.89</td>
+<td></td>
+<td></td>
+<td title="shaker assert that no bonuses are requested
+
+"><a href="https://github.com/Vlad-Shcherbina/icfpc2021-tbd/commit/d4cb9351984168c8fea8a5f0891c5ae851b98fa3">shaker assert that no bonuses are requested</a></td>
+<td>caudate_julie</td>
+</tr>
+<tr>
+<td>34.43</td>
+<td>32.81</td>
+<td>0.62</td>
+<td>2.89</td>
+<td></td>
+<td></td>
+<td title="rail solver: Automatically submit improvements
+
+"><a href="https://github.com/Vlad-Shcherbina/icfpc2021-tbd/commit/f55d4f2f22005df4b00854efe61e1fb8c8f5a962">rail solver: Automatically submit improvements</a></td>
+<td>Vlad Shcherbina</td>
+</tr>
+<tr>
+<td>35.43</td>
+<td>34.52</td>
+<td>0.62</td>
+<td>3.05</td>
+<td></td>
+<td></td>
+<td title="Download pose by its id
+
+"><a href="https://github.com/Vlad-Shcherbina/icfpc2021-tbd/commit/0c41797a07a24af41dfcb0bd93c1650553614939">Download pose by its id</a></td>
+<td>Ilona</td>
+</tr>
+<tr>
+<td>36.15</td>
+<td>33.64</td>
+<td>0.65</td>
+<td>3.08</td>
+<td></td>
+<td></td>
+<td title="randomize bruteforce; fix clippy warns
+
+"><a href="https://github.com/Vlad-Shcherbina/icfpc2021-tbd/commit/e0f62b0ab3e5c826a295f1d9fe48b5752f308266">randomize bruteforce; fix clippy warns</a></td>
+<td>Pavel.Sergeev</td>
+</tr>
+<tr>
+<td>35.63</td>
+<td>34.02</td>
+<td>0.63</td>
+<td>3.05</td>
+<td></td>
+<td></td>
+<td title="checker includes bonus info to response
+
+"><a href="https://github.com/Vlad-Shcherbina/icfpc2021-tbd/commit/476f487898d3889a5ad679301af17b10e48b5f7a">checker includes bonus info to response</a></td>
+<td>caudate_julie</td>
+</tr>
+<tr>
+<td>35.61</td>
+<td>33.21</td>
+<td>0.63</td>
+<td>3.17</td>
+<td></td>
+<td></td>
+<td title="Delta cache
+
+"><a href="https://github.com/Vlad-Shcherbina/icfpc2021-tbd/commit/cfca707394bd8c4e906e3282f275eef46eb9e14e">Delta cache</a></td>
+<td>Vlad Shcherbina</td>
+</tr>
+<tr>
+<td>36.24</td>
+<td>33.84</td>
+<td>0.65</td>
+<td>3.17</td>
+<td></td>
+<td></td>
+<td title="Edge cache
+
+"><a href="https://github.com/Vlad-Shcherbina/icfpc2021-tbd/commit/a3644e88a7332297e9a9c585467bfce261a243ce">Edge cache</a></td>
+<td>Vlad Shcherbina</td>
+</tr>
+<tr>
+<td>36.45</td>
+<td>33.49</td>
+<td>0.62</td>
+<td>3.01</td>
+<td></td>
+<td></td>
+<td title="Scrape global best score for each problem
+
+"><a href="https://github.com/Vlad-Shcherbina/icfpc2021-tbd/commit/52a4a3207e6fb5e2824f9ab8ba7c2f01f2afd8db">Scrape global best score for each problem</a></td>
+<td>Ilona</td>
+</tr>
+<tr>
+<td>35.98</td>
+<td>33.64</td>
+<td>0.64</td>
+<td>3.11</td>
+<td></td>
+<td></td>
+<td title="viz show bonus info
+
+"><a href="https://github.com/Vlad-Shcherbina/icfpc2021-tbd/commit/5160cbd29e622862931fc7e318eb44afdbd62ac1">viz show bonus info</a></td>
+<td>caudate_julie</td>
+</tr>
+<tr>
+<td>35.93</td>
+<td>33.88</td>
+<td>0.63</td>
+<td>3.13</td>
+<td></td>
+<td></td>
+<td title="added a reset button
+
+"><a href="https://github.com/Vlad-Shcherbina/icfpc2021-tbd/commit/0cdd694ffa273375ac324d950f1e2453aa164d9d">added a reset button</a></td>
+<td>Sergey Matveev</td>
+</tr>
+<tr>
+<td>35.33</td>
+<td>34.11</td>
+<td>0.60</td>
+<td>2.97</td>
+<td></td>
+<td></td>
+<td title="bruteforce shaker
+
+"><a href="https://github.com/Vlad-Shcherbina/icfpc2021-tbd/commit/b4d15082a15eaff4e30ce7108f31cb44ae34e0c9">bruteforce shaker</a></td>
+<td>Pavel.Sergeev</td>
+</tr>
+<tr>
+<td>35.92</td>
+<td>33.59</td>
+<td>0.62</td>
+<td>3.03</td>
+<td></td>
+<td></td>
+<td title="Rails solver
+
+"><a href="https://github.com/Vlad-Shcherbina/icfpc2021-tbd/commit/9d4a2544857bb71a967dfc956e3d49a1e6c2dbc8">Rails solver</a></td>
+<td>Vlad Shcherbina</td>
+</tr>
+<tr>
+<td>35.56</td>
+<td>34.18</td>
+<td>0.61</td>
+<td>2.96</td>
+<td></td>
+<td></td>
+<td title="text area loads on focus lost
+
+"><a href="https://github.com/Vlad-Shcherbina/icfpc2021-tbd/commit/a5eaa476f0566d6582db5ccb74d5a44ac964ab88">text area loads on focus lost</a></td>
+<td>caudate_julie</td>
+</tr>
+<tr>
+<td>35.33</td>
+<td>34.12</td>
+<td>0.60</td>
+<td>3.00</td>
+<td></td>
+<td></td>
+<td title="Check for unlocked bonuses
+
+"><a href="https://github.com/Vlad-Shcherbina/icfpc2021-tbd/commit/7717c44c68c66bb3b760e699783d3b7c7bcab5e0">Check for unlocked bonuses</a></td>
+<td>caudate_julie</td>
+</tr>
+<tr>
+<td>35.85</td>
+<td>34.26</td>
+<td>0.61</td>
+<td>3.14</td>
+<td></td>
+<td></td>
+<td title="Nicer Debug impl for Pt
+
+"><a href="https://github.com/Vlad-Shcherbina/icfpc2021-tbd/commit/e3b0b4a835b8afac0008f43061cba79e14cd5f07">Nicer Debug impl for Pt</a></td>
+<td>Vlad Shcherbina</td>
+</tr>
+<tr>
+<td>36.25</td>
+<td>33.86</td>
+<td>0.60</td>
+<td>3.03</td>
+<td></td>
+<td></td>
+<td title="add superflex to viz
+
+"><a href="https://github.com/Vlad-Shcherbina/icfpc2021-tbd/commit/a63867aa2ee0b77628f77d06b2f7b21edd0af918">add superflex to viz</a></td>
+<td>caudate_julie</td>
+</tr>
+<tr>
+<td>36.69</td>
+<td>34.73</td>
+<td>0.63</td>
+<td>3.15</td>
+<td></td>
+<td></td>
+<td title="Add SUPERFLEX bonus to bonus graph
+
+"><a href="https://github.com/Vlad-Shcherbina/icfpc2021-tbd/commit/fb925a4162a09d52baee7085d7e7d365d6508d6b">Add SUPERFLEX bonus to bonus graph</a></td>
+<td>Ilona</td>
+</tr>
+<tr>
+<td>-</td>
+<td>-</td>
+<td>-</td>
+<td>-</td>
+<td></td>
+<td></td>
+<td title="Redownload problems, add new bonus
+
+"><a href="https://github.com/Vlad-Shcherbina/icfpc2021-tbd/commit/70917eb78136dccdb8a4135a95f6b156d57b898a">Redownload problems, add new bonus</a></td>
+<td>Ilona</td>
+</tr>
+<tr>
+<td>35.88</td>
+<td>33.72</td>
+<td>0.58</td>
+<td>2.92</td>
+<td></td>
+<td></td>
+<td title="viz use shift to move selection by 10
+
+"><a href="https://github.com/Vlad-Shcherbina/icfpc2021-tbd/commit/14757a736ceacd5fa9fc9f89fca2e471fa239d4e">viz use shift to move selection by 10</a></td>
+<td>caudate_julie</td>
+</tr>
+<tr>
+<td>34.87</td>
+<td>33.66</td>
+<td>0.59</td>
+<td>2.93</td>
+<td></td>
+<td></td>
+<td title="Show bonuses in summary
+
+"><a href="https://github.com/Vlad-Shcherbina/icfpc2021-tbd/commit/2e57688e7ea077ab2f2119962caf56ba340d6e12">Show bonuses in summary</a></td>
+<td>caudate_julie</td>
+</tr>
+<tr>
+<td>35.34</td>
+<td>33.57</td>
+<td>0.58</td>
+<td>2.88</td>
+<td></td>
+<td></td>
+<td title="viz buttons instead of selector
+
+"><a href="https://github.com/Vlad-Shcherbina/icfpc2021-tbd/commit/4b108d35a31478d8141a1d0d201f2250d315ad5c">viz buttons instead of selector</a></td>
+<td>caudate_julie</td>
+</tr>
+<tr>
+<td>35.38</td>
+<td>33.36</td>
+<td>0.60</td>
+<td>2.96</td>
+<td></td>
+<td></td>
+<td title="mojito shaker is a daiquiri version
+
+"><a href="https://github.com/Vlad-Shcherbina/icfpc2021-tbd/commit/cb8991e5fc54e3438943ba5d35ab3c75cb85db15">mojito shaker is a daiquiri version</a></td>
+<td>caudate_julie</td>
+</tr>
+<tr>
+<td>34.41</td>
+<td>33.69</td>
+<td>0.58</td>
+<td>2.89</td>
+<td></td>
+<td></td>
+<td title="More scraper refactoring
+
+"><a href="https://github.com/Vlad-Shcherbina/icfpc2021-tbd/commit/57622f7d09a08b12b324ffb0024133e46f399268">More scraper refactoring</a></td>
+<td>Vlad Shcherbina</td>
+</tr>
+<tr>
+<td>34.54</td>
+<td>33.11</td>
+<td>0.61</td>
+<td>2.95</td>
+<td></td>
+<td></td>
+<td title="viz turn to separate function
+
+"><a href="https://github.com/Vlad-Shcherbina/icfpc2021-tbd/commit/b566d98d416410374517e740e271e623268b99e4">viz turn to separate function</a></td>
+<td>caudate_julie</td>
+</tr>
+<tr>
+<td>35.75</td>
+<td>32.73</td>
+<td>0.61</td>
+<td>2.99</td>
+<td></td>
+<td></td>
+<td title="Refactor score scraper
+
+"><a href="https://github.com/Vlad-Shcherbina/icfpc2021-tbd/commit/701223681916168b16de8fd52a5e36aad449503c">Refactor score scraper</a></td>
+<td>Vlad Shcherbina</td>
+</tr>
+<tr>
+<td>34.84</td>
+<td>33.01</td>
+<td>0.60</td>
+<td>2.92</td>
+<td></td>
+<td></td>
+<td title="daiquiri parameter sensibility tweak
+
+"><a href="https://github.com/Vlad-Shcherbina/icfpc2021-tbd/commit/e98fc31c30bd67e69b1bdc1b7d830f9ce8c74cbc">daiquiri parameter sensibility tweak</a></td>
+<td>caudate_julie</td>
+</tr>
+<tr>
+<td>34.22</td>
+<td>33.07</td>
+<td>0.59</td>
+<td>2.85</td>
+<td></td>
+<td></td>
+<td title="Better summary page
+
+"><a href="https://github.com/Vlad-Shcherbina/icfpc2021-tbd/commit/32870ac03af65bc2b679160e73ff26b51841c635">Better summary page</a></td>
+<td>Vlad Shcherbina</td>
+</tr>
+<tr>
+<td>35.38</td>
+<td>32.18</td>
+<td>0.59</td>
+<td>2.91</td>
+<td></td>
+<td></td>
+<td title="Viz usability fixes
+
+"><a href="https://github.com/Vlad-Shcherbina/icfpc2021-tbd/commit/891f1b79b0aa9f696cef81139146cc4006f74cad">Viz usability fixes</a></td>
+<td>caudate_julie</td>
+</tr>
+<tr>
+<td>34.80</td>
+<td>32.23</td>
+<td>0.59</td>
+<td>2.92</td>
+<td></td>
+<td></td>
+<td title="Use i32 for problem ID instead of strings
+
+"><a href="https://github.com/Vlad-Shcherbina/icfpc2021-tbd/commit/56a43db21bd1486b00d5af6cc73cca9cf4a0ab7b">Use i32 for problem ID instead of strings</a></td>
+<td>Vlad Shcherbina</td>
+</tr>
+<tr>
+<td>34.81</td>
+<td>32.58</td>
+<td>0.60</td>
+<td>2.93</td>
+<td></td>
+<td></td>
+<td title="Rudimentary problem summary table
+
+"><a href="https://github.com/Vlad-Shcherbina/icfpc2021-tbd/commit/b5e0a66a1c84571f5138391b99c125cbe13822d3">Rudimentary problem summary table</a></td>
+<td>Vlad Shcherbina</td>
+</tr>
+<tr>
+<td>34.99</td>
+<td>31.90</td>
+<td>0.56</td>
+<td>2.80</td>
+<td></td>
+<td></td>
+<td title="improve threshold calculation
+
+"><a href="https://github.com/Vlad-Shcherbina/icfpc2021-tbd/commit/c459af66bd36a7575af61833a6e077b8030c7bb1">improve threshold calculation</a></td>
+<td>Sergey Matveev</td>
+</tr>
+<tr>
+<td>35.24</td>
+<td>31.64</td>
+<td>0.57</td>
+<td>2.86</td>
+<td></td>
+<td></td>
+<td title="support wallhack in visuzalier
+
+"><a href="https://github.com/Vlad-Shcherbina/icfpc2021-tbd/commit/7e26a1ed9fcf295938f0ea5d0ee662d54d1fa4b8">support wallhack in visuzalier</a></td>
+<td>Sergey Matveev</td>
+</tr>
+<tr>
+<td>35.06</td>
+<td>33.02</td>
+<td>0.58</td>
+<td>2.82</td>
+<td></td>
+<td></td>
+<td title="daiquiri supports param
+
+"><a href="https://github.com/Vlad-Shcherbina/icfpc2021-tbd/commit/7766c3cc7f183178e6e522ef9bc4c04549b0f63b">daiquiri supports param</a></td>
+<td>caudate_julie</td>
+</tr>
+<tr>
+<td>34.30</td>
+<td>33.23</td>
+<td>0.60</td>
+<td>2.97</td>
+<td></td>
+<td></td>
+<td title="Spec update
+
+"><a href="https://github.com/Vlad-Shcherbina/icfpc2021-tbd/commit/420e30ec6073a4b3bbe7b71644c07e28b34522f3">Spec update</a></td>
+<td>Vlad Shcherbina</td>
+</tr>
+<tr>
+<td>34.88</td>
+<td>32.87</td>
+<td>0.59</td>
+<td>2.88</td>
+<td></td>
+<td></td>
+<td title="WIP ice
+
+"><a href="https://github.com/Vlad-Shcherbina/icfpc2021-tbd/commit/9aa5526a973f149e87e376f05ccfbef649da44e5">WIP ice</a></td>
+<td>Vlad Shcherbina</td>
+</tr>
+<tr>
+<td>35.67</td>
+<td>32.98</td>
+<td>0.57</td>
+<td>2.82</td>
+<td></td>
+<td></td>
+<td title="fix clippy for highscores
+
+"><a href="https://github.com/Vlad-Shcherbina/icfpc2021-tbd/commit/017f08b1a01125cda543c63065d3174b3d7f9b1b">fix clippy for highscores</a></td>
+<td>Ilona</td>
+</tr>
+<tr>
+<td>34.33</td>
+<td>34.36</td>
+<td>0.70</td>
+<td>3.73</td>
+<td></td>
+<td></td>
+<td title="daiquiri clippy fix
+
+"><a href="https://github.com/Vlad-Shcherbina/icfpc2021-tbd/commit/5d42d1dcd99cf20b4806d48cbb4ea38c06e47e96">daiquiri clippy fix</a></td>
+<td>caudate_julie</td>
+</tr>
+<tr>
+<td>40.41</td>
+<td>37.81</td>
+<td>0.68</td>
+<td>3.71</td>
+<td></td>
+<td></td>
+<td title="fix daiquiri inf loop
+
+"><a href="https://github.com/Vlad-Shcherbina/icfpc2021-tbd/commit/ba97a60f672e1a1f7c288a17014332036752c004">fix daiquiri inf loop</a></td>
+<td>caudate_julie</td>
+</tr>
+<tr>
+<td>36.42</td>
+<td>34.97</td>
+<td>0.61</td>
+<td>3.28</td>
+<td></td>
+<td></td>
+<td title="daiquiri shaker
+
+"><a href="https://github.com/Vlad-Shcherbina/icfpc2021-tbd/commit/484f0e9c995373fb0823d4fd5eb637a8ff55fc55">daiquiri shaker</a></td>
+<td>caudate_julie</td>
+</tr>
+<tr>
+<td>37.25</td>
+<td>34.29</td>
+<td>0.54</td>
+<td>2.76</td>
+<td></td>
+<td></td>
+<td title="Add threshold shaker (threshold acceptance/simulated annealing).
+
+Cooling schedule needs tuning.
+
+"><a href="https://github.com/Vlad-Shcherbina/icfpc2021-tbd/commit/0ae64d4b6f595038ebeec3a54ec9429fea813f1e">Add threshold shaker (threshold acceptance/simulated annealing).</a></td>
+<td>Sergey Matveev</td>
+</tr>
+<tr>
+<td>34.49</td>
+<td>31.94</td>
+<td>0.58</td>
+<td>2.79</td>
+<td></td>
+<td></td>
+<td title="springs shaker
+
+"><a href="https://github.com/Vlad-Shcherbina/icfpc2021-tbd/commit/70fa7a512260398075a28a1e7883fe6f2ad85cc3">springs shaker</a></td>
+<td>Pavel.Sergeev</td>
+</tr>
+<tr>
+<td>36.22</td>
+<td>32.78</td>
+<td>0.54</td>
+<td>2.72</td>
+<td></td>
+<td></td>
+<td title="disable shake button until response is received
+
+"><a href="https://github.com/Vlad-Shcherbina/icfpc2021-tbd/commit/434fdb0266749646145b3bba6874d665632b84d4">disable shake button until response is received</a></td>
+<td>caudate_julie</td>
+</tr>
+<tr>
+<td>33.57</td>
+<td>33.44</td>
+<td>0.61</td>
+<td>2.98</td>
+<td></td>
+<td></td>
+<td title="fetch highscore after submission
+
+"><a href="https://github.com/Vlad-Shcherbina/icfpc2021-tbd/commit/b5c8e781a7cfc78835ff43156eb0ac21a6ed6132">fetch highscore after submission</a></td>
+<td>caudate_julie</td>
+</tr>
+<tr>
+<td>34.48</td>
+<td>32.26</td>
+<td>0.65</td>
+<td>2.74</td>
+<td></td>
+<td></td>
+<td title="Refactor computing highscore to a separate fn
+
+"><a href="https://github.com/Vlad-Shcherbina/icfpc2021-tbd/commit/c38f8251d917c79bae33819d4f55ae56025f06c7">Refactor computing highscore to a separate fn</a></td>
+<td>Ilona</td>
+</tr>
+<tr>
+<td>34.86</td>
+<td>32.27</td>
+<td>0.58</td>
+<td>2.79</td>
+<td></td>
+<td></td>
+<td title="Viz: show highscore on load
+
+"><a href="https://github.com/Vlad-Shcherbina/icfpc2021-tbd/commit/879b965508cbb2275a155823087430baa7e33589">Viz: show highscore on load</a></td>
+<td>Ilona</td>
+</tr>
+<tr>
+<td>33.77</td>
+<td>32.41</td>
+<td>0.55</td>
+<td>2.73</td>
+<td></td>
+<td></td>
+<td title="simplify server_response in viz
+
+"><a href="https://github.com/Vlad-Shcherbina/icfpc2021-tbd/commit/50f6fd8aaf4cef06a76ace150fc764980dfb6b8c">simplify server_response in viz</a></td>
+<td>caudate_julie</td>
+</tr>
+<tr>
+<td>33.29</td>
+<td>32.00</td>
+<td>0.54</td>
+<td>2.66</td>
+<td></td>
+<td></td>
+<td title="Fix submit button
+
+"><a href="https://github.com/Vlad-Shcherbina/icfpc2021-tbd/commit/6dddc670b8f2aca186b48a908c318503deb658b4">Fix submit button</a></td>
+<td>Vlad Shcherbina</td>
+</tr>
+<tr>
+<td>34.33</td>
+<td>31.41</td>
+<td>0.59</td>
+<td>2.93</td>
+<td></td>
+<td></td>
+<td title="Fix Clippy lints
+
+"><a href="https://github.com/Vlad-Shcherbina/icfpc2021-tbd/commit/9de37f16f957b4c55d7d123e95d4a59ea79cac25">Fix Clippy lints</a></td>
+<td>Vlad Shcherbina</td>
+</tr>
+<tr>
+<td>35.90</td>
+<td>32.96</td>
+<td>0.58</td>
+<td>2.87</td>
+<td></td>
+<td></td>
+<td title="WIP ice shaker
+
+"><a href="https://github.com/Vlad-Shcherbina/icfpc2021-tbd/commit/05cf257c549a28f99473b8dd2e1c1baae76f24ad">WIP ice shaker</a></td>
+<td>Vlad Shcherbina</td>
+</tr>
+<tr>
+<td>34.90</td>
+<td>34.75</td>
+<td>0.59</td>
+<td>3.05</td>
+<td></td>
+<td></td>
+<td title="shuffle before shaking
+
+"><a href="https://github.com/Vlad-Shcherbina/icfpc2021-tbd/commit/4ac3d7fe834cbef549c19834f7e89730f7cbb270">shuffle before shaking</a></td>
+<td>Pavel.Sergeev</td>
+</tr>
+<tr>
+<td>36.28</td>
+<td>34.40</td>
+<td>0.60</td>
+<td>3.11</td>
+<td></td>
+<td></td>
+<td title="Problem: no links to problems on page
+
+Solution:
+
+add them because people requested them
+
+"><a href="https://github.com/Vlad-Shcherbina/icfpc2021-tbd/commit/bc6c7378dc590bc904b60b0ba0527661d7be89d4">Problem: no links to problems on page</a></td>
+<td>jonn</td>
+</tr>
+<tr>
+<td>35.75</td>
+<td>33.07</td>
+<td>0.55</td>
+<td>2.73</td>
+<td title="diff --git a/Cargo.toml b/Cargo.toml
+index 9b472b5..00ed45e 100644
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -15,3 +15,4 @@ simple-server = &quot;0.4.0&quot;
+ chrono = { version = &quot;0.4&quot;, features = [&quot;serde&quot;] }
+ ureq = { version = &quot;*&quot;, default-features = false, features = [&quot;tls&quot;, &quot;cookies&quot;] }
+ regex = &quot;1.5&quot;
++ndarray = &quot;*&quot;
+">toml</td>
+<td title="diff --git a/Cargo.lock b/Cargo.lock
+index a2cb6b5..b0cd474 100644
+--- a/Cargo.lock
++++ b/Cargo.lock
+@@ -189,6 +189,7 @@ dependencies = [
+  &quot;chrono&quot;,
+  &quot;http&quot;,
+  &quot;linkme&quot;,
++ &quot;ndarray&quot;,
+  &quot;rand&quot;,
+  &quot;regex&quot;,
+  &quot;serde&quot;,
+@@ -298,12 +299,43 @@ version = &quot;0.1.8&quot;
+ source = &quot;registry+https://github.com/rust-lang/crates.io-index&quot;
+ checksum = &quot;7ffc5c5338469d4d3ea17d269fa8ea3512ad247247c30bd2df69e68309ed0a08&quot;
+ 
++[[package]]
++name = &quot;matrixmultiply&quot;
++version = &quot;0.3.1&quot;
++source = &quot;registry+https://github.com/rust-lang/crates.io-index&quot;
++checksum = &quot;5a8a15b776d9dfaecd44b03c5828c2199cddff5247215858aac14624f8d6b741&quot;
++dependencies = [
++ &quot;rawpointer&quot;,
++]
++
+ [[package]]
+ name = &quot;memchr&quot;
+ version = &quot;2.4.0&quot;
+ source = &quot;registry+https://github.com/rust-lang/crates.io-index&quot;
+ checksum = &quot;b16bd47d9e329435e309c58469fe0791c2d0d1ba96ec0954152a5ae2b04387dc&quot;
+ 
++[[package]]
++name = &quot;ndarray&quot;
++version = &quot;0.15.3&quot;
++source = &quot;registry+https://github.com/rust-lang/crates.io-index&quot;
++checksum = &quot;08e854964160a323e65baa19a0b1a027f76d590faba01f05c0cbc3187221a8c9&quot;
++dependencies = [
++ &quot;matrixmultiply&quot;,
++ &quot;num-complex&quot;,
++ &quot;num-integer&quot;,
++ &quot;num-traits&quot;,
++ &quot;rawpointer&quot;,
++]
++
++[[package]]
++name = &quot;num-complex&quot;
++version = &quot;0.4.0&quot;
++source = &quot;registry+https://github.com/rust-lang/crates.io-index&quot;
++checksum = &quot;26873667bbbb7c5182d4a37c1add32cdf09f841af72da53318fdb81543c15085&quot;
++dependencies = [
++ &quot;num-traits&quot;,
++]
++
+ [[package]]
+ name = &quot;num-integer&quot;
+ version = &quot;0.1.44&quot;
+@@ -425,6 +457,12 @@ dependencies = [
+  &quot;rand_core&quot;,
+ ]
+ 
++[[package]]
++name = &quot;rawpointer&quot;
++version = &quot;0.2.1&quot;
++source = &quot;registry+https://github.com/rust-lang/crates.io-index&quot;
++checksum = &quot;60a357793950651c4ed0f3f52338f53b2f809f32d83a07f72909fa13e4c6c1e3&quot;
++
+ [[package]]
+ name = &quot;regex&quot;
+ version = &quot;1.5.4&quot;
+">lock</td>
+<td title="Speed up and improve the greedy shaker.
+
+"><a href="https://github.com/Vlad-Shcherbina/icfpc2021-tbd/commit/f533614b76cc9046020ffe84e5909ee6b43f5949">Speed up and improve the greedy shaker.</a></td>
+<td>Sergey Matveev</td>
+</tr>
+<tr>
+<td>32.11</td>
+<td>29.95</td>
+<td>0.58</td>
+<td>2.67</td>
+<td></td>
+<td></td>
+<td title="fix deleted ancors
+
+"><a href="https://github.com/Vlad-Shcherbina/icfpc2021-tbd/commit/06f3ec4063a65fca3ff7c7fc6624e219d037b81c">fix deleted ancors</a></td>
+<td>caudate_julie</td>
+</tr>
+<tr>
+<td>31.87</td>
+<td>30.19</td>
+<td>0.53</td>
+<td>2.62</td>
+<td></td>
+<td></td>
+<td title="Factor out rudimentary Checker
+
+"><a href="https://github.com/Vlad-Shcherbina/icfpc2021-tbd/commit/57313c553b7af601a33e60c7031198e90aeb9ce2">Factor out rudimentary Checker</a></td>
+<td>Vlad Shcherbina</td>
+</tr>
+<tr>
+<td>32.06</td>
+<td>30.36</td>
+<td>0.56</td>
+<td>2.82</td>
+<td></td>
+<td></td>
+<td title="viz show nearest vertex on hovering
+
+"><a href="https://github.com/Vlad-Shcherbina/icfpc2021-tbd/commit/91ed730cf8ea4121ddf896c8e9886155a05df2c9">viz show nearest vertex on hovering</a></td>
+<td>caudate_julie</td>
+</tr>
+<tr>
+<td>33.13</td>
+<td>29.57</td>
+<td>0.56</td>
+<td>2.77</td>
+<td title="diff --git a/Cargo.toml b/Cargo.toml
+index 120f0ad..9b472b5 100644
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -14,3 +14,4 @@ rand = &quot;*&quot;
+ simple-server = &quot;0.4.0&quot;
+ chrono = { version = &quot;0.4&quot;, features = [&quot;serde&quot;] }
+ ureq = { version = &quot;*&quot;, default-features = false, features = [&quot;tls&quot;, &quot;cookies&quot;] }
++regex = &quot;1.5&quot;
+">toml</td>
+<td title="diff --git a/Cargo.lock b/Cargo.lock
+index 74c1698..a2cb6b5 100644
+--- a/Cargo.lock
++++ b/Cargo.lock
+@@ -2,6 +2,15 @@
+ # It is not intended for manual editing.
+ version = 3
+ 
++[[package]]
++name = &quot;aho-corasick&quot;
++version = &quot;0.7.18&quot;
++source = &quot;registry+https://github.com/rust-lang/crates.io-index&quot;
++checksum = &quot;1e37cfd5e7657ada45f742d6e99ca5788580b5c529dc78faf11ece6dc702656f&quot;
++dependencies = [
++ &quot;memchr&quot;,
++]
++
+ [[package]]
+ name = &quot;autocfg&quot;
+ version = &quot;1.0.1&quot;
+@@ -181,6 +190,7 @@ dependencies = [
+  &quot;http&quot;,
+  &quot;linkme&quot;,
+  &quot;rand&quot;,
++ &quot;regex&quot;,
+  &quot;serde&quot;,
+  &quot;serde_json&quot;,
+  &quot;simple-server&quot;,
+@@ -288,6 +298,12 @@ version = &quot;0.1.8&quot;
+ source = &quot;registry+https://github.com/rust-lang/crates.io-index&quot;
+ checksum = &quot;7ffc5c5338469d4d3ea17d269fa8ea3512ad247247c30bd2df69e68309ed0a08&quot;
+ 
++[[package]]
++name = &quot;memchr&quot;
++version = &quot;2.4.0&quot;
++source = &quot;registry+https://github.com/rust-lang/crates.io-index&quot;
++checksum = &quot;b16bd47d9e329435e309c58469fe0791c2d0d1ba96ec0954152a5ae2b04387dc&quot;
++
+ [[package]]
+ name = &quot;num-integer&quot;
+ version = &quot;0.1.44&quot;
+@@ -409,6 +425,23 @@ dependencies = [
+  &quot;rand_core&quot;,
+ ]
+ 
++[[package]]
++name = &quot;regex&quot;
++version = &quot;1.5.4&quot;
++source = &quot;registry+https://github.com/rust-lang/crates.io-index&quot;
++checksum = &quot;d07a8629359eb56f1e2fb1652bb04212c072a87ba68546a04065d525673ac461&quot;
++dependencies = [
++ &quot;aho-corasick&quot;,
++ &quot;memchr&quot;,
++ &quot;regex-syntax&quot;,
++]
++
++[[package]]
++name = &quot;regex-syntax&quot;
++version = &quot;0.6.25&quot;
++source = &quot;registry+https://github.com/rust-lang/crates.io-index&quot;
++checksum = &quot;f497285884f3fcff424ffc933e56d7cbca511def0c9831a7f9b5f6153e3cc89b&quot;
++
+ [[package]]
+ name = &quot;ring&quot;
+ version = &quot;0.16.20&quot;
+">lock</td>
+<td title="Parse poses and dislikes from scraped problem page
+
+"><a href="https://github.com/Vlad-Shcherbina/icfpc2021-tbd/commit/4232eab99fbde47abfe0c98b7f89a389414cd019">Parse poses and dislikes from scraped problem page</a></td>
+<td>Ilona</td>
+</tr>
+<tr>
+<td>31.56</td>
+<td>23.81</td>
+<td>0.52</td>
+<td>2.29</td>
+<td></td>
+<td></td>
+<td title="Viz undo
+
+"><a href="https://github.com/Vlad-Shcherbina/icfpc2021-tbd/commit/d570dde0cfea4183e94d0eb5ef36ffe5d1599fd1">Viz undo</a></td>
+<td>caudate_julie</td>
+</tr>
+<tr>
+<td>31.43</td>
+<td>24.53</td>
+<td>0.54</td>
+<td>2.20</td>
+<td></td>
+<td></td>
+<td title="Bonus graph
+
+"><a href="https://github.com/Vlad-Shcherbina/icfpc2021-tbd/commit/b7f50ea1c36ed76c5e108709983d323267d431aa">Bonus graph</a></td>
+<td>Vlad Shcherbina</td>
+</tr>
+<tr>
+<td>30.55</td>
+<td>24.45</td>
+<td>0.57</td>
+<td>2.30</td>
+<td></td>
+<td></td>
+<td title="remove Option from bonuses; viz show bonuses in stats
+
+"><a href="https://github.com/Vlad-Shcherbina/icfpc2021-tbd/commit/1a3de2aacb239031cf2fb673f994fb64e2456750">remove Option from bonuses; viz show bonuses in stats</a></td>
+<td>caudate_julie</td>
+</tr>
+<tr>
+<td>30.62</td>
+<td>23.93</td>
+<td>0.55</td>
+<td>2.28</td>
+<td></td>
+<td></td>
+<td title="Pose and State types added to viz
+
+"><a href="https://github.com/Vlad-Shcherbina/icfpc2021-tbd/commit/5e4c2eb7f752d6535d8e4a186344a53fb5d9c331">Pose and State types added to viz</a></td>
+<td>caudate_julie</td>
+</tr>
+<tr>
+<td>30.80</td>
+<td>24.25</td>
+<td>0.56</td>
+<td>2.32</td>
+<td></td>
+<td></td>
+<td title="viz half of bonuses visualization (other half stashed for later)
+
+"><a href="https://github.com/Vlad-Shcherbina/icfpc2021-tbd/commit/5c9bb33600984c4c737405e54f8b174a1884b594">viz half of bonuses visualization (other half stashed for later)</a></td>
+<td>caudate_julie</td>
+</tr>
+<tr>
+<td>30.97</td>
+<td>24.04</td>
+<td>0.55</td>
+<td>2.30</td>
+<td></td>
+<td></td>
+<td title="Refactor CheckPoseRequest
+
+"><a href="https://github.com/Vlad-Shcherbina/icfpc2021-tbd/commit/5a3fdd923d56e0a99ac30c1d47f842c01a24b29e">Refactor CheckPoseRequest</a></td>
+<td>Vlad Shcherbina</td>
+</tr>
+<tr>
+<td>31.01</td>
+<td>24.18</td>
+<td>0.56</td>
+<td>2.32</td>
+<td></td>
+<td></td>
+<td title="Viz fix mouse drag/click resolution
+
+"><a href="https://github.com/Vlad-Shcherbina/icfpc2021-tbd/commit/676423130272a5a3a4cda494d870a0cc1df9834e">Viz fix mouse drag/click resolution</a></td>
+<td>caudate_julie</td>
+</tr>
+<tr>
+<td>31.38</td>
+<td>24.02</td>
+<td>0.53</td>
+<td>2.24</td>
+<td></td>
+<td></td>
+<td title="viz shift+rotate to 90 deg rotates, hotkeys to select and deselect
+
+"><a href="https://github.com/Vlad-Shcherbina/icfpc2021-tbd/commit/16dac1b286fa7dbf776066c1f9ddc3369fa993a8">viz shift+rotate to 90 deg rotates, hotkeys to select and deselect</a></td>
+<td>caudate_julie</td>
+</tr>
+<tr>
+<td>31.24</td>
+<td>24.29</td>
+<td>0.55</td>
+<td>2.27</td>
+<td></td>
+<td></td>
+<td title="WIP SSE demo
+
+"><a href="https://github.com/Vlad-Shcherbina/icfpc2021-tbd/commit/f55008baab145337e5ef845f7cfd17736e9d161a">WIP SSE demo</a></td>
+<td>Vlad Shcherbina</td>
+</tr>
+<tr>
+<td>31.48</td>
+<td>24.62</td>
+<td>0.52</td>
+<td>2.24</td>
+<td></td>
+<td></td>
+<td title="Viz visible selection boundary
+
+"><a href="https://github.com/Vlad-Shcherbina/icfpc2021-tbd/commit/a73a5789eb6d2f88445f54290ce194910a298ecf">Viz visible selection boundary</a></td>
+<td>caudate_julie</td>
+</tr>
+<tr>
+<td>30.85</td>
+<td>24.73</td>
+<td>0.54</td>
+<td>2.25</td>
+<td></td>
+<td></td>
+<td title="Fix submission through viz
+
+"><a href="https://github.com/Vlad-Shcherbina/icfpc2021-tbd/commit/aa2eff72ee44b02a869980a8770f9b3291df909f">Fix submission through viz</a></td>
+<td>Ilona</td>
+</tr>
+<tr>
+<td>31.69</td>
+<td>24.26</td>
+<td>0.53</td>
+<td>2.23</td>
+<td></td>
+<td></td>
+<td title="Viz select vertices with a selection rectangle
+
+"><a href="https://github.com/Vlad-Shcherbina/icfpc2021-tbd/commit/c9b4087084fe6efe3ad7a5d82ff58e311180fdb2">Viz select vertices with a selection rectangle</a></td>
+<td>caudate_julie</td>
+</tr>
+<tr>
+<td>31.83</td>
+<td>24.28</td>
+<td>0.53</td>
+<td>2.20</td>
+<td></td>
+<td></td>
+<td title="fix lint warning
+
+"><a href="https://github.com/Vlad-Shcherbina/icfpc2021-tbd/commit/fc1aaefccf2fe43d9d1f12f1f95307ac0c09f728">fix lint warning</a></td>
+<td>Sergey Matveev</td>
+</tr>
+<tr>
+<td>31.55</td>
+<td>23.91</td>
+<td>0.53</td>
+<td>2.25</td>
+<td></td>
+<td></td>
+<td title="Use mango logic in greedy shaker.
+
+"><a href="https://github.com/Vlad-Shcherbina/icfpc2021-tbd/commit/6ca0742f206a246f91a12a9876cdd679af7571ff">Use mango logic in greedy shaker.</a></td>
+<td>Sergey Matveev</td>
+</tr>
+<tr>
+<td>31.16</td>
+<td>24.37</td>
+<td>0.55</td>
+<td>2.30</td>
+<td></td>
+<td></td>
+<td title="nouse coordinates fixed
+
+"><a href="https://github.com/Vlad-Shcherbina/icfpc2021-tbd/commit/4591e43402be2368e4cc47c1e79d6b2e37baeb6c">nouse coordinates fixed</a></td>
+<td>caudate_julie</td>
+</tr>
+<tr>
+<td>31.37</td>
+<td>23.78</td>
+<td>0.56</td>
+<td>2.31</td>
+<td></td>
+<td></td>
+<td title="viz improved dragging
+
+"><a href="https://github.com/Vlad-Shcherbina/icfpc2021-tbd/commit/f82e2e56e3f3624f9a38c8b079334f8a852c08a2">viz improved dragging</a></td>
+<td>caudate_julie</td>
+</tr>
+<tr>
+<td>31.45</td>
+<td>23.77</td>
+<td>0.55</td>
+<td>2.29</td>
+<td></td>
+<td></td>
+<td title="Reorder functions
+
+"><a href="https://github.com/Vlad-Shcherbina/icfpc2021-tbd/commit/1083a0fa3090c16fbeb7fba72f96b96424c417a5">Reorder functions</a></td>
+<td>caudate_julie</td>
+</tr>
+<tr>
+<td>31.08</td>
+<td>23.64</td>
+<td>0.56</td>
+<td>2.28</td>
+<td></td>
+<td></td>
+<td title="Introduce bounding_box(). Fix bug in mango
+
+"><a href="https://github.com/Vlad-Shcherbina/icfpc2021-tbd/commit/25a67179df60d95db13a05d07b61fc94a08fddde">Introduce bounding_box(). Fix bug in mango</a></td>
+<td>Sergey Matveev</td>
+</tr>
+<tr>
+<td>31.44</td>
+<td>23.60</td>
+<td>0.52</td>
+<td>2.22</td>
+<td></td>
+<td></td>
+<td title="Fix warnings
+
+"><a href="https://github.com/Vlad-Shcherbina/icfpc2021-tbd/commit/ed83482cf326fdbe3df88068bb482461c4de6282">Fix warnings</a></td>
+<td>Vlad Shcherbina</td>
+</tr>
+<tr>
+<td>31.57</td>
+<td>24.53</td>
+<td>0.52</td>
+<td>2.26</td>
+<td></td>
+<td></td>
+<td title="remove legacy shadow layer
+
+"><a href="https://github.com/Vlad-Shcherbina/icfpc2021-tbd/commit/fede47e03405f6224e74240cf29129122b8a8b3f">remove legacy shadow layer</a></td>
+<td>caudate_julie</td>
+</tr>
+<tr>
+<td>30.87</td>
+<td>24.36</td>
+<td>0.56</td>
+<td>2.32</td>
+<td></td>
+<td></td>
+<td title="Problem: Foci adds too much complexity right now
+
+M/N is enough, but we keep the code in case invese kinematics will use
+it.
+
+"><a href="https://github.com/Vlad-Shcherbina/icfpc2021-tbd/commit/bc51dbf912cf93542fde0218556307ab9f88041d">Problem: Foci adds too much complexity right now</a></td>
+<td>jonn</td>
+</tr>
+<tr>
+<td>31.09</td>
+<td>24.17</td>
+<td>0.57</td>
+<td>2.30</td>
+<td></td>
+<td></td>
+<td title="Problem: pushed merge conflict broke everything
+
+Solution:
+
+Due to not saving file before running `git add` during rebase,
+I got a conflict that stayed in WC.
+
+Fucking `tsc --watch` doesn&#x27;t erase js files for which there are
+compilation errors.
+
+"><a href="https://github.com/Vlad-Shcherbina/icfpc2021-tbd/commit/d2cf61dc3de3c4aa972ebd352b0e8a49d45556d7">Problem: pushed merge conflict broke everything</a></td>
+<td>jonn</td>
+</tr>
+<tr>
+<td>31.46</td>
+<td>24.24</td>
+<td>0.53</td>
+<td>2.22</td>
+<td></td>
+<td></td>
+<td title="Problem: No way to select pivot for rotation
+
+Solution:
+
+ Pushing half-working code. `r` to enter rotation mode (if there is no
+ pivot selected, next click will ccount as pivot selection). `Shift+R`
+ clears selected pivots and clears expectation of next click being pivot
+ selection.
+
+It works except for pivot (focus) drawing, which seems to be broken.
+
+"><a href="https://github.com/Vlad-Shcherbina/icfpc2021-tbd/commit/642b36caf8396b6a226ad73904ca4c2c69ddb7d4">Problem: No way to select pivot for rotation</a></td>
+<td>jonn</td>
+</tr>
+<tr>
+<td>31.04</td>
+<td>24.56</td>
+<td>0.52</td>
+<td>2.22</td>
+<td></td>
+<td></td>
+<td title="Added bonuses fields to models
+
+"><a href="https://github.com/Vlad-Shcherbina/icfpc2021-tbd/commit/81baa995e96b2ab37abbeb5a3655a5ff488f9e1c">Added bonuses fields to models</a></td>
+<td>Ilona</td>
+</tr>
+<tr>
+<td>31.36</td>
+<td>24.39</td>
+<td>0.50</td>
+<td>2.17</td>
+<td></td>
+<td></td>
+<td title="Add greedy shaker. Assuming a valid inital configuration, it alternates
+between deterministically moving vertices to minimize dislikes, and randomly
+perturbating vertices to make space.
+
+Pose remains valid throughout, dislikes are nonincreasing.
+
+"><a href="https://github.com/Vlad-Shcherbina/icfpc2021-tbd/commit/225e55ed0d21867f62fe16255d3b2ae82267d719">Add greedy shaker. Assuming a valid inital configuration, it alternates</a></td>
+<td>Sergey Matveev</td>
+</tr>
+<tr>
+<td>30.54</td>
+<td>24.40</td>
+<td>0.50</td>
+<td>2.17</td>
+<td></td>
+<td></td>
+<td title="Re-scrape problems bc added bonuses, fix shebang
+
+"><a href="https://github.com/Vlad-Shcherbina/icfpc2021-tbd/commit/e5a26a84a95bbb9a4e00b6392465c675edc1a440">Re-scrape problems bc added bonuses, fix shebang</a></td>
+<td>Ilona</td>
+</tr>
+<tr>
+<td>31.09</td>
+<td>24.32</td>
+<td>0.51</td>
+<td>2.16</td>
+<td></td>
+<td></td>
+<td title="Fix center of mass rotation
+
+"><a href="https://github.com/Vlad-Shcherbina/icfpc2021-tbd/commit/6d0a80d546d5d8aad73fd5a83e9b7297a0e2a7f0">Fix center of mass rotation</a></td>
+<td>Ilona</td>
+</tr>
+<tr>
+<td>30.60</td>
+<td>24.22</td>
+<td>0.52</td>
+<td>2.23</td>
+<td></td>
+<td></td>
+<td title="Add rotation help text
+
+"><a href="https://github.com/Vlad-Shcherbina/icfpc2021-tbd/commit/6d36616d5a796a87d617f41d1d6358399b3ba709">Add rotation help text</a></td>
+<td>Ilona</td>
+</tr>
+<tr>
+<td>31.52</td>
+<td>23.64</td>
+<td>0.50</td>
+<td>2.16</td>
+<td></td>
+<td></td>
+<td title="Add simple centroid rotation to the viz
+
+"><a href="https://github.com/Vlad-Shcherbina/icfpc2021-tbd/commit/9545d073b2d4e547e72fc4cefbe375ee9dc42960">Add simple centroid rotation to the viz</a></td>
+<td>Ilona</td>
+</tr>
+<tr>
+<td>31.39</td>
+<td>23.86</td>
+<td>0.50</td>
+<td>2.18</td>
+<td></td>
+<td></td>
+<td title="one more shaker
+
+"><a href="https://github.com/Vlad-Shcherbina/icfpc2021-tbd/commit/b217236d4e927a37381c1309f03717aceae7c5d0">one more shaker</a></td>
+<td>Pavel.Sergeev</td>
+</tr>
+<tr>
+<td>31.22</td>
+<td>24.60</td>
+<td>0.48</td>
+<td>2.18</td>
+<td></td>
+<td></td>
+<td title="Subtler circles
+
+"><a href="https://github.com/Vlad-Shcherbina/icfpc2021-tbd/commit/5f17379052566d70e8ad9a3541ced2d53c665136">Subtler circles</a></td>
+<td>Vlad Shcherbina</td>
+</tr>
+<tr>
+<td>31.46</td>
+<td>23.71</td>
+<td>0.47</td>
+<td>2.10</td>
+<td></td>
+<td></td>
+<td title="Banana shake works on all points if none are selected
+
+"><a href="https://github.com/Vlad-Shcherbina/icfpc2021-tbd/commit/25873850186d62cbbc55da6f86bdf92466adc658">Banana shake works on all points if none are selected</a></td>
+<td>Vlad Shcherbina</td>
+</tr>
+<tr>
+<td>30.49</td>
+<td>23.78</td>
+<td>0.50</td>
+<td>2.20</td>
+<td></td>
+<td></td>
+<td title="Rename coord types for viz
+
+"><a href="https://github.com/Vlad-Shcherbina/icfpc2021-tbd/commit/dd44123fc9122cb422cfe0ca8c8802b5a3f0fafb">Rename coord types for viz</a></td>
+<td>caudate_julie</td>
+</tr>
+<tr>
+<td>30.92</td>
+<td>23.33</td>
+<td>0.49</td>
+<td>2.19</td>
+<td></td>
+<td></td>
+<td title="Ctrl+C was broken; fixed now
+
+"><a href="https://github.com/Vlad-Shcherbina/icfpc2021-tbd/commit/43f65c86c7956c27979394218f2cc547b00663d8">Ctrl+C was broken; fixed now</a></td>
+<td>caudate_julie</td>
+</tr>
+<tr>
+<td>31.49</td>
+<td>23.81</td>
+<td>0.49</td>
+<td>2.22</td>
+<td></td>
+<td></td>
+<td title="Fix zero-length edges
+
+"><a href="https://github.com/Vlad-Shcherbina/icfpc2021-tbd/commit/6f378aceb9dcd857928d328ce7686c56dbcb61f3">Fix zero-length edges</a></td>
+<td>Vlad Shcherbina</td>
+</tr>
+<tr>
+<td>32.29</td>
+<td>24.22</td>
+<td>0.49</td>
+<td>2.18</td>
+<td></td>
+<td></td>
+<td title="Viz fix dragging
+
+"><a href="https://github.com/Vlad-Shcherbina/icfpc2021-tbd/commit/4830961c30256fbed8b5a49ab7a8b3276fd3e8e9">Viz fix dragging</a></td>
+<td>caudate_julie</td>
+</tr>
+<tr>
+<td>32.41</td>
+<td>23.32</td>
+<td>0.49</td>
+<td>2.14</td>
+<td></td>
+<td></td>
+<td title="Viz allows dragging
+
+"><a href="https://github.com/Vlad-Shcherbina/icfpc2021-tbd/commit/79f1438d160fe71d4ed0dec4e33a2c208d44af21">Viz allows dragging</a></td>
+<td>caudate_julie</td>
+</tr>
+<tr>
+<td>31.74</td>
+<td>24.16</td>
+<td>0.50</td>
+<td>2.21</td>
+<td></td>
+<td></td>
+<td title="Banana shake (currently hill climbing)
+
+"><a href="https://github.com/Vlad-Shcherbina/icfpc2021-tbd/commit/c57437baec01a71658b759efa22ac55ba8aac205">Banana shake (currently hill climbing)</a></td>
+<td>Vlad Shcherbina</td>
+</tr>
+<tr>
+<td>31.29</td>
+<td>23.22</td>
+<td>0.50</td>
+<td>2.17</td>
+<td></td>
+<td></td>
+<td title="Implement point and poly rotation
+
+"><a href="https://github.com/Vlad-Shcherbina/icfpc2021-tbd/commit/f1c1a84f7c4cf296abbb12a1b1bd28f734b5f57e">Implement point and poly rotation</a></td>
+<td>Ilona</td>
+</tr>
+<tr>
+<td>31.56</td>
+<td>23.40</td>
+<td>0.49</td>
+<td>2.21</td>
+<td></td>
+<td></td>
+<td title="draw border circles with different colors
+
+"><a href="https://github.com/Vlad-Shcherbina/icfpc2021-tbd/commit/575257db2016b257a048f31271be5c9a52c008f1">draw border circles with different colors</a></td>
+<td>Pavel.Sergeev</td>
+</tr>
+<tr>
+<td>31.83</td>
+<td>24.82</td>
+<td>0.50</td>
+<td>2.19</td>
+<td></td>
+<td></td>
+<td title="Viz use Ctrl or Shift to select multiple
+
+"><a href="https://github.com/Vlad-Shcherbina/icfpc2021-tbd/commit/a3aaae943fa72697ff3153397b7f59dda60f6f31">Viz use Ctrl or Shift to select multiple</a></td>
+<td>caudate_julie</td>
+</tr>
+<tr>
+<td>31.60</td>
+<td>24.60</td>
+<td>0.50</td>
+<td>2.19</td>
+<td></td>
+<td></td>
+<td title="viz Circles are optional
+
+"><a href="https://github.com/Vlad-Shcherbina/icfpc2021-tbd/commit/5a42b06ca6eaf74585b183940917ca3273735888">viz Circles are optional</a></td>
+<td>caudate_julie</td>
+</tr>
+<tr>
+<td>31.82</td>
+<td>25.69</td>
+<td>0.54</td>
+<td>2.36</td>
+<td></td>
+<td></td>
+<td title="Support for different shake methods
+
+"><a href="https://github.com/Vlad-Shcherbina/icfpc2021-tbd/commit/406b6bfb2d3a13b2771a9eb8e6aeb0358e2fa2ed">Support for different shake methods</a></td>
+<td>Vlad Shcherbina</td>
+</tr>
+<tr>
+<td>31.61</td>
+<td>24.12</td>
+<td>0.55</td>
+<td>2.48</td>
+<td></td>
+<td></td>
+<td title="Viz show goldilocks area for edge length
+
+"><a href="https://github.com/Vlad-Shcherbina/icfpc2021-tbd/commit/5e2986c04466395ad1e6d8d0628376adca904158">Viz show goldilocks area for edge length</a></td>
+<td>caudate_julie</td>
+</tr>
+<tr>
+<td>33.43</td>
+<td>25.66</td>
+<td>0.54</td>
+<td>2.60</td>
+<td></td>
+<td></td>
+<td title="Shake tool
+
+"><a href="https://github.com/Vlad-Shcherbina/icfpc2021-tbd/commit/e3e684fec252df0d338bbd7004bcd7313382060e">Shake tool</a></td>
+<td>Vlad Shcherbina</td>
+</tr>
+<tr>
+<td>35.72</td>
+<td>27.07</td>
+<td>0.56</td>
+<td>2.83</td>
+<td></td>
+<td></td>
+<td title="viz indicates if result is valid
+
+"><a href="https://github.com/Vlad-Shcherbina/icfpc2021-tbd/commit/5c06c1d68789c7459f421f5ddb04f2d164b0a705">viz indicates if result is valid</a></td>
+<td>caudate_julie</td>
+</tr>
+<tr>
+<td>35.37</td>
+<td>27.10</td>
+<td>0.55</td>
+<td>2.74</td>
+<td></td>
+<td></td>
+<td title="Viz checks edge status on server.
+
+"><a href="https://github.com/Vlad-Shcherbina/icfpc2021-tbd/commit/35917bbe4520add0395086ab5594663674a2ed54">Viz checks edge status on server.</a></td>
+<td>caudate_julie</td>
+</tr>
+<tr>
+<td>35.34</td>
+<td>27.05</td>
+<td>0.55</td>
+<td>2.77</td>
+<td></td>
+<td></td>
+<td title="Dislikes computation, &#x27;valid&#x27; field
+
+"><a href="https://github.com/Vlad-Shcherbina/icfpc2021-tbd/commit/394544885bacf745f4a9adf9f2200f62de70719f">Dislikes computation, 'valid' field</a></td>
+<td>Vlad Shcherbina</td>
+</tr>
+<tr>
+<td>35.58</td>
+<td>27.24</td>
+<td>0.56</td>
+<td>2.81</td>
+<td></td>
+<td></td>
+<td title="put together all changes of the figure
+
+"><a href="https://github.com/Vlad-Shcherbina/icfpc2021-tbd/commit/8cd79edc6ffa39f81952a75551e1e8a028c62d81">put together all changes of the figure</a></td>
+<td>caudate_julie</td>
+</tr>
+<tr>
+<td>35.42</td>
+<td>27.24</td>
+<td>0.56</td>
+<td>2.82</td>
+<td></td>
+<td></td>
+<td title="Actual constraints checker
+
+"><a href="https://github.com/Vlad-Shcherbina/icfpc2021-tbd/commit/0e18b99170f01c6ab5228e88af1bbd652da8a901">Actual constraints checker</a></td>
+<td>Vlad Shcherbina</td>
+</tr>
+<tr>
+<td>35.74</td>
+<td>27.24</td>
+<td>0.56</td>
+<td>2.83</td>
+<td></td>
+<td></td>
+<td title="Placeholder for /check_pose endpoint
+
+"><a href="https://github.com/Vlad-Shcherbina/icfpc2021-tbd/commit/e5dd8a994dc4bfc784e51e17df691b504a2b255e">Placeholder for /check_pose endpoint</a></td>
+<td>Vlad Shcherbina</td>
+</tr>
+<tr>
+<td>35.35</td>
+<td>26.82</td>
+<td>0.54</td>
+<td>2.74</td>
+<td></td>
+<td></td>
+<td title="Actually submit
+
+"><a href="https://github.com/Vlad-Shcherbina/icfpc2021-tbd/commit/82b4ce04efbf448479b0947345c571e55fee7e64">Actually submit</a></td>
+<td>Vlad Shcherbina</td>
+</tr>
+<tr>
+<td>35.23</td>
+<td>27.19</td>
+<td>0.55</td>
+<td>2.77</td>
+<td></td>
+<td></td>
+<td title="Handle rate limit when submitting
+
+"><a href="https://github.com/Vlad-Shcherbina/icfpc2021-tbd/commit/795557224241b743f7f299b41028191af5b45cd0">Handle rate limit when submitting</a></td>
+<td>Vlad Shcherbina</td>
+</tr>
+<tr>
+<td>35.36</td>
+<td>26.67</td>
+<td>0.54</td>
+<td>2.75</td>
+<td></td>
+<td></td>
+<td title="Visualizer layout
+
+"><a href="https://github.com/Vlad-Shcherbina/icfpc2021-tbd/commit/ce6b370de53c1f8d1f15fd2c657f63c63944f917">Visualizer layout</a></td>
+<td>Vlad Shcherbina</td>
+</tr>
+<tr>
+<td>35.24</td>
+<td>27.02</td>
+<td>0.56</td>
+<td>2.76</td>
+<td></td>
+<td></td>
+<td title="Mock submit button
+
+"><a href="https://github.com/Vlad-Shcherbina/icfpc2021-tbd/commit/1b9f3175b050bd6cb399fd6199ac1a49abda76ae">Mock submit button</a></td>
+<td>Vlad Shcherbina</td>
+</tr>
+<tr>
+<td>35.34</td>
+<td>26.79</td>
+<td>0.54</td>
+<td>2.76</td>
+<td></td>
+<td></td>
+<td title="Viz server in Rust
+
+"><a href="https://github.com/Vlad-Shcherbina/icfpc2021-tbd/commit/8a3e7e3a7adb3798ffefb6141dc20fe2e2f92746">Viz server in Rust</a></td>
+<td>Vlad Shcherbina</td>
+</tr>
+<tr>
+<td>35.57</td>
+<td>26.93</td>
+<td>0.53</td>
+<td>2.72</td>
+<td></td>
+<td></td>
+<td title="New batch of problems
+
+"><a href="https://github.com/Vlad-Shcherbina/icfpc2021-tbd/commit/47843a736d02039ff3c78fd17323df39023a4ac0">New batch of problems</a></td>
+<td>Vlad Shcherbina</td>
+</tr>
+<tr>
+<td>35.30</td>
+<td>26.98</td>
+<td>0.54</td>
+<td>2.79</td>
+<td title="diff --git a/Cargo.toml b/Cargo.toml
+index e794618..120f0ad 100644
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -13,4 +13,4 @@ serde_json = &quot;*&quot;
+ rand = &quot;*&quot;
+ simple-server = &quot;0.4.0&quot;
+ chrono = { version = &quot;0.4&quot;, features = [&quot;serde&quot;] }
+-ureq = { version = &quot;*&quot;, default-features = false, features = [&quot;tls&quot;] }
++ureq = { version = &quot;*&quot;, default-features = false, features = [&quot;tls&quot;, &quot;cookies&quot;] }
+">toml</td>
+<td title="diff --git a/Cargo.lock b/Cargo.lock
+index 3cd815a..74c1698 100644
+--- a/Cargo.lock
++++ b/Cargo.lock
+@@ -8,6 +8,12 @@ version = &quot;1.0.1&quot;
+ source = &quot;registry+https://github.com/rust-lang/crates.io-index&quot;
+ checksum = &quot;cdb031dd78e28731d87d56cc8ffef4a8f36ca26c38fe2de700543e627f8a464a&quot;
+ 
++[[package]]
++name = &quot;base-x&quot;
++version = &quot;0.2.8&quot;
++source = &quot;registry+https://github.com/rust-lang/crates.io-index&quot;
++checksum = &quot;a4521f3e3d031370679b3b140beb36dfe4801b09ac77e30c61941f97df3ef28b&quot;
++
+ [[package]]
+ name = &quot;base64&quot;
+ version = &quot;0.13.0&quot;
+@@ -58,7 +64,7 @@ dependencies = [
+  &quot;num-integer&quot;,
+  &quot;num-traits&quot;,
+  &quot;serde&quot;,
+- &quot;time&quot;,
++ &quot;time 0.1.44&quot;,
+  &quot;winapi&quot;,
+ ]
+ 
+@@ -68,6 +74,46 @@ version = &quot;1.4.0&quot;
+ source = &quot;registry+https://github.com/rust-lang/crates.io-index&quot;
+ checksum = &quot;fff857943da45f546682664a79488be82e69e43c1a7a2307679ab9afb3a66d2e&quot;
+ 
++[[package]]
++name = &quot;const_fn&quot;
++version = &quot;0.4.8&quot;
++source = &quot;registry+https://github.com/rust-lang/crates.io-index&quot;
++checksum = &quot;f92cfa0fd5690b3cf8c1ef2cabbd9b7ef22fa53cf5e1f92b05103f6d5d1cf6e7&quot;
++
++[[package]]
++name = &quot;cookie&quot;
++version = &quot;0.15.0&quot;
++source = &quot;registry+https://github.com/rust-lang/crates.io-index&quot;
++checksum = &quot;ffdf8865bac3d9a3bde5bde9088ca431b11f5d37c7a578b8086af77248b76627&quot;
++dependencies = [
++ &quot;percent-encoding&quot;,
++ &quot;time 0.2.27&quot;,
++ &quot;version_check&quot;,
++]
++
++[[package]]
++name = &quot;cookie_store&quot;
++version = &quot;0.13.3&quot;
++source = &quot;registry+https://github.com/rust-lang/crates.io-index&quot;
++checksum = &quot;ca21c99a5abebf846694789d9dc5a3d2d6ff638d44b1bc782c3560eb5e2fcd0e&quot;
++dependencies = [
++ &quot;cookie&quot;,
++ &quot;idna&quot;,
++ &quot;indexmap&quot;,
++ &quot;log 0.4.14&quot;,
++ &quot;publicsuffix&quot;,
++ &quot;serde&quot;,
++ &quot;serde_json&quot;,
++ &quot;time 0.2.27&quot;,
++ &quot;url&quot;,
++]
++
++[[package]]
++name = &quot;discard&quot;
++version = &quot;1.0.4&quot;
++source = &quot;registry+https://github.com/rust-lang/crates.io-index&quot;
++checksum = &quot;212d0f5754cb6769937f4501cc0e67f4f4483c8d2c3e1e922ee9edbe4ab4c7c0&quot;
++
+ [[package]]
+ name = &quot;fnv&quot;
+ version = &quot;1.0.7&quot;
+@@ -95,6 +141,12 @@ dependencies = [
+  &quot;wasi&quot;,
+ ]
+ 
++[[package]]
++name = &quot;hashbrown&quot;
++version = &quot;0.11.2&quot;
++source = &quot;registry+https://github.com/rust-lang/crates.io-index&quot;
++checksum = &quot;ab5ef0d4909ef3724cc8cce6ccc8572c5c817592e9285f5464f8e86f8bd3726e&quot;
++
+ [[package]]
+ name = &quot;hermit-abi&quot;
+ version = &quot;0.1.19&quot;
+@@ -146,6 +198,16 @@ dependencies = [
+  &quot;unicode-normalization&quot;,
+ ]
+ 
++[[package]]
++name = &quot;indexmap&quot;
++version = &quot;1.7.0&quot;
++source = &quot;registry+https://github.com/rust-lang/crates.io-index&quot;
++checksum = &quot;bc633605454125dec4b66843673f01c7df2b89479b32e0ed634e43a91cff62a5&quot;
++dependencies = [
++ &quot;autocfg&quot;,
++ &quot;hashbrown&quot;,
++]
++
+ [[package]]
+ name = &quot;iovec&quot;
+ version = &quot;0.1.4&quot;
+@@ -273,6 +335,12 @@ version = &quot;0.2.10&quot;
+ source = &quot;registry+https://github.com/rust-lang/crates.io-index&quot;
+ checksum = &quot;ac74c624d6b2d21f425f752262f42188365d7b8ff1aff74c82e45136510a4857&quot;
+ 
++[[package]]
++name = &quot;proc-macro-hack&quot;
++version = &quot;0.5.19&quot;
++source = &quot;registry+https://github.com/rust-lang/crates.io-index&quot;
++checksum = &quot;dbf0c48bc1d91375ae5c3cd81e3722dff1abcf81a30960240640d223f59fe0e5&quot;
++
+ [[package]]
+ name = &quot;proc-macro2&quot;
+ version = &quot;1.0.27&quot;
+@@ -282,6 +350,16 @@ dependencies = [
+  &quot;unicode-xid&quot;,
+ ]
+ 
++[[package]]
++name = &quot;publicsuffix&quot;
++version = &quot;1.5.6&quot;
++source = &quot;registry+https://github.com/rust-lang/crates.io-index&quot;
++checksum = &quot;95b4ce31ff0a27d93c8de1849cf58162283752f065a90d508f1105fa6c9a213f&quot;
++dependencies = [
++ &quot;idna&quot;,
++ &quot;url&quot;,
++]
++
+ [[package]]
+ name = &quot;quote&quot;
+ version = &quot;1.0.9&quot;
+@@ -346,6 +424,15 @@ dependencies = [
+  &quot;winapi&quot;,
+ ]
+ 
++[[package]]
++name = &quot;rustc_version&quot;
++version = &quot;0.2.3&quot;
++source = &quot;registry+https://github.com/rust-lang/crates.io-index&quot;
++checksum = &quot;138e3e0acb6c9fb258b19b67cb8abd63c00679d2851805ea151465464fe9030a&quot;
++dependencies = [
++ &quot;semver&quot;,
++]
++
+ [[package]]
+ name = &quot;rustls&quot;
+ version = &quot;0.19.1&quot;
+@@ -381,6 +468,21 @@ dependencies = [
+  &quot;untrusted&quot;,
+ ]
+ 
++[[package]]
++name = &quot;semver&quot;
++version = &quot;0.9.0&quot;
++source = &quot;registry+https://github.com/rust-lang/crates.io-index&quot;
++checksum = &quot;1d7eb9ef2c18661902cc47e535f9bc51b78acd254da71d375c2f6720d9a40403&quot;
++dependencies = [
++ &quot;semver-parser&quot;,
++]
++
++[[package]]
++name = &quot;semver-parser&quot;
++version = &quot;0.7.0&quot;
++source = &quot;registry+https://github.com/rust-lang/crates.io-index&quot;
++checksum = &quot;388a1df253eca08550bef6c72392cfe7c30914bf41df5269b68cbd6ff8f570a3&quot;
++
+ [[package]]
+ name = &quot;serde&quot;
+ version = &quot;1.0.126&quot;
+@@ -412,6 +514,12 @@ dependencies = [
+  &quot;serde&quot;,
+ ]
+ 
++[[package]]
++name = &quot;sha1&quot;
++version = &quot;0.6.0&quot;
++source = &quot;registry+https://github.com/rust-lang/crates.io-index&quot;
++checksum = &quot;2579985fda508104f7587689507983eadd6a6e84dd35d6d115361f530916fa0d&quot;
++
+ [[package]]
+ name = &quot;simple-server&quot;
+ version = &quot;0.4.0&quot;
+@@ -423,7 +531,7 @@ dependencies = [
+  &quot;log 0.3.9&quot;,
+  &quot;num_cpus&quot;,
+  &quot;scoped_threadpool&quot;,
+- &quot;time&quot;,
++ &quot;time 0.1.44&quot;,
+ ]
+ 
+ [[package]]
+@@ -432,6 +540,64 @@ version = &quot;0.5.2&quot;
+ source = &quot;registry+https://github.com/rust-lang/crates.io-index&quot;
+ checksum = &quot;6e63cff320ae2c57904679ba7cb63280a3dc4613885beafb148ee7bf9aa9042d&quot;
+ 
++[[package]]
++name = &quot;standback&quot;
++version = &quot;0.2.17&quot;
++source = &quot;registry+https://github.com/rust-lang/crates.io-index&quot;
++checksum = &quot;e113fb6f3de07a243d434a56ec6f186dfd51cb08448239fe7bcae73f87ff28ff&quot;
++dependencies = [
++ &quot;version_check&quot;,
++]
++
++[[package]]
++name = &quot;stdweb&quot;
++version = &quot;0.4.20&quot;
++source = &quot;registry+https://github.com/rust-lang/crates.io-index&quot;
++checksum = &quot;d022496b16281348b52d0e30ae99e01a73d737b2f45d38fed4edf79f9325a1d5&quot;
++dependencies = [
++ &quot;discard&quot;,
++ &quot;rustc_version&quot;,
++ &quot;stdweb-derive&quot;,
++ &quot;stdweb-internal-macros&quot;,
++ &quot;stdweb-internal-runtime&quot;,
++ &quot;wasm-bindgen&quot;,
++]
++
++[[package]]
++name = &quot;stdweb-derive&quot;
++version = &quot;0.5.3&quot;
++source = &quot;registry+https://github.com/rust-lang/crates.io-index&quot;
++checksum = &quot;c87a60a40fccc84bef0652345bbbbbe20a605bf5d0ce81719fc476f5c03b50ef&quot;
++dependencies = [
++ &quot;proc-macro2&quot;,
++ &quot;quote&quot;,
++ &quot;serde&quot;,
++ &quot;serde_derive&quot;,
++ &quot;syn&quot;,
++]
++
++[[package]]
++name = &quot;stdweb-internal-macros&quot;
++version = &quot;0.2.9&quot;
++source = &quot;registry+https://github.com/rust-lang/crates.io-index&quot;
++checksum = &quot;58fa5ff6ad0d98d1ffa8cb115892b6e69d67799f6763e162a1c9db421dc22e11&quot;
++dependencies = [
++ &quot;base-x&quot;,
++ &quot;proc-macro2&quot;,
++ &quot;quote&quot;,
++ &quot;serde&quot;,
++ &quot;serde_derive&quot;,
++ &quot;serde_json&quot;,
++ &quot;sha1&quot;,
++ &quot;syn&quot;,
++]
++
++[[package]]
++name = &quot;stdweb-internal-runtime&quot;
++version = &quot;0.1.5&quot;
++source = &quot;registry+https://github.com/rust-lang/crates.io-index&quot;
++checksum = &quot;213701ba3370744dcd1a12960caa4843b3d68b4d1c0a5d575e0d65b2ee9d16c0&quot;
++
+ [[package]]
+ name = &quot;syn&quot;
+ version = &quot;1.0.73&quot;
+@@ -454,6 +620,44 @@ dependencies = [
+  &quot;winapi&quot;,
+ ]
+ 
++[[package]]
++name = &quot;time&quot;
++version = &quot;0.2.27&quot;
++source = &quot;registry+https://github.com/rust-lang/crates.io-index&quot;
++checksum = &quot;4752a97f8eebd6854ff91f1c1824cd6160626ac4bd44287f7f4ea2035a02a242&quot;
++dependencies = [
++ &quot;const_fn&quot;,
++ &quot;libc&quot;,
++ &quot;standback&quot;,
++ &quot;stdweb&quot;,
++ &quot;time-macros&quot;,
++ &quot;version_check&quot;,
++ &quot;winapi&quot;,
++]
++
++[[package]]
++name = &quot;time-macros&quot;
++version = &quot;0.1.1&quot;
++source = &quot;registry+https://github.com/rust-lang/crates.io-index&quot;
++checksum = &quot;957e9c6e26f12cb6d0dd7fc776bb67a706312e7299aed74c8dd5b17ebb27e2f1&quot;
++dependencies = [
++ &quot;proc-macro-hack&quot;,
++ &quot;time-macros-impl&quot;,
++]
++
++[[package]]
++name = &quot;time-macros-impl&quot;
++version = &quot;0.1.2&quot;
++source = &quot;registry+https://github.com/rust-lang/crates.io-index&quot;
++checksum = &quot;fd3c141a1b43194f3f56a1411225df8646c55781d5f26db825b3d98507eb482f&quot;
++dependencies = [
++ &quot;proc-macro-hack&quot;,
++ &quot;proc-macro2&quot;,
++ &quot;quote&quot;,
++ &quot;standback&quot;,
++ &quot;syn&quot;,
++]
++
+ [[package]]
+ name = &quot;tinyvec&quot;
+ version = &quot;1.2.0&quot;
+@@ -507,6 +711,8 @@ checksum = &quot;2475a6781e9bc546e7b64f4013d2f4032c8c6a40fcffd7c6f4ee734a890972ab&quot;
+ dependencies = [
+  &quot;base64&quot;,
+  &quot;chunked_transfer&quot;,
++ &quot;cookie&quot;,
++ &quot;cookie_store&quot;,
+  &quot;log 0.4.14&quot;,
+  &quot;once_cell&quot;,
+  &quot;rustls&quot;,
+@@ -527,6 +733,12 @@ dependencies = [
+  &quot;percent-encoding&quot;,
+ ]
+ 
++[[package]]
++name = &quot;version_check&quot;
++version = &quot;0.9.3&quot;
++source = &quot;registry+https://github.com/rust-lang/crates.io-index&quot;
++checksum = &quot;5fecdca9a5291cc2b8dcf7dc02453fee791a280f3743cb0905f8822ae463b3fe&quot;
++
+ [[package]]
+ name = &quot;wasi&quot;
+ version = &quot;0.10.0+wasi-snapshot-preview1&quot;
+">lock</td>
+<td title="login and get problem page from orgs site
+
+"><a href="https://github.com/Vlad-Shcherbina/icfpc2021-tbd/commit/46de6195e3fdf7928b3972b6d7ac6b3a4dc3d161">login and get problem page from orgs site</a></td>
+<td>caudate_julie</td>
+</tr>
+<tr>
+<td>30.54</td>
+<td>23.60</td>
+<td>0.51</td>
+<td>2.46</td>
+<td></td>
+<td></td>
+<td title="API client: submit pose
+
+"><a href="https://github.com/Vlad-Shcherbina/icfpc2021-tbd/commit/08f8c52912eb710d0c4be0b391ff541fa32924e2">API client: submit pose</a></td>
+<td>Vlad Shcherbina</td>
+</tr>
+<tr>
+<td>30.26</td>
+<td>23.81</td>
+<td>0.51</td>
+<td>2.51</td>
+<td></td>
+<td></td>
+<td title="fix rigidity calculation in random.rs
+
+"><a href="https://github.com/Vlad-Shcherbina/icfpc2021-tbd/commit/6986b002900f3c0cdcdf833b80a9e5f8348a8ef9">fix rigidity calculation in random.rs</a></td>
+<td>Sergey Matveev</td>
+</tr>
+<tr>
+<td>30.76</td>
+<td>23.86</td>
+<td>0.51</td>
+<td>2.46</td>
+<td></td>
+<td></td>
+<td title="Problem: no way to make rotations
+
+Solution:
+
+ 1. Introduce global variable `foci`. It will be later on used for
+    rotation and other operations that require a target or multiple
+    targets.
+
+ 2. Start writing closest_grid_vertex, but fail because fuck knows
+    which out of the THREE coordinate systems we&#x27;re using
+    (A. browser, B. canvas, C. game)
+
+ 3. At least implement `select_focus` in a way that makes sense
+    from the standpoint of types.
+
+ 4. Lay ground for communication with the server by adding POST
+    handler to my scratch (run with `cargo run manpages/http`).
+
+"><a href="https://github.com/Vlad-Shcherbina/icfpc2021-tbd/commit/5a5c0961c332f09921632276ba9ded2476a12530">Problem: no way to make rotations</a></td>
+<td>jonn</td>
+</tr>
+<tr>
+<td>30.51</td>
+<td>23.83</td>
+<td>0.51</td>
+<td>2.52</td>
+<td></td>
+<td></td>
+<td title="allow multi vertex selection with meta too
+
+"><a href="https://github.com/Vlad-Shcherbina/icfpc2021-tbd/commit/aa144f9b84c0e4932698625d3628d614273d2988">allow multi vertex selection with meta too</a></td>
+<td>Pavel.Sergeev</td>
+</tr>
+<tr>
+<td>30.55</td>
+<td>24.09</td>
+<td>0.51</td>
+<td>2.48</td>
+<td></td>
+<td></td>
+<td title="Clippy
+
+"><a href="https://github.com/Vlad-Shcherbina/icfpc2021-tbd/commit/c2d663ff192b0fef24d179bc1fa8f9b581688766">Clippy</a></td>
+<td>Vlad Shcherbina</td>
+</tr>
+<tr>
+<td>30.71</td>
+<td>24.23</td>
+<td>0.54</td>
+<td>2.57</td>
+<td title="diff --git a/Cargo.toml b/Cargo.toml
+index f09c7cf..e794618 100644
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -13,3 +13,4 @@ serde_json = &quot;*&quot;
+ rand = &quot;*&quot;
+ simple-server = &quot;0.4.0&quot;
+ chrono = { version = &quot;0.4&quot;, features = [&quot;serde&quot;] }
++ureq = { version = &quot;*&quot;, default-features = false, features = [&quot;tls&quot;] }
+">toml</td>
+<td title="diff --git a/Cargo.lock b/Cargo.lock
+index d03316b..3cd815a 100644
+--- a/Cargo.lock
++++ b/Cargo.lock
+@@ -8,6 +8,18 @@ version = &quot;1.0.1&quot;
+ source = &quot;registry+https://github.com/rust-lang/crates.io-index&quot;
+ checksum = &quot;cdb031dd78e28731d87d56cc8ffef4a8f36ca26c38fe2de700543e627f8a464a&quot;
+ 
++[[package]]
++name = &quot;base64&quot;
++version = &quot;0.13.0&quot;
++source = &quot;registry+https://github.com/rust-lang/crates.io-index&quot;
++checksum = &quot;904dfeac50f3cdaba28fc6f57fdcddb75f49ed61346676a78c4ffe55877802fd&quot;
++
++[[package]]
++name = &quot;bumpalo&quot;
++version = &quot;3.7.0&quot;
++source = &quot;registry+https://github.com/rust-lang/crates.io-index&quot;
++checksum = &quot;9c59e7af012c713f529e7a3ee57ce9b31ddd858d4b512923602f74608b009631&quot;
++
+ [[package]]
+ name = &quot;byteorder&quot;
+ version = &quot;1.4.3&quot;
+@@ -24,6 +36,12 @@ dependencies = [
+  &quot;iovec&quot;,
+ ]
+ 
++[[package]]
++name = &quot;cc&quot;
++version = &quot;1.0.68&quot;
++source = &quot;registry+https://github.com/rust-lang/crates.io-index&quot;
++checksum = &quot;4a72c244c1ff497a746a7e1fb3d14bd08420ecda70c8f25c7112f2781652d787&quot;
++
+ [[package]]
+ name = &quot;cfg-if&quot;
+ version = &quot;1.0.0&quot;
+@@ -44,12 +62,28 @@ dependencies = [
+  &quot;winapi&quot;,
+ ]
+ 
++[[package]]
++name = &quot;chunked_transfer&quot;
++version = &quot;1.4.0&quot;
++source = &quot;registry+https://github.com/rust-lang/crates.io-index&quot;
++checksum = &quot;fff857943da45f546682664a79488be82e69e43c1a7a2307679ab9afb3a66d2e&quot;
++
+ [[package]]
+ name = &quot;fnv&quot;
+ version = &quot;1.0.7&quot;
+ source = &quot;registry+https://github.com/rust-lang/crates.io-index&quot;
+ checksum = &quot;3f9eec918d3f24069decb9af1554cad7c880e2da24a9afd88aca000531ab82c1&quot;
+ 
++[[package]]
++name = &quot;form_urlencoded&quot;
++version = &quot;1.0.1&quot;
++source = &quot;registry+https://github.com/rust-lang/crates.io-index&quot;
++checksum = &quot;5fc25a87fa4fd2094bffb06925852034d90a17f0d1e05197d4956d3555752191&quot;
++dependencies = [
++ &quot;matches&quot;,
++ &quot;percent-encoding&quot;,
++]
++
+ [[package]]
+ name = &quot;getrandom&quot;
+ version = &quot;0.2.3&quot;
+@@ -98,6 +132,18 @@ dependencies = [
+  &quot;serde&quot;,
+  &quot;serde_json&quot;,
+  &quot;simple-server&quot;,
++ &quot;ureq&quot;,
++]
++
++[[package]]
++name = &quot;idna&quot;
++version = &quot;0.2.3&quot;
++source = &quot;registry+https://github.com/rust-lang/crates.io-index&quot;
++checksum = &quot;418a0a6fab821475f634efe3ccc45c013f742efe03d853e8d3355d5cb850ecf8&quot;
++dependencies = [
++ &quot;matches&quot;,
++ &quot;unicode-bidi&quot;,
++ &quot;unicode-normalization&quot;,
+ ]
+ 
+ [[package]]
+@@ -115,6 +161,21 @@ version = &quot;0.4.7&quot;
+ source = &quot;registry+https://github.com/rust-lang/crates.io-index&quot;
+ checksum = &quot;dd25036021b0de88a0aff6b850051563c6516d0bf53f8638938edbb9de732736&quot;
+ 
++[[package]]
++name = &quot;js-sys&quot;
++version = &quot;0.3.51&quot;
++source = &quot;registry+https://github.com/rust-lang/crates.io-index&quot;
++checksum = &quot;83bdfbace3a0e81a4253f73b49e960b053e396a11012cbd49b9b74d6a2b67062&quot;
++dependencies = [
++ &quot;wasm-bindgen&quot;,
++]
++
++[[package]]
++name = &quot;lazy_static&quot;
++version = &quot;1.4.0&quot;
++source = &quot;registry+https://github.com/rust-lang/crates.io-index&quot;
++checksum = &quot;e2abad23fbc42b3700f2f279844dc832adb2b2eb069b2df918f455c4e18cc646&quot;
++
+ [[package]]
+ name = &quot;libc&quot;
+ version = &quot;0.2.98&quot;
+@@ -159,6 +220,12 @@ dependencies = [
+  &quot;cfg-if&quot;,
+ ]
+ 
++[[package]]
++name = &quot;matches&quot;
++version = &quot;0.1.8&quot;
++source = &quot;registry+https://github.com/rust-lang/crates.io-index&quot;
++checksum = &quot;7ffc5c5338469d4d3ea17d269fa8ea3512ad247247c30bd2df69e68309ed0a08&quot;
++
+ [[package]]
+ name = &quot;num-integer&quot;
+ version = &quot;0.1.44&quot;
+@@ -188,6 +255,18 @@ dependencies = [
+  &quot;libc&quot;,
+ ]
+ 
++[[package]]
++name = &quot;once_cell&quot;
++version = &quot;1.8.0&quot;
++source = &quot;registry+https://github.com/rust-lang/crates.io-index&quot;
++checksum = &quot;692fcb63b64b1758029e0a96ee63e049ce8c5948587f2f7208df04625e5f6b56&quot;
++
++[[package]]
++name = &quot;percent-encoding&quot;
++version = &quot;2.1.0&quot;
++source = &quot;registry+https://github.com/rust-lang/crates.io-index&quot;
++checksum = &quot;d4fd5641d01c8f18a23da7b6fe29298ff4b55afcccdf78973b24cf3175fee32e&quot;
++
+ [[package]]
+ name = &quot;ppv-lite86&quot;
+ version = &quot;0.2.10&quot;
+@@ -252,6 +331,34 @@ dependencies = [
+  &quot;rand_core&quot;,
+ ]
+ 
++[[package]]
++name = &quot;ring&quot;
++version = &quot;0.16.20&quot;
++source = &quot;registry+https://github.com/rust-lang/crates.io-index&quot;
++checksum = &quot;3053cf52e236a3ed746dfc745aa9cacf1b791d846bdaf412f60a8d7d6e17c8fc&quot;
++dependencies = [
++ &quot;cc&quot;,
++ &quot;libc&quot;,
++ &quot;once_cell&quot;,
++ &quot;spin&quot;,
++ &quot;untrusted&quot;,
++ &quot;web-sys&quot;,
++ &quot;winapi&quot;,
++]
++
++[[package]]
++name = &quot;rustls&quot;
++version = &quot;0.19.1&quot;
++source = &quot;registry+https://github.com/rust-lang/crates.io-index&quot;
++checksum = &quot;35edb675feee39aec9c99fa5ff985081995a06d594114ae14cbe797ad7b7a6d7&quot;
++dependencies = [
++ &quot;base64&quot;,
++ &quot;log 0.4.14&quot;,
++ &quot;ring&quot;,
++ &quot;sct&quot;,
++ &quot;webpki&quot;,
++]
++
+ [[package]]
+ name = &quot;ryu&quot;
+ version = &quot;1.0.5&quot;
+@@ -264,6 +371,16 @@ version = &quot;0.1.9&quot;
+ source = &quot;registry+https://github.com/rust-lang/crates.io-index&quot;
+ checksum = &quot;1d51f5df5af43ab3f1360b429fa5e0152ac5ce8c0bd6485cae490332e96846a8&quot;
+ 
++[[package]]
++name = &quot;sct&quot;
++version = &quot;0.6.1&quot;
++source = &quot;registry+https://github.com/rust-lang/crates.io-index&quot;
++checksum = &quot;b362b83898e0e69f38515b82ee15aa80636befe47c3b6d3d89a911e78fc228ce&quot;
++dependencies = [
++ &quot;ring&quot;,
++ &quot;untrusted&quot;,
++]
++
+ [[package]]
+ name = &quot;serde&quot;
+ version = &quot;1.0.126&quot;
+@@ -309,6 +426,12 @@ dependencies = [
+  &quot;time&quot;,
+ ]
+ 
++[[package]]
++name = &quot;spin&quot;
++version = &quot;0.5.2&quot;
++source = &quot;registry+https://github.com/rust-lang/crates.io-index&quot;
++checksum = &quot;6e63cff320ae2c57904679ba7cb63280a3dc4613885beafb148ee7bf9aa9042d&quot;
++
+ [[package]]
+ name = &quot;syn&quot;
+ version = &quot;1.0.73&quot;
+@@ -331,18 +454,168 @@ dependencies = [
+  &quot;winapi&quot;,
+ ]
+ 
++[[package]]
++name = &quot;tinyvec&quot;
++version = &quot;1.2.0&quot;
++source = &quot;registry+https://github.com/rust-lang/crates.io-index&quot;
++checksum = &quot;5b5220f05bb7de7f3f53c7c065e1199b3172696fe2db9f9c4d8ad9b4ee74c342&quot;
++dependencies = [
++ &quot;tinyvec_macros&quot;,
++]
++
++[[package]]
++name = &quot;tinyvec_macros&quot;
++version = &quot;0.1.0&quot;
++source = &quot;registry+https://github.com/rust-lang/crates.io-index&quot;
++checksum = &quot;cda74da7e1a664f795bb1f8a87ec406fb89a02522cf6e50620d016add6dbbf5c&quot;
++
++[[package]]
++name = &quot;unicode-bidi&quot;
++version = &quot;0.3.5&quot;
++source = &quot;registry+https://github.com/rust-lang/crates.io-index&quot;
++checksum = &quot;eeb8be209bb1c96b7c177c7420d26e04eccacb0eeae6b980e35fcb74678107e0&quot;
++dependencies = [
++ &quot;matches&quot;,
++]
++
++[[package]]
++name = &quot;unicode-normalization&quot;
++version = &quot;0.1.19&quot;
++source = &quot;registry+https://github.com/rust-lang/crates.io-index&quot;
++checksum = &quot;d54590932941a9e9266f0832deed84ebe1bf2e4c9e4a3554d393d18f5e854bf9&quot;
++dependencies = [
++ &quot;tinyvec&quot;,
++]
++
+ [[package]]
+ name = &quot;unicode-xid&quot;
+ version = &quot;0.2.2&quot;
+ source = &quot;registry+https://github.com/rust-lang/crates.io-index&quot;
+ checksum = &quot;8ccb82d61f80a663efe1f787a51b16b5a51e3314d6ac365b08639f52387b33f3&quot;
+ 
++[[package]]
++name = &quot;untrusted&quot;
++version = &quot;0.7.1&quot;
++source = &quot;registry+https://github.com/rust-lang/crates.io-index&quot;
++checksum = &quot;a156c684c91ea7d62626509bce3cb4e1d9ed5c4d978f7b4352658f96a4c26b4a&quot;
++
++[[package]]
++name = &quot;ureq&quot;
++version = &quot;2.1.1&quot;
++source = &quot;registry+https://github.com/rust-lang/crates.io-index&quot;
++checksum = &quot;2475a6781e9bc546e7b64f4013d2f4032c8c6a40fcffd7c6f4ee734a890972ab&quot;
++dependencies = [
++ &quot;base64&quot;,
++ &quot;chunked_transfer&quot;,
++ &quot;log 0.4.14&quot;,
++ &quot;once_cell&quot;,
++ &quot;rustls&quot;,
++ &quot;url&quot;,
++ &quot;webpki&quot;,
++ &quot;webpki-roots&quot;,
++]
++
++[[package]]
++name = &quot;url&quot;
++version = &quot;2.2.2&quot;
++source = &quot;registry+https://github.com/rust-lang/crates.io-index&quot;
++checksum = &quot;a507c383b2d33b5fc35d1861e77e6b383d158b2da5e14fe51b83dfedf6fd578c&quot;
++dependencies = [
++ &quot;form_urlencoded&quot;,
++ &quot;idna&quot;,
++ &quot;matches&quot;,
++ &quot;percent-encoding&quot;,
++]
++
+ [[package]]
+ name = &quot;wasi&quot;
+ version = &quot;0.10.0+wasi-snapshot-preview1&quot;
+ source = &quot;registry+https://github.com/rust-lang/crates.io-index&quot;
+ checksum = &quot;1a143597ca7c7793eff794def352d41792a93c481eb1042423ff7ff72ba2c31f&quot;
+ 
++[[package]]
++name = &quot;wasm-bindgen&quot;
++version = &quot;0.2.74&quot;
++source = &quot;registry+https://github.com/rust-lang/crates.io-index&quot;
++checksum = &quot;d54ee1d4ed486f78874278e63e4069fc1ab9f6a18ca492076ffb90c5eb2997fd&quot;
++dependencies = [
++ &quot;cfg-if&quot;,
++ &quot;wasm-bindgen-macro&quot;,
++]
++
++[[package]]
++name = &quot;wasm-bindgen-backend&quot;
++version = &quot;0.2.74&quot;
++source = &quot;registry+https://github.com/rust-lang/crates.io-index&quot;
++checksum = &quot;3b33f6a0694ccfea53d94db8b2ed1c3a8a4c86dd936b13b9f0a15ec4a451b900&quot;
++dependencies = [
++ &quot;bumpalo&quot;,
++ &quot;lazy_static&quot;,
++ &quot;log 0.4.14&quot;,
++ &quot;proc-macro2&quot;,
++ &quot;quote&quot;,
++ &quot;syn&quot;,
++ &quot;wasm-bindgen-shared&quot;,
++]
++
++[[package]]
++name = &quot;wasm-bindgen-macro&quot;
++version = &quot;0.2.74&quot;
++source = &quot;registry+https://github.com/rust-lang/crates.io-index&quot;
++checksum = &quot;088169ca61430fe1e58b8096c24975251700e7b1f6fd91cc9d59b04fb9b18bd4&quot;
++dependencies = [
++ &quot;quote&quot;,
++ &quot;wasm-bindgen-macro-support&quot;,
++]
++
++[[package]]
++name = &quot;wasm-bindgen-macro-support&quot;
++version = &quot;0.2.74&quot;
++source = &quot;registry+https://github.com/rust-lang/crates.io-index&quot;
++checksum = &quot;be2241542ff3d9f241f5e2cb6dd09b37efe786df8851c54957683a49f0987a97&quot;
++dependencies = [
++ &quot;proc-macro2&quot;,
++ &quot;quote&quot;,
++ &quot;syn&quot;,
++ &quot;wasm-bindgen-backend&quot;,
++ &quot;wasm-bindgen-shared&quot;,
++]
++
++[[package]]
++name = &quot;wasm-bindgen-shared&quot;
++version = &quot;0.2.74&quot;
++source = &quot;registry+https://github.com/rust-lang/crates.io-index&quot;
++checksum = &quot;d7cff876b8f18eed75a66cf49b65e7f967cb354a7aa16003fb55dbfd25b44b4f&quot;
++
++[[package]]
++name = &quot;web-sys&quot;
++version = &quot;0.3.51&quot;
++source = &quot;registry+https://github.com/rust-lang/crates.io-index&quot;
++checksum = &quot;e828417b379f3df7111d3a2a9e5753706cae29c41f7c4029ee9fd77f3e09e582&quot;
++dependencies = [
++ &quot;js-sys&quot;,
++ &quot;wasm-bindgen&quot;,
++]
++
++[[package]]
++name = &quot;webpki&quot;
++version = &quot;0.21.4&quot;
++source = &quot;registry+https://github.com/rust-lang/crates.io-index&quot;
++checksum = &quot;b8e38c0608262c46d4a56202ebabdeb094cef7e560ca7a226c6bf055188aa4ea&quot;
++dependencies = [
++ &quot;ring&quot;,
++ &quot;untrusted&quot;,
++]
++
++[[package]]
++name = &quot;webpki-roots&quot;
++version = &quot;0.21.1&quot;
++source = &quot;registry+https://github.com/rust-lang/crates.io-index&quot;
++checksum = &quot;aabe153544e473b775453675851ecc86863d2a81d786d741f6b76778f2a48940&quot;
++dependencies = [
++ &quot;webpki&quot;,
++]
++
+ [[package]]
+ name = &quot;winapi&quot;
+ version = &quot;0.3.9&quot;
+">lock</td>
+<td title="Rudimentary API client
+
+/api/hello endpoint only
+
+"><a href="https://github.com/Vlad-Shcherbina/icfpc2021-tbd/commit/3e0476f4008195215b6cf4a5af6ae09e48df2d6d">Rudimentary API client</a></td>
+<td>Vlad Shcherbina</td>
+</tr>
+<tr>
+<td>23.31</td>
+<td>13.86</td>
+<td>0.48</td>
+<td>1.60</td>
+<td></td>
+<td></td>
+<td title="fix rounding rules for edge limits
+
+"><a href="https://github.com/Vlad-Shcherbina/icfpc2021-tbd/commit/87c49c5427939be5d97a0840a969feb4c6cf5bbb">fix rounding rules for edge limits</a></td>
+<td>caudate_julie</td>
+</tr>
+<tr>
+<td>23.01</td>
+<td>14.31</td>
+<td>0.49</td>
+<td>1.54</td>
+<td></td>
+<td></td>
+<td title="Viz show limits for edge size on not-ok edges
+
+"><a href="https://github.com/Vlad-Shcherbina/icfpc2021-tbd/commit/25c99c774da1206db774188b32c329fc0d11d3c5">Viz show limits for edge size on not-ok edges</a></td>
+<td>caudate_julie</td>
+</tr>
+<tr>
+<td>23.12</td>
+<td>14.07</td>
+<td>0.49</td>
+<td>1.58</td>
+<td></td>
+<td></td>
+<td title="Viz select multiple with ctrl key only.
+
+"><a href="https://github.com/Vlad-Shcherbina/icfpc2021-tbd/commit/7da439b529b19d335f903933501efe1f85c1ad6a">Viz select multiple with ctrl key only.</a></td>
+<td>caudate_julie</td>
+</tr>
+<tr>
+<td>23.66</td>
+<td>14.45</td>
+<td>0.50</td>
+<td>1.55</td>
+<td></td>
+<td></td>
+<td title="better naming
+
+"><a href="https://github.com/Vlad-Shcherbina/icfpc2021-tbd/commit/71b5bffa398a22f7c7f2b8f4fe85a0d00fd6c9f0">better naming</a></td>
+<td>caudate_julie</td>
+</tr>
+<tr>
+<td>23.16</td>
+<td>14.18</td>
+<td>0.48</td>
+<td>1.55</td>
+<td></td>
+<td></td>
+<td title="Viz calculate and show dislikes
+
+"><a href="https://github.com/Vlad-Shcherbina/icfpc2021-tbd/commit/d0174f89a972ffa895d64bced10396624f141417">Viz calculate and show dislikes</a></td>
+<td>caudate_julie</td>
+</tr>
+<tr>
+<td>23.37</td>
+<td>14.09</td>
+<td>0.50</td>
+<td>1.59</td>
+<td></td>
+<td></td>
+<td title="solver trait; runner script
+
+"><a href="https://github.com/Vlad-Shcherbina/icfpc2021-tbd/commit/3a14378103d94a9d63a66046260cb6b003538de2">solver trait; runner script</a></td>
+<td>Pavel.Sergeev</td>
+</tr>
+<tr>
+<td>23.46</td>
+<td>14.29</td>
+<td>0.49</td>
+<td>1.57</td>
+<td></td>
+<td></td>
+<td title="brute force over tasks
+
+"><a href="https://github.com/Vlad-Shcherbina/icfpc2021-tbd/commit/6015082715cacf2983689c5e66b36521e0980dcf">brute force over tasks</a></td>
+<td>Pavel.Sergeev</td>
+</tr>
+<tr>
+<td>23.34</td>
+<td>13.93</td>
+<td>0.48</td>
+<td>1.52</td>
+<td></td>
+<td></td>
+<td title="Allow pasting solution
+
+"><a href="https://github.com/Vlad-Shcherbina/icfpc2021-tbd/commit/4c3136de8fe4bb8f7a97fc09eafe49f5102f1a4a">Allow pasting solution</a></td>
+<td>Vlad Shcherbina</td>
+</tr>
+<tr>
+<td>23.09</td>
+<td>14.22</td>
+<td>0.49</td>
+<td>1.63</td>
+<td></td>
+<td></td>
+<td title="Remove old spec.js
+
+"><a href="https://github.com/Vlad-Shcherbina/icfpc2021-tbd/commit/e8f6ab0bb8829fe005c463df57b0ef174a626156">Remove old spec.js</a></td>
+<td>Vlad Shcherbina</td>
+</tr>
+<tr>
+<td>23.64</td>
+<td>14.34</td>
+<td>0.47</td>
+<td>1.54</td>
+<td></td>
+<td></td>
+<td title="viz color hints
+
+"><a href="https://github.com/Vlad-Shcherbina/icfpc2021-tbd/commit/e84c56757bfafe13802a89dc9bb21a36c3b52f54">viz color hints</a></td>
+<td>caudate_julie</td>
+</tr>
+<tr>
+<td>23.42</td>
+<td>14.16</td>
+<td>0.49</td>
+<td>1.57</td>
+<td></td>
+<td></td>
+<td title="viz edge color coded as too short or too long
+
+"><a href="https://github.com/Vlad-Shcherbina/icfpc2021-tbd/commit/91d6351ead7956b6f5c91b13d40634c563a0f525">viz edge color coded as too short or too long</a></td>
+<td>caudate_julie</td>
+</tr>
+<tr>
+<td>23.45</td>
+<td>13.97</td>
+<td>0.49</td>
+<td>1.55</td>
+<td></td>
+<td></td>
+<td title="viz separate initial figure from solution to compare edges
+
+"><a href="https://github.com/Vlad-Shcherbina/icfpc2021-tbd/commit/27e297b6e9430f969c3ed893bcb83fc921520f48">viz separate initial figure from solution to compare edges</a></td>
+<td>caudate_julie</td>
+</tr>
+<tr>
+<td>23.21</td>
+<td>14.27</td>
+<td>0.48</td>
+<td>1.59</td>
+<td></td>
+<td></td>
+<td title="URL fragment to select problem
+
+"><a href="https://github.com/Vlad-Shcherbina/icfpc2021-tbd/commit/3a66eecf3402d0676515b0f4282fe3d331d7d90b">URL fragment to select problem</a></td>
+<td>Vlad Shcherbina</td>
+</tr>
+<tr>
+<td>23.28</td>
+<td>14.26</td>
+<td>0.48</td>
+<td>1.58</td>
+<td></td>
+<td></td>
+<td title="Problem: spec is not maintainable
+
+Solution:
+
+1. Port to typescript
+2. Remove epsilon validation
+
+"><a href="https://github.com/Vlad-Shcherbina/icfpc2021-tbd/commit/70da338b30fbcd47083d99f07e98db3eada0d973">Problem: spec is not maintainable</a></td>
+<td>jonn</td>
+</tr>
+<tr>
+<td>23.45</td>
+<td>14.38</td>
+<td>0.49</td>
+<td>1.55</td>
+<td></td>
+<td></td>
+<td title="Show problem stats
+
+"><a href="https://github.com/Vlad-Shcherbina/icfpc2021-tbd/commit/2e6b07f0352db9a3ec359e211e371ceaf22d71be">Show problem stats</a></td>
+<td>Vlad Shcherbina</td>
+</tr>
+<tr>
+<td>23.15</td>
+<td>14.16</td>
+<td>0.47</td>
+<td>1.52</td>
+<td></td>
+<td></td>
+<td title="Box with the solution
+
+"><a href="https://github.com/Vlad-Shcherbina/icfpc2021-tbd/commit/7cc2418562258be72bec52e4f90d385322898435">Box with the solution</a></td>
+<td>Vlad Shcherbina</td>
+</tr>
+<tr>
+<td>23.09</td>
+<td>13.97</td>
+<td>0.47</td>
+<td>1.50</td>
+<td></td>
+<td></td>
+<td title="viz move selected points with keyboard arrows
+
+"><a href="https://github.com/Vlad-Shcherbina/icfpc2021-tbd/commit/3ed36585e50831a9307d92fc954180806797b283">viz move selected points with keyboard arrows</a></td>
+<td>caudate_julie</td>
+</tr>
+<tr>
+<td>22.81</td>
+<td>13.68</td>
+<td>0.46</td>
+<td>1.44</td>
+<td></td>
+<td></td>
+<td title="Instructions to run the visualizer
+
+"><a href="https://github.com/Vlad-Shcherbina/icfpc2021-tbd/commit/68da1870fb103d9edda6a6450361f048ff980e9a">Instructions to run the visualizer</a></td>
+<td>Vlad Shcherbina</td>
+</tr>
+<tr>
+<td>22.35</td>
+<td>13.78</td>
+<td>0.47</td>
+<td>1.42</td>
+<td></td>
+<td></td>
+<td title="extract load_problem/store_solution
+
+"><a href="https://github.com/Vlad-Shcherbina/icfpc2021-tbd/commit/035688425340168bdad29203f3a0ab3ffb91d6ff">extract load_problem/store_solution</a></td>
+<td>Pavel.Sergeev</td>
+</tr>
+<tr>
+<td>22.53</td>
+<td>13.68</td>
+<td>0.46</td>
+<td>1.41</td>
+<td></td>
+<td></td>
+<td title="viz rebranding
+
+"><a href="https://github.com/Vlad-Shcherbina/icfpc2021-tbd/commit/80e9252a9fd568a21e55e6028f9a382a135910d1">viz rebranding</a></td>
+<td>caudate_julie</td>
+</tr>
+<tr>
+<td>22.33</td>
+<td>13.67</td>
+<td>0.45</td>
+<td>1.39</td>
+<td></td>
+<td></td>
+<td title="Problem: bug in div by zero check
+
+Solution:
+
+ 1. Fix the bug
+ 2. Improve error reporting
+
+"><a href="https://github.com/Vlad-Shcherbina/icfpc2021-tbd/commit/fa762729511cf2948e2a0fd111ce70bc23d35c48">Problem: bug in div by zero check</a></td>
+<td>jonn</td>
+</tr>
+<tr>
+<td>22.32</td>
+<td>13.71</td>
+<td>0.47</td>
+<td>1.41</td>
+<td></td>
+<td></td>
+<td title="Solver using random search
+
+"><a href="https://github.com/Vlad-Shcherbina/icfpc2021-tbd/commit/0536a8d40f7bedac5649273e24783d78cf86b7fa">Solver using random search</a></td>
+<td>Vlad Shcherbina</td>
+</tr>
+<tr>
+<td>23.18</td>
+<td>13.47</td>
+<td>0.46</td>
+<td>1.41</td>
+<td></td>
+<td></td>
+<td title="Clippy
+
+"><a href="https://github.com/Vlad-Shcherbina/icfpc2021-tbd/commit/ee8d80076b2416ee282725c0dc2783fb482f124c">Clippy</a></td>
+<td>Vlad Shcherbina</td>
+</tr>
+<tr>
+<td>22.35</td>
+<td>13.14</td>
+<td>0.45</td>
+<td>1.38</td>
+<td></td>
+<td></td>
+<td title="Problem: unoptimal allocations
+
+Solution:
+
+ - Make more messy success+history / rollback logic
+ - Make really defensive deep copying functions
+
+"><a href="https://github.com/Vlad-Shcherbina/icfpc2021-tbd/commit/2f32d751c38df968c6619bb1593de097444dcbca">Problem: unoptimal allocations</a></td>
+<td>jonn</td>
+</tr>
+<tr>
+<td>22.52</td>
+<td>13.19</td>
+<td>0.45</td>
+<td>1.35</td>
+<td></td>
+<td></td>
+<td title="Problem: no return value from drag
+
+Solution:
+
+ - Move retrurn values of rules enforcement
+
+"><a href="https://github.com/Vlad-Shcherbina/icfpc2021-tbd/commit/3e870494de34cb71bae1f034ba20d6a93fd2a67f">Problem: no return value from drag</a></td>
+<td>jonn</td>
+</tr>
+<tr>
+<td>22.26</td>
+<td>13.34</td>
+<td>0.45</td>
+<td>1.34</td>
+<td></td>
+<td></td>
+<td title="Problem: references were getting weirdly mutated
+
+Solution:
+
+ spreads ...spreads everywhere
+
+"><a href="https://github.com/Vlad-Shcherbina/icfpc2021-tbd/commit/e0a943b1573cbd227d65f55732617a6cbab7432d">Problem: references were getting weirdly mutated</a></td>
+<td>jonn</td>
+</tr>
+<tr>
+<td>22.29</td>
+<td>13.32</td>
+<td>0.45</td>
+<td>1.34</td>
+<td></td>
+<td></td>
+<td title="absolute paths converted to relative to run http server from the root
+
+"><a href="https://github.com/Vlad-Shcherbina/icfpc2021-tbd/commit/f2ece1063a095a3b1fd77361c5345552e64629a2">absolute paths converted to relative to run http server from the root</a></td>
+<td>caudate_julie</td>
+</tr>
+<tr>
+<td>22.46</td>
+<td>13.02</td>
+<td>0.45</td>
+<td>1.34</td>
+<td></td>
+<td></td>
+<td title="js gitignore policy restricted to ts folders
+
+"><a href="https://github.com/Vlad-Shcherbina/icfpc2021-tbd/commit/69726b5adb45c1c9085d53a0a7c523f180f050a2">js gitignore policy restricted to ts folders</a></td>
+<td>caudate_julie</td>
+</tr>
+<tr>
+<td>22.46</td>
+<td>13.24</td>
+<td>0.45</td>
+<td>1.34</td>
+<td></td>
+<td></td>
+<td title="pt_in_poly()
+
+"><a href="https://github.com/Vlad-Shcherbina/icfpc2021-tbd/commit/35bceadd566f44814885de554662e4f339ab2096">pt_in_poly()</a></td>
+<td>Vlad Shcherbina</td>
+</tr>
+<tr>
+<td>22.28</td>
+<td>13.33</td>
+<td>0.45</td>
+<td>1.36</td>
+<td></td>
+<td></td>
+<td title="Problem: API of the JS spec implementation missing
+
+Solution:
+
+ - Push BROKEN API with debug output (sorry)
+
+"><a href="https://github.com/Vlad-Shcherbina/icfpc2021-tbd/commit/f334ad7f5df0c18e45e75e2025c2fc1c1ced0544">Problem: API of the JS spec implementation missing</a></td>
+<td>jonn</td>
+</tr>
+<tr>
+<td>22.27</td>
+<td>13.40</td>
+<td>0.44</td>
+<td>1.34</td>
+<td></td>
+<td></td>
+<td title="viz select and deselect figure vertices
+
+"><a href="https://github.com/Vlad-Shcherbina/icfpc2021-tbd/commit/9dd45c515dcc9b427749dc6a9d8588e092b443a9">viz select and deselect figure vertices</a></td>
+<td>caudate_julie</td>
+</tr>
+<tr>
+<td>22.27</td>
+<td>13.45</td>
+<td>0.45</td>
+<td>1.34</td>
+<td></td>
+<td></td>
+<td title="viz show grid
+
+"><a href="https://github.com/Vlad-Shcherbina/icfpc2021-tbd/commit/b58e5687b4c1cf79d1cf8a4e76036feccc7bab61">viz show grid</a></td>
+<td>caudate_julie</td>
+</tr>
+<tr>
+<td>22.32</td>
+<td>13.41</td>
+<td>0.45</td>
+<td>1.36</td>
+<td></td>
+<td></td>
+<td title="Segment intersection
+
+"><a href="https://github.com/Vlad-Shcherbina/icfpc2021-tbd/commit/672a36dbc4f9cb8c3baa40f60b083f5c8384fb30">Segment intersection</a></td>
+<td>Vlad Shcherbina</td>
+</tr>
+<tr>
+<td>22.46</td>
+<td>13.43</td>
+<td>0.45</td>
+<td>1.37</td>
+<td></td>
+<td></td>
+<td title="y axis points down
+
+"><a href="https://github.com/Vlad-Shcherbina/icfpc2021-tbd/commit/6f47838eeb6bdf8067c687a26178af42f6ff0d1c">y axis points down</a></td>
+<td>Vlad Shcherbina</td>
+</tr>
+<tr>
+<td>22.48</td>
+<td>13.44</td>
+<td>0.44</td>
+<td>1.34</td>
+<td></td>
+<td></td>
+<td title="viz: draw (initial) figure
+
+"><a href="https://github.com/Vlad-Shcherbina/icfpc2021-tbd/commit/97ff104183d22fbd46e8be0535aa99fbf5896d22">viz: draw (initial) figure</a></td>
+<td>caudate_julie</td>
+</tr>
+<tr>
+<td>22.33</td>
+<td>13.10</td>
+<td>0.44</td>
+<td>1.32</td>
+<td></td>
+<td></td>
+<td title="viz scaling
+
+"><a href="https://github.com/Vlad-Shcherbina/icfpc2021-tbd/commit/a90038fa6e9f58ea9708fbc8521955094ecf9c3d">viz scaling</a></td>
+<td>caudate_julie</td>
+</tr>
+<tr>
+<td>22.29</td>
+<td>13.27</td>
+<td>0.44</td>
+<td>1.32</td>
+<td></td>
+<td></td>
+<td title="warning silencing
+
+"><a href="https://github.com/Vlad-Shcherbina/icfpc2021-tbd/commit/057c5af99b72d18bbb7a56d80c67c31a36e8461c">warning silencing</a></td>
+<td>caudate_julie</td>
+</tr>
+<tr>
+<td>22.22</td>
+<td>13.61</td>
+<td>0.45</td>
+<td>1.34</td>
+<td></td>
+<td></td>
+<td title="Silence warning
+
+"><a href="https://github.com/Vlad-Shcherbina/icfpc2021-tbd/commit/291d745fd6bb465321977c6da0fc10a4d63dfc34">Silence warning</a></td>
+<td>Vlad Shcherbina</td>
+</tr>
+<tr>
+<td>22.45</td>
+<td>13.52</td>
+<td>0.44</td>
+<td>1.35</td>
+<td></td>
+<td></td>
+<td title="Domain model (structs for Problem and Pose)
+
+"><a href="https://github.com/Vlad-Shcherbina/icfpc2021-tbd/commit/1b797d2fb97db6b7436fff2a5851400628331960">Domain model (structs for Problem and Pose)</a></td>
+<td>Vlad Shcherbina</td>
+</tr>
+<tr>
+<td>22.85</td>
+<td>13.69</td>
+<td>0.40</td>
+<td>1.43</td>
+<td></td>
+<td></td>
+<td title="fixes
+
+"><a href="https://github.com/Vlad-Shcherbina/icfpc2021-tbd/commit/45e2ce53af553bf721b9ef180ce65643324fdcc7">fixes</a></td>
+<td>caudate_julie</td>
+</tr>
+<tr>
+<td>-</td>
+<td>-</td>
+<td>-</td>
+<td>-</td>
+<td></td>
+<td></td>
+<td title="scratch cleanup
+
+"><a href="https://github.com/Vlad-Shcherbina/icfpc2021-tbd/commit/c735a9cb1b39f447295b46881a8ccde278f4cc48">scratch cleanup</a></td>
+<td>caudate_julie</td>
+</tr>
+<tr>
+<td>-</td>
+<td>-</td>
+<td>-</td>
+<td>-</td>
+<td></td>
+<td></td>
+<td title="&quot;viz moved to production; register mouse clicks&quot;
+
+"><a href="https://github.com/Vlad-Shcherbina/icfpc2021-tbd/commit/8fc9e31266dddcc3142687fb38dfffc10646d280">"viz moved to production; register mouse clicks"</a></td>
+<td>caudate_julie</td>
+</tr>
+<tr>
+<td>-</td>
+<td>-</td>
+<td>-</td>
+<td>-</td>
+<td></td>
+<td></td>
+<td title="add the problem scraper script
+
+"><a href="https://github.com/Vlad-Shcherbina/icfpc2021-tbd/commit/950f2c7496e36dbfc830bae4d7d8ebbaaf37de26">add the problem scraper script</a></td>
+<td>Sergey Matveev</td>
+</tr>
+<tr>
+<td>-</td>
+<td>-</td>
+<td>-</td>
+<td>-</td>
+<td></td>
+<td></td>
+<td title="&quot;missing assert module&quot;
+
+"><a href="https://github.com/Vlad-Shcherbina/icfpc2021-tbd/commit/f3964d4d870495918110e2b9bcc8b057e00586f1">"missing assert module"</a></td>
+<td>caudate_julie</td>
+</tr>
+<tr>
+<td>-</td>
+<td>-</td>
+<td>-</td>
+<td>-</td>
+<td></td>
+<td></td>
+<td title="viz example
+
+"><a href="https://github.com/Vlad-Shcherbina/icfpc2021-tbd/commit/ab198d6933aa51bc5737d29cb7aa88757683dc77">viz example</a></td>
+<td>caudate_julie</td>
+</tr>
+<tr>
+<td>23.17</td>
+<td>13.40</td>
+<td>0.37</td>
+<td>1.34</td>
+<td></td>
+<td></td>
+<td title="added problems 1-59
+
+"><a href="https://github.com/Vlad-Shcherbina/icfpc2021-tbd/commit/67c5a795a0c0f5c2d2df10dcdf8ae34ebae6407b">added problems 1-59</a></td>
+<td>Sergey Matveev</td>
+</tr>
+<tr>
+<td>22.98</td>
+<td>13.71</td>
+<td>0.38</td>
+<td>1.44</td>
+<td></td>
+<td></td>
+<td title="ignore .idea
+
+"><a href="https://github.com/Vlad-Shcherbina/icfpc2021-tbd/commit/69a0e0687fffcaa994c841d1ece3a2353a260648">ignore .idea</a></td>
+<td>Pavel.Sergeev</td>
+</tr>
+<tr>
+<td>23.34</td>
+<td>13.72</td>
+<td>0.37</td>
+<td>1.37</td>
+<td></td>
+<td></td>
+<td title="fix project_root
+
+"><a href="https://github.com/Vlad-Shcherbina/icfpc2021-tbd/commit/b96ffa4186e72cb054b9eaf92e89fd1288893b06">fix project_root</a></td>
+<td>Pavel.Sergeev</td>
+</tr>
+<tr>
+<td>23.31</td>
+<td>13.76</td>
+<td>0.36</td>
+<td>1.33</td>
+<td></td>
+<td></td>
+<td title="add URL to life game for discoverability
+
+"><a href="https://github.com/Vlad-Shcherbina/icfpc2021-tbd/commit/c8e087f1ddc6728be94db2a0cde4cfc1149d15b2">add URL to life game for discoverability</a></td>
+<td>caudate_julie</td>
+</tr>
+<tr>
+<td>23.26</td>
+<td>13.68</td>
+<td>0.35</td>
+<td>1.28</td>
+<td></td>
+<td></td>
+<td title="Add link to the countdown page for discoverability
+
+"><a href="https://github.com/Vlad-Shcherbina/icfpc2021-tbd/commit/c04f48d58aa868897ff767b10c9eff1747191630">Add link to the countdown page for discoverability</a></td>
+<td>Vlad Shcherbina</td>
+</tr>
+<tr>
+<td>22.78</td>
+<td>12.99</td>
+<td>0.36</td>
+<td>1.23</td>
+<td title="diff --git a/Cargo.toml b/Cargo.toml
+index 2168bbc..f09c7cf 100644
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -8,7 +8,8 @@ edition = &quot;2018&quot;
+ [dependencies]
+ linkme = &quot;*&quot;
+ http = &quot;*&quot;
+-serde = &quot;*&quot;
++serde = { version = &quot;*&quot;, features = [&quot;derive&quot;] }
+ serde_json = &quot;*&quot;
++rand = &quot;*&quot;
+ simple-server = &quot;0.4.0&quot;
+ chrono = { version = &quot;0.4&quot;, features = [&quot;serde&quot;] }
+">toml</td>
+<td title="diff --git a/Cargo.lock b/Cargo.lock
+index e7dcc24..d03316b 100644
+--- a/Cargo.lock
++++ b/Cargo.lock
+@@ -50,6 +50,17 @@ version = &quot;1.0.7&quot;
+ source = &quot;registry+https://github.com/rust-lang/crates.io-index&quot;
+ checksum = &quot;3f9eec918d3f24069decb9af1554cad7c880e2da24a9afd88aca000531ab82c1&quot;
+ 
++[[package]]
++name = &quot;getrandom&quot;
++version = &quot;0.2.3&quot;
++source = &quot;registry+https://github.com/rust-lang/crates.io-index&quot;
++checksum = &quot;7fcd999463524c52659517fe2cea98493cfe485d10565e7b0fb07dbba7ad2753&quot;
++dependencies = [
++ &quot;cfg-if&quot;,
++ &quot;libc&quot;,
++ &quot;wasi&quot;,
++]
++
+ [[package]]
+ name = &quot;hermit-abi&quot;
+ version = &quot;0.1.19&quot;
+@@ -83,6 +94,7 @@ dependencies = [
+  &quot;chrono&quot;,
+  &quot;http&quot;,
+  &quot;linkme&quot;,
++ &quot;rand&quot;,
+  &quot;serde&quot;,
+  &quot;serde_json&quot;,
+  &quot;simple-server&quot;,
+@@ -176,6 +188,12 @@ dependencies = [
+  &quot;libc&quot;,
+ ]
+ 
++[[package]]
++name = &quot;ppv-lite86&quot;
++version = &quot;0.2.10&quot;
++source = &quot;registry+https://github.com/rust-lang/crates.io-index&quot;
++checksum = &quot;ac74c624d6b2d21f425f752262f42188365d7b8ff1aff74c82e45136510a4857&quot;
++
+ [[package]]
+ name = &quot;proc-macro2&quot;
+ version = &quot;1.0.27&quot;
+@@ -194,6 +212,46 @@ dependencies = [
+  &quot;proc-macro2&quot;,
+ ]
+ 
++[[package]]
++name = &quot;rand&quot;
++version = &quot;0.8.4&quot;
++source = &quot;registry+https://github.com/rust-lang/crates.io-index&quot;
++checksum = &quot;2e7573632e6454cf6b99d7aac4ccca54be06da05aca2ef7423d22d27d4d4bcd8&quot;
++dependencies = [
++ &quot;libc&quot;,
++ &quot;rand_chacha&quot;,
++ &quot;rand_core&quot;,
++ &quot;rand_hc&quot;,
++]
++
++[[package]]
++name = &quot;rand_chacha&quot;
++version = &quot;0.3.1&quot;
++source = &quot;registry+https://github.com/rust-lang/crates.io-index&quot;
++checksum = &quot;e6c10a63a0fa32252be49d21e7709d4d4baf8d231c2dbce1eaa8141b9b127d88&quot;
++dependencies = [
++ &quot;ppv-lite86&quot;,
++ &quot;rand_core&quot;,
++]
++
++[[package]]
++name = &quot;rand_core&quot;
++version = &quot;0.6.3&quot;
++source = &quot;registry+https://github.com/rust-lang/crates.io-index&quot;
++checksum = &quot;d34f1408f55294453790c48b2f1ebbb1c5b4b7563eb1f418bcfcfdbb06ebb4e7&quot;
++dependencies = [
++ &quot;getrandom&quot;,
++]
++
++[[package]]
++name = &quot;rand_hc&quot;
++version = &quot;0.3.1&quot;
++source = &quot;registry+https://github.com/rust-lang/crates.io-index&quot;
++checksum = &quot;d51e9f596de227fda2ea6c84607f5558e196eeaf43c986b724ba4fb8fdf497e7&quot;
++dependencies = [
++ &quot;rand_core&quot;,
++]
++
+ [[package]]
+ name = &quot;ryu&quot;
+ version = &quot;1.0.5&quot;
+@@ -211,6 +269,20 @@ name = &quot;serde&quot;
+ version = &quot;1.0.126&quot;
+ source = &quot;registry+https://github.com/rust-lang/crates.io-index&quot;
+ checksum = &quot;ec7505abeacaec74ae4778d9d9328fe5a5d04253220a85c4ee022239fc996d03&quot;
++dependencies = [
++ &quot;serde_derive&quot;,
++]
++
++[[package]]
++name = &quot;serde_derive&quot;
++version = &quot;1.0.126&quot;
++source = &quot;registry+https://github.com/rust-lang/crates.io-index&quot;
++checksum = &quot;963a7dbc9895aeac7ac90e74f34a5d5261828f79df35cbed41e10189d3804d43&quot;
++dependencies = [
++ &quot;proc-macro2&quot;,
++ &quot;quote&quot;,
++ &quot;syn&quot;,
++]
+ 
+ [[package]]
+ name = &quot;serde_json&quot;
+">lock</td>
+<td title="JS-Rust http-based visualization example (Life game)
+
+"><a href="https://github.com/Vlad-Shcherbina/icfpc2021-tbd/commit/00dc436a02cd883035ea395019f4d05497fc42bf">JS-Rust http-based visualization example (Life game)</a></td>
+<td>caudate_julie</td>
+</tr>
+<tr>
+<td>14.03</td>
+<td>10.47</td>
+<td>0.29</td>
+<td>1.00</td>
+<td></td>
+<td></td>
+<td title="Problem: Timer is laggy
+
+Solution:
+ - Manually fuse all the setintervals
+ - Do most of the calculations outside.
+
+"><a href="https://github.com/Vlad-Shcherbina/icfpc2021-tbd/commit/ea1716adfcdaf8bc5c64bf5b9a104b6127b7b7c6">Problem: Timer is laggy</a></td>
+<td>jonn</td>
+</tr>
+<tr>
+<td>14.09</td>
+<td>10.42</td>
+<td>0.30</td>
+<td>1.00</td>
+<td></td>
+<td></td>
+<td title="Problem: It is unclear how to make clients
+
+Solution:
+
+ - Implement a demo-client for timer application
+
+"><a href="https://github.com/Vlad-Shcherbina/icfpc2021-tbd/commit/f2089e0d8769205b9b4ae49a2ab73a93a7fbb255">Problem: It is unclear how to make clients</a></td>
+<td>jonn</td>
+</tr>
+<tr>
+<td>14.08</td>
+<td>10.50</td>
+<td>0.30</td>
+<td>1.01</td>
+<td></td>
+<td></td>
+<td title="Problem: It is unclear how to write JS clients
+
+Solution:
+
+ - Use static file serving feature of the simple_server
+ - Serve demo dashboard.html that just gets timers and prints them into console
+
+"><a href="https://github.com/Vlad-Shcherbina/icfpc2021-tbd/commit/7198516eb5234095af385d39b4b7c0cdc3ce4dfe">Problem: It is unclear how to write JS clients</a></td>
+<td>jonn</td>
+</tr>
+<tr>
+<td>14.19</td>
+<td>10.53</td>
+<td>0.31</td>
+<td>1.11</td>
+<td title="diff --git a/Cargo.toml b/Cargo.toml
+index 5c53243..2168bbc 100644
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -9,5 +9,6 @@ edition = &quot;2018&quot;
+ linkme = &quot;*&quot;
+ http = &quot;*&quot;
+ serde = &quot;*&quot;
++serde_json = &quot;*&quot;
+ simple-server = &quot;0.4.0&quot;
+-chrono = &quot;0.4&quot;
++chrono = { version = &quot;0.4&quot;, features = [&quot;serde&quot;] }
+">toml</td>
+<td title="diff --git a/Cargo.lock b/Cargo.lock
+index e0baf74..e7dcc24 100644
+--- a/Cargo.lock
++++ b/Cargo.lock
+@@ -39,6 +39,7 @@ dependencies = [
+  &quot;libc&quot;,
+  &quot;num-integer&quot;,
+  &quot;num-traits&quot;,
++ &quot;serde&quot;,
+  &quot;time&quot;,
+  &quot;winapi&quot;,
+ ]
+@@ -83,6 +84,7 @@ dependencies = [
+  &quot;http&quot;,
+  &quot;linkme&quot;,
+  &quot;serde&quot;,
++ &quot;serde_json&quot;,
+  &quot;simple-server&quot;,
+ ]
+ 
+@@ -192,6 +194,12 @@ dependencies = [
+  &quot;proc-macro2&quot;,
+ ]
+ 
++[[package]]
++name = &quot;ryu&quot;
++version = &quot;1.0.5&quot;
++source = &quot;registry+https://github.com/rust-lang/crates.io-index&quot;
++checksum = &quot;71d301d4193d031abdd79ff7e3dd721168a9572ef3fe51a1517aba235bd8f86e&quot;
++
+ [[package]]
+ name = &quot;scoped_threadpool&quot;
+ version = &quot;0.1.9&quot;
+@@ -204,6 +212,17 @@ version = &quot;1.0.126&quot;
+ source = &quot;registry+https://github.com/rust-lang/crates.io-index&quot;
+ checksum = &quot;ec7505abeacaec74ae4778d9d9328fe5a5d04253220a85c4ee022239fc996d03&quot;
+ 
++[[package]]
++name = &quot;serde_json&quot;
++version = &quot;1.0.64&quot;
++source = &quot;registry+https://github.com/rust-lang/crates.io-index&quot;
++checksum = &quot;799e97dc9fdae36a5c8b8f2cae9ce2ee9fdce2058c57a93e6099d919fd982f79&quot;
++dependencies = [
++ &quot;itoa&quot;,
++ &quot;ryu&quot;,
++ &quot;serde&quot;,
++]
++
+ [[package]]
+ name = &quot;simple-server&quot;
+ version = &quot;0.4.0&quot;
+">lock</td>
+<td title="Problem: No way to see timers
+
+Solution:
+ - Add dashboard/timer endpoint
+ - Notice that we shoudl URLdecode strings gotten via GET
+
+"><a href="https://github.com/Vlad-Shcherbina/icfpc2021-tbd/commit/55c105a55c5159e03d58d56b0ff65a0dc029ea30">Problem: No way to see timers</a></td>
+<td>jonn</td>
+</tr>
+<tr>
+<td>13.10</td>
+<td>9.79</td>
+<td>0.29</td>
+<td>0.92</td>
+<td title="diff --git a/Cargo.toml b/Cargo.toml
+index b00c25a..5c53243 100644
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -8,5 +8,6 @@ edition = &quot;2018&quot;
+ [dependencies]
+ linkme = &quot;*&quot;
+ http = &quot;*&quot;
++serde = &quot;*&quot;
+ simple-server = &quot;0.4.0&quot;
+ chrono = &quot;0.4&quot;
+">toml</td>
+<td title="diff --git a/Cargo.lock b/Cargo.lock
+index 70cc868..e0baf74 100644
+--- a/Cargo.lock
++++ b/Cargo.lock
+@@ -82,6 +82,7 @@ dependencies = [
+  &quot;chrono&quot;,
+  &quot;http&quot;,
+  &quot;linkme&quot;,
++ &quot;serde&quot;,
+  &quot;simple-server&quot;,
+ ]
+ 
+@@ -197,6 +198,12 @@ version = &quot;0.1.9&quot;
+ source = &quot;registry+https://github.com/rust-lang/crates.io-index&quot;
+ checksum = &quot;1d51f5df5af43ab3f1360b429fa5e0152ac5ce8c0bd6485cae490332e96846a8&quot;
+ 
++[[package]]
++name = &quot;serde&quot;
++version = &quot;1.0.126&quot;
++source = &quot;registry+https://github.com/rust-lang/crates.io-index&quot;
++checksum = &quot;ec7505abeacaec74ae4778d9d9328fe5a5d04253220a85c4ee022239fc996d03&quot;
++
+ [[package]]
+ name = &quot;simple-server&quot;
+ version = &quot;0.4.0&quot;
+">lock</td>
+<td title="Problem: No way to mutate shared state
+
+Solution:
+
+ - Implement /dashboard/timer/insert and .../remove that provide
+   ergonomic RPC to NaiveDateTime generation and updating state
+
+"><a href="https://github.com/Vlad-Shcherbina/icfpc2021-tbd/commit/a33d7e57d9486fa7973331c3e7538206c2f94f85">Problem: No way to mutate shared state</a></td>
+<td>jonn</td>
+</tr>
+<tr>
+<td>11.73</td>
+<td>7.96</td>
+<td>0.29</td>
+<td>0.86</td>
+<td title="diff --git a/Cargo.toml b/Cargo.toml
+index aaeb49d..b00c25a 100644
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -9,3 +9,4 @@ edition = &quot;2018&quot;
+ linkme = &quot;*&quot;
+ http = &quot;*&quot;
+ simple-server = &quot;0.4.0&quot;
++chrono = &quot;0.4&quot;
+">toml</td>
+<td title="diff --git a/Cargo.lock b/Cargo.lock
+index 33dffb4..70cc868 100644
+--- a/Cargo.lock
++++ b/Cargo.lock
+@@ -2,6 +2,12 @@
+ # It is not intended for manual editing.
+ version = 3
+ 
++[[package]]
++name = &quot;autocfg&quot;
++version = &quot;1.0.1&quot;
++source = &quot;registry+https://github.com/rust-lang/crates.io-index&quot;
++checksum = &quot;cdb031dd78e28731d87d56cc8ffef4a8f36ca26c38fe2de700543e627f8a464a&quot;
++
+ [[package]]
+ name = &quot;byteorder&quot;
+ version = &quot;1.4.3&quot;
+@@ -24,6 +30,19 @@ version = &quot;1.0.0&quot;
+ source = &quot;registry+https://github.com/rust-lang/crates.io-index&quot;
+ checksum = &quot;baf1de4339761588bc0619e3cbc0120ee582ebb74b53b4efbf79117bd2da40fd&quot;
+ 
++[[package]]
++name = &quot;chrono&quot;
++version = &quot;0.4.19&quot;
++source = &quot;registry+https://github.com/rust-lang/crates.io-index&quot;
++checksum = &quot;670ad68c9088c2a963aaa298cb369688cf3f9465ce5e2d4ca10e6e0098a1ce73&quot;
++dependencies = [
++ &quot;libc&quot;,
++ &quot;num-integer&quot;,
++ &quot;num-traits&quot;,
++ &quot;time&quot;,
++ &quot;winapi&quot;,
++]
++
+ [[package]]
+ name = &quot;fnv&quot;
+ version = &quot;1.0.7&quot;
+@@ -60,6 +79,7 @@ checksum = &quot;f3a87b616e37e93c22fb19bcd386f02f3af5ea98a25670ad0fce773de23c5e68&quot;
+ name = &quot;icfpc2021-tbd&quot;
+ version = &quot;0.1.0&quot;
+ dependencies = [
++ &quot;chrono&quot;,
+  &quot;http&quot;,
+  &quot;linkme&quot;,
+  &quot;simple-server&quot;,
+@@ -124,6 +144,25 @@ dependencies = [
+  &quot;cfg-if&quot;,
+ ]
+ 
++[[package]]
++name = &quot;num-integer&quot;
++version = &quot;0.1.44&quot;
++source = &quot;registry+https://github.com/rust-lang/crates.io-index&quot;
++checksum = &quot;d2cc698a63b549a70bc047073d2949cce27cd1c7b0a4a862d08a8031bc2801db&quot;
++dependencies = [
++ &quot;autocfg&quot;,
++ &quot;num-traits&quot;,
++]
++
++[[package]]
++name = &quot;num-traits&quot;
++version = &quot;0.2.14&quot;
++source = &quot;registry+https://github.com/rust-lang/crates.io-index&quot;
++checksum = &quot;9a64b1ec5cda2586e284722486d802acf1f7dbdc623e2bfc57e65ca1cd099290&quot;
++dependencies = [
++ &quot;autocfg&quot;,
++]
++
+ [[package]]
+ name = &quot;num_cpus&quot;
+ version = &quot;1.13.0&quot;
+">lock</td>
+<td title="Problem: There is no way to keep server&#x27;s state
+
+Solution:
+
+ - Use atomically reference counted (Arc) mutex
+ - Demonstrate its usage under server&#x27;s closure by using `move`
+   instruction
+
+"><a href="https://github.com/Vlad-Shcherbina/icfpc2021-tbd/commit/d14d078fcae8b7367c566d1b63d20c206f376bf5">Problem: There is no way to keep server's state</a></td>
+<td>jonn</td>
+</tr>
+<tr>
+<td>10.01</td>
+<td>6.85</td>
+<td>0.28</td>
+<td>0.74</td>
+<td></td>
+<td></td>
+<td title="Use 127.0.0.1 as hostname instead of &quot;localhost&quot;
+
+This way, both http://127.0.0.1:8340 and http://localhost:8340 work.
+
+"><a href="https://github.com/Vlad-Shcherbina/icfpc2021-tbd/commit/00903e8c2c93f9d048477c05d2eef54b5a602b4f">Use 127.0.0.1 as hostname instead of "localhost"</a></td>
+<td>Vlad Shcherbina</td>
+</tr>
+<tr>
+<td>10.09</td>
+<td>6.82</td>
+<td>0.28</td>
+<td>0.74</td>
+<td></td>
+<td></td>
+<td title="Print where it is serving
+
+"><a href="https://github.com/Vlad-Shcherbina/icfpc2021-tbd/commit/853e5ea10357af9d678eaa09744eb775d3524c54">Print where it is serving</a></td>
+<td>Vlad Shcherbina</td>
+</tr>
+<tr>
+<td>9.95</td>
+<td>6.81</td>
+<td>0.28</td>
+<td>0.74</td>
+<td></td>
+<td></td>
+<td title="Fix unicode
+
+"><a href="https://github.com/Vlad-Shcherbina/icfpc2021-tbd/commit/2535cd1dd20aae4cbec872c01cc27e5c222cadae">Fix unicode</a></td>
+<td>Vlad Shcherbina</td>
+</tr>
+<tr>
+<td>10.00</td>
+<td>6.80</td>
+<td>0.28</td>
+<td>0.74</td>
+<td title="diff --git a/Cargo.toml b/Cargo.toml
+index d64af8c..aaeb49d 100644
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -7,3 +7,5 @@ edition = &quot;2018&quot;
+ 
+ [dependencies]
+ linkme = &quot;*&quot;
++http = &quot;*&quot;
++simple-server = &quot;0.4.0&quot;
+">toml</td>
+<td title="diff --git a/Cargo.lock b/Cargo.lock
+index 622b437..33dffb4 100644
+--- a/Cargo.lock
++++ b/Cargo.lock
+@@ -2,13 +2,90 @@
+ # It is not intended for manual editing.
+ version = 3
+ 
++[[package]]
++name = &quot;byteorder&quot;
++version = &quot;1.4.3&quot;
++source = &quot;registry+https://github.com/rust-lang/crates.io-index&quot;
++checksum = &quot;14c189c53d098945499cdfa7ecc63567cf3886b3332b312a5b4585d8d3a6a610&quot;
++
++[[package]]
++name = &quot;bytes&quot;
++version = &quot;0.4.12&quot;
++source = &quot;registry+https://github.com/rust-lang/crates.io-index&quot;
++checksum = &quot;206fdffcfa2df7cbe15601ef46c813fce0965eb3286db6b56c583b814b51c81c&quot;
++dependencies = [
++ &quot;byteorder&quot;,
++ &quot;iovec&quot;,
++]
++
++[[package]]
++name = &quot;cfg-if&quot;
++version = &quot;1.0.0&quot;
++source = &quot;registry+https://github.com/rust-lang/crates.io-index&quot;
++checksum = &quot;baf1de4339761588bc0619e3cbc0120ee582ebb74b53b4efbf79117bd2da40fd&quot;
++
++[[package]]
++name = &quot;fnv&quot;
++version = &quot;1.0.7&quot;
++source = &quot;registry+https://github.com/rust-lang/crates.io-index&quot;
++checksum = &quot;3f9eec918d3f24069decb9af1554cad7c880e2da24a9afd88aca000531ab82c1&quot;
++
++[[package]]
++name = &quot;hermit-abi&quot;
++version = &quot;0.1.19&quot;
++source = &quot;registry+https://github.com/rust-lang/crates.io-index&quot;
++checksum = &quot;62b467343b94ba476dcb2500d242dadbb39557df889310ac77c5d99100aaac33&quot;
++dependencies = [
++ &quot;libc&quot;,
++]
++
++[[package]]
++name = &quot;http&quot;
++version = &quot;0.1.21&quot;
++source = &quot;registry+https://github.com/rust-lang/crates.io-index&quot;
++checksum = &quot;d6ccf5ede3a895d8856620237b2f02972c1bbc78d2965ad7fe8838d4a0ed41f0&quot;
++dependencies = [
++ &quot;bytes&quot;,
++ &quot;fnv&quot;,
++ &quot;itoa&quot;,
++]
++
++[[package]]
++name = &quot;httparse&quot;
++version = &quot;1.4.1&quot;
++source = &quot;registry+https://github.com/rust-lang/crates.io-index&quot;
++checksum = &quot;f3a87b616e37e93c22fb19bcd386f02f3af5ea98a25670ad0fce773de23c5e68&quot;
++
+ [[package]]
+ name = &quot;icfpc2021-tbd&quot;
+ version = &quot;0.1.0&quot;
+ dependencies = [
++ &quot;http&quot;,
+  &quot;linkme&quot;,
++ &quot;simple-server&quot;,
+ ]
+ 
++[[package]]
++name = &quot;iovec&quot;
++version = &quot;0.1.4&quot;
++source = &quot;registry+https://github.com/rust-lang/crates.io-index&quot;
++checksum = &quot;b2b3ea6ff95e175473f8ffe6a7eb7c00d054240321b84c57051175fe3c1e075e&quot;
++dependencies = [
++ &quot;libc&quot;,
++]
++
++[[package]]
++name = &quot;itoa&quot;
++version = &quot;0.4.7&quot;
++source = &quot;registry+https://github.com/rust-lang/crates.io-index&quot;
++checksum = &quot;dd25036021b0de88a0aff6b850051563c6516d0bf53f8638938edbb9de732736&quot;
++
++[[package]]
++name = &quot;libc&quot;
++version = &quot;0.2.98&quot;
++source = &quot;registry+https://github.com/rust-lang/crates.io-index&quot;
++checksum = &quot;320cfe77175da3a483efed4bc0adc1968ca050b098ce4f2f1c13a56626128790&quot;
++
+ [[package]]
+ name = &quot;linkme&quot;
+ version = &quot;0.2.6&quot;
+@@ -29,6 +106,34 @@ dependencies = [
+  &quot;syn&quot;,
+ ]
+ 
++[[package]]
++name = &quot;log&quot;
++version = &quot;0.3.9&quot;
++source = &quot;registry+https://github.com/rust-lang/crates.io-index&quot;
++checksum = &quot;e19e8d5c34a3e0e2223db8e060f9e8264aeeb5c5fc64a4ee9965c062211c024b&quot;
++dependencies = [
++ &quot;log 0.4.14&quot;,
++]
++
++[[package]]
++name = &quot;log&quot;
++version = &quot;0.4.14&quot;
++source = &quot;registry+https://github.com/rust-lang/crates.io-index&quot;
++checksum = &quot;51b9bbe6c47d51fc3e1a9b945965946b4c44142ab8792c50835a980d362c2710&quot;
++dependencies = [
++ &quot;cfg-if&quot;,
++]
++
++[[package]]
++name = &quot;num_cpus&quot;
++version = &quot;1.13.0&quot;
++source = &quot;registry+https://github.com/rust-lang/crates.io-index&quot;
++checksum = &quot;05499f3756671c15885fee9034446956fff3f243d6077b91e5767df161f766b3&quot;
++dependencies = [
++ &quot;hermit-abi&quot;,
++ &quot;libc&quot;,
++]
++
+ [[package]]
+ name = &quot;proc-macro2&quot;
+ version = &quot;1.0.27&quot;
+@@ -47,6 +152,26 @@ dependencies = [
+  &quot;proc-macro2&quot;,
+ ]
+ 
++[[package]]
++name = &quot;scoped_threadpool&quot;
++version = &quot;0.1.9&quot;
++source = &quot;registry+https://github.com/rust-lang/crates.io-index&quot;
++checksum = &quot;1d51f5df5af43ab3f1360b429fa5e0152ac5ce8c0bd6485cae490332e96846a8&quot;
++
++[[package]]
++name = &quot;simple-server&quot;
++version = &quot;0.4.0&quot;
++source = &quot;registry+https://github.com/rust-lang/crates.io-index&quot;
++checksum = &quot;b47624fcb3e3416bd7f764b2319875043ce22b0eff78f5c7684de07c88ba5761&quot;
++dependencies = [
++ &quot;http&quot;,
++ &quot;httparse&quot;,
++ &quot;log 0.3.9&quot;,
++ &quot;num_cpus&quot;,
++ &quot;scoped_threadpool&quot;,
++ &quot;time&quot;,
++]
++
+ [[package]]
+ name = &quot;syn&quot;
+ version = &quot;1.0.73&quot;
+@@ -58,8 +183,47 @@ dependencies = [
+  &quot;unicode-xid&quot;,
+ ]
+ 
++[[package]]
++name = &quot;time&quot;
++version = &quot;0.1.44&quot;
++source = &quot;registry+https://github.com/rust-lang/crates.io-index&quot;
++checksum = &quot;6db9e6914ab8b1ae1c260a4ae7a49b6c5611b40328a735b21862567685e73255&quot;
++dependencies = [
++ &quot;libc&quot;,
++ &quot;wasi&quot;,
++ &quot;winapi&quot;,
++]
++
+ [[package]]
+ name = &quot;unicode-xid&quot;
+ version = &quot;0.2.2&quot;
+ source = &quot;registry+https://github.com/rust-lang/crates.io-index&quot;
+ checksum = &quot;8ccb82d61f80a663efe1f787a51b16b5a51e3314d6ac365b08639f52387b33f3&quot;
++
++[[package]]
++name = &quot;wasi&quot;
++version = &quot;0.10.0+wasi-snapshot-preview1&quot;
++source = &quot;registry+https://github.com/rust-lang/crates.io-index&quot;
++checksum = &quot;1a143597ca7c7793eff794def352d41792a93c481eb1042423ff7ff72ba2c31f&quot;
++
++[[package]]
++name = &quot;winapi&quot;
++version = &quot;0.3.9&quot;
++source = &quot;registry+https://github.com/rust-lang/crates.io-index&quot;
++checksum = &quot;5c839a674fcd7a98952e593242ea400abe93992746761e38641405d28b00f419&quot;
++dependencies = [
++ &quot;winapi-i686-pc-windows-gnu&quot;,
++ &quot;winapi-x86_64-pc-windows-gnu&quot;,
++]
++
++[[package]]
++name = &quot;winapi-i686-pc-windows-gnu&quot;
++version = &quot;0.4.0&quot;
++source = &quot;registry+https://github.com/rust-lang/crates.io-index&quot;
++checksum = &quot;ac3b87c63620426dd9b991e5ce0329eff545bccbbb34f3be09ff6fb6ab51b7b6&quot;
++
++[[package]]
++name = &quot;winapi-x86_64-pc-windows-gnu&quot;
++version = &quot;0.4.0&quot;
++source = &quot;registry+https://github.com/rust-lang/crates.io-index&quot;
++checksum = &quot;712e227841d057c1ee1cd2fb22fa7e5a5461ae8e48fa2ca79ec42cfc1931183f&quot;
+">lock</td>
+<td title="Problem: http servers slow down compilation
+
+Solution:
+
+ - Use simple_server
+
+It compiles quickly, but has a significant drawback: seemingly it
+doesn&#x27;t support wider-than-byte characters, as can be seen when
+one runs `cargo run manpages/http` and accesses `/`.
+
+"><a href="https://github.com/Vlad-Shcherbina/icfpc2021-tbd/commit/b274b4d5e1519fbf553ba616d55a4f1ea9a6ce52">Problem: http servers slow down compilation</a></td>
+<td>jonn</td>
+</tr>
+<tr>
+<td>-</td>
+<td>-</td>
+<td>-</td>
+<td>-</td>
+<td></td>
+<td></td>
+<td title="Document testing and git workflow
+
+"><a href="https://github.com/Vlad-Shcherbina/icfpc2021-tbd/commit/558c8b45c8258811a244eb5389044deabf9099bd">Document testing and git workflow</a></td>
+<td>Vlad Shcherbina</td>
+</tr>
+<tr>
+<td>-</td>
+<td>-</td>
+<td>-</td>
+<td>-</td>
+<td></td>
+<td></td>
+<td title="Document data dirs; project_path() util
+
+"><a href="https://github.com/Vlad-Shcherbina/icfpc2021-tbd/commit/4659b84e374795a6e7683c09304ef456ff41e874">Document data dirs; project_path() util</a></td>
+<td>Vlad Shcherbina</td>
+</tr>
+<tr>
+<td>-</td>
+<td>-</td>
+<td>-</td>
+<td>-</td>
+<td title="diff --git a/Cargo.toml b/Cargo.toml
+index 6c8c554..d64af8c 100644
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -6,3 +6,4 @@ edition = &quot;2018&quot;
+ # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+ 
+ [dependencies]
++linkme = &quot;*&quot;
+">toml</td>
+<td title="diff --git a/Cargo.lock b/Cargo.lock
+index bb9801c..622b437 100644
+--- a/Cargo.lock
++++ b/Cargo.lock
+@@ -5,3 +5,61 @@ version = 3
+ [[package]]
+ name = &quot;icfpc2021-tbd&quot;
+ version = &quot;0.1.0&quot;
++dependencies = [
++ &quot;linkme&quot;,
++]
++
++[[package]]
++name = &quot;linkme&quot;
++version = &quot;0.2.6&quot;
++source = &quot;registry+https://github.com/rust-lang/crates.io-index&quot;
++checksum = &quot;04f7a548defb4c688d16c333586fe92907d774c2df78037ab098b8f7202bf7fb&quot;
++dependencies = [
++ &quot;linkme-impl&quot;,
++]
++
++[[package]]
++name = &quot;linkme-impl&quot;
++version = &quot;0.2.6&quot;
++source = &quot;registry+https://github.com/rust-lang/crates.io-index&quot;
++checksum = &quot;befcc41894750103e29b7d4b0763bbf807eb723ce78626c461cf6dadb84124ac&quot;
++dependencies = [
++ &quot;proc-macro2&quot;,
++ &quot;quote&quot;,
++ &quot;syn&quot;,
++]
++
++[[package]]
++name = &quot;proc-macro2&quot;
++version = &quot;1.0.27&quot;
++source = &quot;registry+https://github.com/rust-lang/crates.io-index&quot;
++checksum = &quot;f0d8caf72986c1a598726adc988bb5984792ef84f5ee5aa50209145ee8077038&quot;
++dependencies = [
++ &quot;unicode-xid&quot;,
++]
++
++[[package]]
++name = &quot;quote&quot;
++version = &quot;1.0.9&quot;
++source = &quot;registry+https://github.com/rust-lang/crates.io-index&quot;
++checksum = &quot;c3d0b9745dc2debf507c8422de05d7226cc1f0644216dfdfead988f9b1ab32a7&quot;
++dependencies = [
++ &quot;proc-macro2&quot;,
++]
++
++[[package]]
++name = &quot;syn&quot;
++version = &quot;1.0.73&quot;
++source = &quot;registry+https://github.com/rust-lang/crates.io-index&quot;
++checksum = &quot;f71489ff30030d2ae598524f61326b902466f72a0fb1a8564c001cc63425bcc7&quot;
++dependencies = [
++ &quot;proc-macro2&quot;,
++ &quot;quote&quot;,
++ &quot;unicode-xid&quot;,
++]
++
++[[package]]
++name = &quot;unicode-xid&quot;
++version = &quot;0.2.2&quot;
++source = &quot;registry+https://github.com/rust-lang/crates.io-index&quot;
++checksum = &quot;8ccb82d61f80a663efe1f787a51b16b5a51e3314d6ac365b08639f52387b33f3&quot;
+">lock</td>
+<td title="Entry points
+
+"><a href="https://github.com/Vlad-Shcherbina/icfpc2021-tbd/commit/dabdff62e4468d1ca0ff9de725df99d1bb10dbea">Entry points</a></td>
+<td>Vlad Shcherbina</td>
+</tr>
+<tr>
+<td>0.69</td>
+<td>0.43</td>
+<td>0.23</td>
+<td>0.39</td>
+<td></td>
+<td></td>
+<td title="Rust setup instructions
+
+"><a href="https://github.com/Vlad-Shcherbina/icfpc2021-tbd/commit/6668f74f577f7729eafa33f8ce10b8d9316c0a3a">Rust setup instructions</a></td>
+<td>Vlad Shcherbina</td>
+</tr>
+<tr>
+<td>0.70</td>
+<td>0.43</td>
+<td>0.24</td>
+<td>0.40</td>
+<td></td>
+<td></td>
+<td title="Initial commit
+
+"><a href="https://github.com/Vlad-Shcherbina/icfpc2021-tbd/commit/d577a0d03b78f3331b8618192d561f3a8a8acdb6">Initial commit</a></td>
+<td>Vlad Shcherbina</td>
+</tr>
+</table>
