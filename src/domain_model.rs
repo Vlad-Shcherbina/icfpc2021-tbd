@@ -46,6 +46,10 @@ impl BonusName {
     pub fn short_name(&self) -> String {
         format!("{:?}", self)[..1].to_owned()
     }
+
+    pub fn to_string(&self) -> String {
+        format!("{:?}", self)
+    }
 }
 
 #[derive(serde::Deserialize, serde::Serialize)]
