@@ -108,18 +108,18 @@ pub fn update_validator() -> Result<(), postgres::Error> {
 
 
 // Function assumes that solution has already been validated.
-pub fn write_valid_solution_to_db(problem_id: i64, pose: &Pose, dislikes: i64) 
+pub fn write_valid_solution_to_db(problem_id: i32, pose: &Pose, dislikes: i64) 
                 -> Result<(), postgres::Error> {
     let mut client = connect()?;
     if pose.bonuses.is_empty() {
         client.execute(
-            "INSERT INTO solution (problem, text, dislikes) VALUES ($1, $2, $3);",
-            &[&problem_id, &serde_json::to_vec(pose).unwrap(), &dislikes]
+            "INSERT INTO solutions (problem, text, dislikes) VALUES ($1, $2, $3);",
+            &[&problem_id, &serde_json::to_value(pose).unwrap(), &(dislikes as i32)]
         )?;
     }
     else {
         client.execute(
-            "INSERT INTO solution (problem, text, dislikes, bonus) VALUES ($1, $2, $3, $4);",
+            "INSERT INTO solutions (problem, text, dislikes, bonus) VALUES ($1, $2, $3, $4);",
             &[&problem_id, &serde_json::to_vec(pose).unwrap(), &dislikes, &pose.bonuses[0].bonus.to_string()]
         )?;
     }

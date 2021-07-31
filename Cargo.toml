@@ -17,4 +17,4 @@ ureq = { version = "*", default-features = false, features = ["tls", "cookies"] 
 regex = "1.5"
 ndarray = "*"
 integer-sqrt = "*"
-postgres = "*"
+postgres = { version = "*", features = ["with-serde_json-1"] }

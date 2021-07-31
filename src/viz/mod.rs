@@ -36,22 +36,39 @@ fn handler(_state: &Mutex<ServerState>, req: &Request, resp: ResponseBuilder) ->
             .body("");
     }
 
+    // // old version - submit to orgs' server - replaced by submitting to db
+    // if let Some(problem_id) = req.path.strip_prefix("/api/submit/") {
+    //     assert_eq!(req.method, "POST");
+    //     let problem_id: i32 = problem_id.parse().unwrap();
+
+    //     let pose: Pose = serde_json::from_slice(req.body).unwrap();
+    //     let res = crate::poses_live::submit_pose(problem_id, &pose);
+
+    //     let body = match res {
+    //         Ok(pose_id) => format!(
+    //             r#"submitted as <a href="https://poses.live/solutions/{}">{}</a>"#,
+    //             pose_id, pose_id),
+    //         Err(e) => e,
+    //     };
+
+    //     return resp.code("200 OK")
+    //         .body(body);
+    // }
+
     if let Some(problem_id) = req.path.strip_prefix("/api/submit/") {
         assert_eq!(req.method, "POST");
         let problem_id: i32 = problem_id.parse().unwrap();
+        let problem = load_problem(problem_id);
 
         let pose: Pose = serde_json::from_slice(req.body).unwrap();
-        let res = crate::poses_live::submit_pose(problem_id, &pose);
-
-        let body = match res {
-            Ok(pose_id) => format!(
-                r#"submitted as <a href="https://poses.live/solutions/{}">{}</a>"#,
-                pose_id, pose_id),
-            Err(e) => e,
+        let check = check_pose(&problem, &pose);
+        if !check.valid {
+            return resp.code("200 OK").body("Invalid solution was not submitted");
+        }
+        return match crate::db::write_valid_solution_to_db(problem_id, &pose, check.dislikes) {
+            Ok(_) => resp.code("200 OK").body("submitted successfully"),
+            Err(a) => resp.code("200 OK").body(format!("{}", a)),
         };
-
-        return resp.code("200 OK")
-            .body(body);
     }
 
     if req.path == "/api/check_pose" {
