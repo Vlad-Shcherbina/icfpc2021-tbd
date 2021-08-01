@@ -6,7 +6,7 @@ use crate::prelude::*;
 use crate::checker::{CheckPoseRequest, check_pose};
 use crate::shake::{ShakeRequest, shake};
 use crate::rotate::{RotateRequest, rotate};
-use crate::poses_live::{Scraper};
+// use crate::poses_live::{Scraper};
 
 struct ServerState {
     client: postgres::Client,
