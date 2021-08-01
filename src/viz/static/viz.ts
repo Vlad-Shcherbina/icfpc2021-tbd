@@ -56,7 +56,6 @@ async function get_problem(n: number): Promise<Problem> {
     return await response.json();
 }
 
-
 let problem: Problem;
 let highscore: string;
 let pose: Pose;
@@ -67,9 +66,9 @@ let selected: boolean[] = [];
 let server_check_result: CheckPoseResponse;
 
 async function show_problem_stats(problem_no: number) {
-    let hs = await fetch('/api/highscore/' + problem_no);
-    assert(hs.ok);
-    highscore = await hs.text();
+    // let hs = await fetch('/api/highscore/' + problem_no);
+    // assert(hs.ok);
+    // highscore = await hs.text();
 
     let problem_stats = document.getElementById('problem-stats')!;
     problem_stats.innerHTML = `
@@ -78,7 +77,34 @@ async function show_problem_stats(problem_no: number) {
     ${problem.figure.edges.length} edges,
     epsilon = ${problem.epsilon}`
     problem_stats.innerHTML += "<br>";
-    problem_stats.innerHTML += highscore;
+    // problem_stats.innerHTML += highscore;
+}
+
+async function show_solution_list(problem_no: number) {
+    let sl = await fetch('/api/solution_list/' + problem_no);
+    assert(sl.ok);
+    let list_json = await sl.text();
+
+    let list: [number, number][] = JSON.parse(list_json);
+    list.sort((a, b) => a[1] - b[1]);
+    let solution_div = document.getElementById('solution-cell')!;
+    
+    solution_div.innerHTML = "";
+    if (list.length == 0) {
+        solution_div.innerHTML = "no previous solutions";
+    }
+    else {
+        for (let s of list) {
+            solution_div.innerHTML += `<a class="solution_ref" href="#${problem_no}@${s[0]}">`
+                + `Solution ${s[0]}`
+                + `</a> got ${s[1]} dislikes<br>`
+        }
+    }
+
+    // for (let x of document.getElementsByClassName("solution_ref")) {
+    //     let a = x as HTMLAnchorElement;
+    //     a.onclick = () => load_solution_by_id(a.href);
+    // }
 }
 
 async function get_tgt_bonuses(problem_no: number): Promise<ProblemTgtBonus[]> {
@@ -102,8 +128,9 @@ async function main() {
             pose_id = ids[1];
         }
     }
-    show_problem_stats(problem_no);
     problem = await get_problem(problem_no);
+    show_problem_stats(problem_no);
+    show_solution_list(problem_no);
 
     let bonuses_to_use = document.getElementById("bonus_to_use")!;
     bonuses_to_use.innerHTML = "<b>Bonuses to use</b>: "
@@ -152,9 +179,10 @@ async function main() {
         });
         assert(r.ok);
         submit_result.innerHTML = await r.text();
-        setTimeout(() => {
-            show_problem_stats(problem_no);
-        }, 2000);
+        show_solution_list(problem_no);
+        // setTimeout(() => {
+        //     show_problem_stats(problem_no);
+        // }, 2000);
     };
 
     document.getElementById('our-submissions')!.innerHTML =

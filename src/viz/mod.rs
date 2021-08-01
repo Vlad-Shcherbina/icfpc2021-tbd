@@ -6,14 +6,15 @@ use crate::prelude::*;
 use crate::checker::{CheckPoseRequest, check_pose};
 use crate::shake::{ShakeRequest, shake};
 use crate::rotate::{RotateRequest, rotate};
-use crate::poses_live::{Scraper, PoseInfo, EvaluationResult };
+use crate::poses_live::{Scraper};
 
 struct ServerState {
+    client: postgres::Client,
 }
 
 crate::entry_point!("viz_server", viz_server);
 fn viz_server() {
-    let state = ServerState {};
+    let state = ServerState { client: crate::db::connect().unwrap() };
     let state = Arc::new(Mutex::new(state));
 
     let addr = "127.0.0.1:8000";
@@ -29,7 +30,9 @@ fn viz_server() {
     });
 }
 
-fn handler(_state: &Mutex<ServerState>, req: &Request, resp: ResponseBuilder) -> HandlerResult {
+fn handler(state: &Mutex<ServerState>, req: &Request, resp: ResponseBuilder) -> HandlerResult {
+    let client = &mut (*state.lock().unwrap()).client;
+
     if req.path == "/" {
         return resp.code("302 Found")
             .header("Location", "/src/viz/static/viz.html#42")
@@ -65,7 +68,7 @@ fn handler(_state: &Mutex<ServerState>, req: &Request, resp: ResponseBuilder) ->
         if !check.valid {
             return resp.code("200 OK").body("Invalid solution was not submitted");
         }
-        return match crate::db::write_valid_solution_to_db(problem_id, &pose, check.dislikes) {
+        return match crate::db::write_valid_solution_to_db(client, problem_id, &pose, check.dislikes) {
             Ok(_) => resp.code("200 OK").body("submitted successfully"),
             Err(a) => resp.code("200 OK").body(format!("{}", a)),
         };
@@ -95,23 +98,40 @@ fn handler(_state: &Mutex<ServerState>, req: &Request, resp: ResponseBuilder) ->
             .body(serde_json::to_vec(&r).unwrap());
     }
 
-    if let Some(problem_id) = req.path.strip_prefix("/api/highscore/") {
+    // // since the server is (almost) down, switch to db
+    // if let Some(problem_id) = req.path.strip_prefix("/api/highscore/") {
+    //     assert_eq!(req.method, "GET");
+    //     let problem_id: i32 = problem_id.parse().unwrap();
+
+    //     let mut scraper = Scraper::new();
+    //     let problem_info = scraper.problem_info(problem_id);
+
+    //     let body = match problem_info.highscore() {
+    //         Some(PoseInfo { id, er: EvaluationResult::Valid { dislikes }} ) => format!(
+    //             r#"Least dislikes: {}, at <a href="https://poses.live/solutions/{}">{}</a>"#,
+    //             dislikes, id, id),
+    //         Some(PoseInfo { .. }) => unreachable!(),
+    //         None => "No previous valid solutions".to_string(),
+    //     };
+
+    //     return resp.code("200 OK")
+    //         .body(body);
+    // }
+
+    if let Some(problem_id) = req.path.strip_prefix("/api/solution_list/") {
         assert_eq!(req.method, "GET");
         let problem_id: i32 = problem_id.parse().unwrap();
+        let v = crate::db::get_solutions_stats_by_problem(client, problem_id).unwrap();
+        return resp.code("200 OK").body(serde_json::to_string(&v).unwrap());
+    }
 
-        let mut scraper = Scraper::new();
-        let problem_info = scraper.problem_info(problem_id);
-
-        let body = match problem_info.highscore() {
-            Some(PoseInfo { id, er: EvaluationResult::Valid { dislikes }} ) => format!(
-                r#"Least dislikes: {}, at <a href="https://poses.live/solutions/{}">{}</a>"#,
-                dislikes, id, id),
-            Some(PoseInfo { .. }) => unreachable!(),
-            None => "No previous valid solutions".to_string(),
+    if let Some(solution_id) = req.path.strip_prefix("/api/get_pose/") {
+        assert_eq!(req.method, "GET");
+        let solution_id: i32 = solution_id.parse().unwrap();
+        return match crate::db::get_solution_by_id(client, solution_id).unwrap() {
+            None => resp.code("400 Bad Request").body(format!("Wrong solution id {}", solution_id)),
+            Some(p) => resp.code("200 OK").body(serde_json::to_vec(&p).unwrap()),
         };
-
-        return resp.code("200 OK")
-            .body(body);
     }
 
     if let Some(problem_id) = req.path.strip_prefix("/api/tgt_bonuses/") {
@@ -131,17 +151,19 @@ fn handler(_state: &Mutex<ServerState>, req: &Request, resp: ResponseBuilder) ->
             .body(serde_json::to_vec(&tgts).unwrap());
     }
 
-    if let Some(pose_id) = req.path.strip_prefix("/api/get_pose/") {
-        assert_eq!(req.method, "GET");
 
-        let mut scraper = Scraper::new();
-        let pose = scraper.get_pose_by_id(pose_id);
+    // // since the server is (almost) down, switch to db
+    // if let Some(pose_id) = req.path.strip_prefix("/api/get_pose/") {
+    //     assert_eq!(req.method, "GET");
 
-        return match pose {
-            Some(valid_pose) => resp.code("200 OK").body(serde_json::to_vec(&valid_pose).unwrap()),
-            None => resp.code("404 Not Found").body(vec![]),
-        }
-    }
+    //     let mut scraper = Scraper::new();
+    //     let pose = scraper.get_pose_by_id(pose_id);
+
+    //     return match pose {
+    //         Some(valid_pose) => resp.code("200 OK").body(serde_json::to_vec(&valid_pose).unwrap()),
+    //         None => resp.code("404 Not Found").body(vec![]),
+    //     }
+    // }
 
     static_handler(req, resp)
 }

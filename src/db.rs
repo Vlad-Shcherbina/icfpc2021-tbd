@@ -1,8 +1,10 @@
+use serde_json::de::Read;
+
 use crate::util::{project_path, load_problem, all_problem_ids};
 use crate::domain_model::Pose;
 
 
-fn connect() -> Result<postgres::Client, postgres::Error> {
+pub fn connect() -> Result<postgres::Client, postgres::Error> {
     let content = std::fs::read_to_string(project_path("data/db_pwd.txt")).unwrap();
     let client = postgres::Client::connect(&content, postgres::NoTls)?;
     Ok(client)
@@ -84,8 +86,7 @@ pub fn update_problems() {
 }
 
 #[allow(dead_code)]
-pub fn update_validator() -> Result<(), postgres::Error> {
-    let mut client = connect()?;
+pub fn update_validator(client: &mut postgres::Client) -> Result<(), postgres::Error> {
     for problem_id in all_problem_ids() {
         let problem = load_problem(problem_id);
         for row in client.query("SELECT * FROM solutions WHERE problem = $1;", &[&problem_id])? {
@@ -108,9 +109,9 @@ pub fn update_validator() -> Result<(), postgres::Error> {
 
 
 // Function assumes that solution has already been validated.
-pub fn write_valid_solution_to_db(problem_id: i32, pose: &Pose, dislikes: i64) 
+pub fn write_valid_solution_to_db(client: &mut postgres::Client,
+                problem_id: i32, pose: &Pose, dislikes: i64) 
                 -> Result<(), postgres::Error> {
-    let mut client = connect()?;
     if pose.bonuses.is_empty() {
         client.execute(
             "INSERT INTO solutions (problem, text, dislikes) VALUES ($1, $2, $3);",
@@ -125,4 +126,22 @@ pub fn write_valid_solution_to_db(problem_id: i32, pose: &Pose, dislikes: i64)
     }
 
     Ok(())
+}
+
+
+pub fn get_solutions_stats_by_problem(client: &mut postgres::Client, problem_id: i32) 
+                -> Result<Vec<(i32, i32)>, postgres::Error> {
+    let res = client.query("SELECT id, dislikes FROM solutions WHERE (problem = $1)", &[&problem_id])?;
+    Ok(res.iter().map(|r| (r.get("id"), r.get("dislikes"))).collect())
+}
+
+
+pub fn get_solution_by_id(client: &mut postgres::Client, solution_id: i32)
+                -> Result<Option<Pose>, postgres::Error> {
+    let res = client.query("SELECT text FROM solutions WHERE (id = $1)", &[&solution_id])?;
+    match res.len() {
+        0 => Ok(None),
+        1 => Ok(Some(serde_json::from_value(res[0].get("text")).unwrap())),
+        _ => panic!(),
+    }
 }

@@ -11,6 +11,7 @@
     .grid-wrapper {
         display: grid;
         grid-template-columns: 600px 1fr;
+        grid-template-columns: auto auto;
     }
 
     #canvas-cell {
@@ -20,7 +21,14 @@
 
     #toolbar-cell {
         grid-column: 2;
-        grid-row: 1;
+        /* grid-row: 1; */
+        grid-row-start: 1;
+        grid-row-end: 3;
+    }
+
+    #solution-cell {
+        grid-column: 1;
+        grid-row: 2;
     }
 </style>
 
@@ -183,7 +191,10 @@
                 <a href="#87">87</a>
                 <a href="#88">88</a>
             </div>
-
+    
+        </div>
+        <div id="solution-cell">
+            loading list of previous solutions...
         </div>
     </div>
 
