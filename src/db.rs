@@ -1,7 +1,8 @@
-// use serde_json::de::Read;
+use std::collections::HashMap;
 
+use crate::checker::check_pose;
 use crate::util::{project_path, load_problem, all_problem_ids};
-use crate::domain_model::{Pose, ProblemTgtBonus};
+use crate::domain_model::{BonusName, Pose, ProblemTgtBonus};
 
 
 pub fn connect() -> Result<postgres::Client, postgres::Error> {
@@ -91,6 +92,57 @@ pub fn update_problems() {
     }
 }
 
+crate::entry_point!("db_from_cache", from_cache, _EP3);
+pub fn from_cache() {
+    let mut client = connect().unwrap();
+    let cache = crate::poses_live::read_cache();
+    let mut poses_by_vertices: HashMap<usize, Vec<String>> = HashMap::new();
+    let mut valid_by_str_id: HashMap<String, i64> = HashMap::new();
+
+    for (str_id, p) in &cache.poses {
+        let mut v = p.vertices.len();
+        if p.bonuses.len() == 1 && p.bonuses[0].bonus == BonusName::BREAK_A_LEG {
+            v -= 1;
+        }
+        valid_by_str_id.insert(str_id.clone(), 0);
+        poses_by_vertices.entry(v).or_default().push(str_id.clone());
+    }
+
+    for problem_id in all_problem_ids() {
+        let problem = load_problem(problem_id);
+        println!("Problem {}", problem_id);
+        let pose_ids: &Vec<String> = poses_by_vertices.entry(problem.figure.vertices.len()).or_default();
+        println!("    by vertex number: {}", pose_ids.len());
+        let mut cnt: i32 = 0;
+        for str_id in pose_ids {
+            let pose = cache.poses.get(str_id).unwrap();
+            let r = check_pose(&problem, pose);
+            if r.valid {
+                let e = valid_by_str_id.entry(str_id.clone()).or_default();
+                *e += 1;
+                cnt += 1;
+                write_timestamped_valid_solution_to_db(
+                    &mut client,
+                    problem_id,
+                    pose,
+                    r.dislikes,
+                    &"cached",
+                    &std::time::SystemTime::from(chrono::DateTime::<chrono::Utc>::from(
+                        chrono::DateTime::parse_from_rfc3339("2021-07-12T12:00:00Z").unwrap()))
+                ).unwrap();
+            }
+        }
+        println!("    passed as valid: {}", cnt);
+    }
+
+    for (str_id, n) in valid_by_str_id {
+        if n > 1 {
+            println!("{} valid solutions for {}", n, str_id);
+        }        
+    }
+}
+
+
 #[allow(dead_code)]
 pub fn update_validator(client: &mut postgres::Client) -> Result<(), postgres::Error> {
     for problem_id in all_problem_ids() {
@@ -113,14 +165,14 @@ pub fn update_validator(client: &mut postgres::Client) -> Result<(), postgres::E
     Ok(())
 }
 
-
 // Function assumes that solution has already been validated.
-pub fn write_valid_solution_to_db(
+pub fn write_timestamped_valid_solution_to_db(
                 client: &mut postgres::Client,
                 problem_id: i32, 
                 pose: &Pose, 
                 dislikes: i64,
-                solver: &str)
+                solver: &str,
+                time: &std::time::SystemTime)
                 -> Result<(), postgres::Error> {
 
     let bonus = match pose.bonuses.len() {
@@ -134,7 +186,7 @@ pub fn write_valid_solution_to_db(
         "INSERT INTO solutions (problem, text, dislikes, bonus, solver, time)
                         VALUES ($1, $2, $3, $4, $5, $6) RETURNING id;", 
         &[&problem_id, &serde_json::to_value(pose).unwrap(),
-          &dislikes, &bonus, &solver, &std::time::SystemTime::now()]
+          &dislikes, &bonus, &solver, &time]
     )?.get("id");
 
     let problem = load_problem(problem_id);
@@ -151,6 +203,20 @@ pub fn write_valid_solution_to_db(
     transaction.commit()?;
 
     Ok(())
+}
+
+// Function assumes that solution has already been validated.
+pub fn write_valid_solution_to_db(
+                client: &mut postgres::Client,
+                problem_id: i32, 
+                pose: &Pose, 
+                dislikes: i64,
+                solver: &str)
+                -> Result<(), postgres::Error> {
+    
+    write_timestamped_valid_solution_to_db(
+        client, problem_id, pose, dislikes, solver, &std::time::SystemTime::now()
+    )
 }
 
 
