@@ -1,7 +1,6 @@
 use std::sync::{Arc, Mutex};
 use std::net::TcpListener;
 use crate::dev_server::{serve_forever, Request, ResponseBuilder, HandlerResult};
-use crate::domain_model::{ProblemTgtBonus};
 use crate::prelude::*;
 use crate::checker::{CheckPoseRequest, check_pose};
 use crate::shake::{ShakeRequest, shake};
@@ -68,7 +67,9 @@ fn handler(state: &Mutex<ServerState>, req: &Request, resp: ResponseBuilder) -> 
         if !check.valid {
             return resp.code("200 OK").body("Invalid solution was not submitted");
         }
-        return match crate::db::write_valid_solution_to_db(client, problem_id, &pose, check.dislikes) {
+        return match crate::db::write_valid_solution_to_db(
+                client, problem_id, &pose, check.dislikes, "visualizer"
+            ) {
             Ok(_) => resp.code("200 OK").body("submitted successfully"),
             Err(a) => resp.code("200 OK").body(format!("{}", a)),
         };
@@ -137,16 +138,8 @@ fn handler(state: &Mutex<ServerState>, req: &Request, resp: ResponseBuilder) -> 
     if let Some(problem_id) = req.path.strip_prefix("/api/tgt_bonuses/") {
         assert_eq!(req.method, "GET");
         let problem_id: i32 = problem_id.parse().unwrap();
-        let mut tgts: Vec<ProblemTgtBonus> = vec![];
-        for idx in all_problem_ids() {
-            let p = load_problem(idx);
-            for b in p.bonuses {
-                if b.problem == problem_id {
-                    tgts.push(ProblemTgtBonus{ bonus: b.bonus, from_problem: idx });
-                }
-            }
-        }
-
+        let tgts = crate::db::get_target_bonuses_by_problem(client, problem_id).unwrap();
+        dbg!(&tgts);
         return resp.code ("200 OK")
             .body(serde_json::to_vec(&tgts).unwrap());
     }

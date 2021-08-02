@@ -34,6 +34,8 @@ impl Problem {
 
 #[derive(serde::Deserialize, serde::Serialize)]
 #[derive(Debug, Clone, Copy, PartialEq)]
+#[derive(postgres_types::ToSql, postgres_types::FromSql)]
+#[postgres(name = "bonustype")]
 #[allow(non_camel_case_types, clippy::upper_case_acronyms)]
 pub enum BonusName {
     GLOBALIST,
@@ -45,10 +47,6 @@ pub enum BonusName {
 impl BonusName {
     pub fn short_name(&self) -> String {
         format!("{:?}", self)[..1].to_owned()
-    }
-
-    pub fn to_string(&self) -> String {
-        format!("{:?}", self)
     }
 }
 

@@ -1,7 +1,7 @@
 // use serde_json::de::Read;
 
 use crate::util::{project_path, load_problem, all_problem_ids};
-use crate::domain_model::Pose;
+use crate::domain_model::{Pose, ProblemTgtBonus};
 
 
 pub fn connect() -> Result<postgres::Client, postgres::Error> {
@@ -12,6 +12,11 @@ pub fn connect() -> Result<postgres::Client, postgres::Error> {
 
 fn create_db() -> Result<(), postgres::Error> {
     let mut client = connect()?;
+    client.batch_execute(
+        "DROP SCHEMA public CASCADE;
+         CREATE SCHEMA public;"
+    )?;
+
     client.batch_execute(
         "CREATE TYPE bonustype AS ENUM (
             'SUPERFLEX', 'WALLHACK', 'BREAK_A_LEG', 'GLOBALIST'
@@ -32,8 +37,10 @@ fn create_db() -> Result<(), postgres::Error> {
             id          SERIAL PRIMARY KEY,
             problem     integer NOT NULL,
             text        JSON NOT NULL,
-            dislikes    integer NOT NULL,
-            bonus_used  bonustype
+            dislikes    int8 NOT NULL,
+            bonus       bonustype,
+            solver      varchar(20),
+            time        timestamp
         );"
     )?;
 
@@ -51,21 +58,20 @@ fn create_db() -> Result<(), postgres::Error> {
 
 pub fn update_bonus_graph() -> Result<(), postgres::Error> {
     let mut client = connect()?;
-    client.batch_execute(
+    let mut transaction = client.transaction()?;
+    transaction.batch_execute(
         "DELETE FROM bonuses"
     )?;
     
     for id in all_problem_ids() {
         let p = load_problem(id);
         for b in p.bonuses {
-            let smth = client
-                    .prepare_typed("INSERT INTO bonuses (src, dest, type) VALUES ($1, $2, $3::bonustype);",
-                                    &[postgres::types::Type::INT4,
-                                      postgres::types::Type::INT4,
-                                      postgres::types::Type::TEXT])?;
-            client.execute(&smth, &[&id, &b.problem, &b.bonus.to_string()])?;
+            transaction.execute(
+                "INSERT INTO bonuses (src, dest, type) VALUES ($1, $2, $3);",
+                &[&id, &b.problem, &b.bonus])?;
         }
     }
+    transaction.commit()?;
     Ok(())
 }
 
@@ -109,28 +115,47 @@ pub fn update_validator(client: &mut postgres::Client) -> Result<(), postgres::E
 
 
 // Function assumes that solution has already been validated.
-pub fn write_valid_solution_to_db(client: &mut postgres::Client,
-                problem_id: i32, pose: &Pose, dislikes: i64) 
+pub fn write_valid_solution_to_db(
+                client: &mut postgres::Client,
+                problem_id: i32, 
+                pose: &Pose, 
+                dislikes: i64,
+                solver: &str)
                 -> Result<(), postgres::Error> {
-    if pose.bonuses.is_empty() {
-        client.execute(
-            "INSERT INTO solutions (problem, text, dislikes) VALUES ($1, $2, $3);",
-            &[&problem_id, &serde_json::to_value(pose).unwrap(), &(dislikes as i32)]
-        )?;
+
+    let bonus = match pose.bonuses.len() {
+        0 => None,
+        1 => Some(pose.bonuses[0].bonus),
+        _ => panic!("too many bonuses: {:?}", pose),
+    };
+    let mut transaction = client.transaction()?;
+
+    let solution_id: i32 = transaction.query_one(
+        "INSERT INTO solutions (problem, text, dislikes, bonus, solver, time)
+                        VALUES ($1, $2, $3, $4, $5, $6) RETURNING id;", 
+        &[&problem_id, &serde_json::to_value(pose).unwrap(),
+          &dislikes, &bonus, &solver, &std::time::SystemTime::now()]
+    )?.get("id");
+
+    let problem = load_problem(problem_id);
+    for bonus in problem.bonuses {
+        if pose.vertices.iter().any(|v| *v == bonus.position) {
+
+            transaction.execute(
+                "INSERT INTO bonuses_unlocked (solution, dest, type)
+                    VALUES ($1, $2, $3);",
+                &[&solution_id, &bonus.problem, &bonus.bonus]
+            )?;
+        }
     }
-    else {
-        client.execute(
-            "INSERT INTO solutions (problem, text, dislikes, bonus) VALUES ($1, $2, $3, $4);",
-            &[&problem_id, &serde_json::to_vec(pose).unwrap(), &dislikes, &pose.bonuses[0].bonus.to_string()]
-        )?;
-    }
+    transaction.commit()?;
 
     Ok(())
 }
 
 
 pub fn get_solutions_stats_by_problem(client: &mut postgres::Client, problem_id: i32) 
-                -> Result<Vec<(i32, i32)>, postgres::Error> {
+                -> Result<Vec<(i32, i64)>, postgres::Error> {
     let res = client.query("SELECT id, dislikes FROM solutions WHERE (problem = $1)", &[&problem_id])?;
     Ok(res.iter().map(|r| (r.get("id"), r.get("dislikes"))).collect())
 }
@@ -144,4 +169,15 @@ pub fn get_solution_by_id(client: &mut postgres::Client, solution_id: i32)
         1 => Ok(Some(serde_json::from_value(res[0].get("text")).unwrap())),
         _ => panic!(),
     }
+}
+
+pub fn get_target_bonuses_by_problem(client: &mut postgres::Client, problem_id: i32) 
+-> Result<Vec<ProblemTgtBonus>, postgres::Error> {
+    let res = client.query("SELECT src, type FROM bonuses WHERE dest = $1;", &[&problem_id])?;
+    Ok(res.iter().map(|r| {
+        ProblemTgtBonus {
+            bonus: r.get("type"),
+            from_problem: r.get("src")
+        }
+    }).collect())    
 }
