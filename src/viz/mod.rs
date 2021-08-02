@@ -30,7 +30,6 @@ fn viz_server() {
 }
 
 fn handler(state: &Mutex<ServerState>, req: &Request, resp: ResponseBuilder) -> HandlerResult {
-    let client = &mut (*state.lock().unwrap()).client;
 
     if req.path == "/" {
         return resp.code("302 Found")
@@ -59,6 +58,7 @@ fn handler(state: &Mutex<ServerState>, req: &Request, resp: ResponseBuilder) -> 
 
     if let Some(problem_id) = req.path.strip_prefix("/api/submit/") {
         assert_eq!(req.method, "POST");
+        let client = &mut (*state.lock().unwrap()).client;
         let problem_id: i32 = problem_id.parse().unwrap();
         let problem = load_problem(problem_id);
 
@@ -121,6 +121,7 @@ fn handler(state: &Mutex<ServerState>, req: &Request, resp: ResponseBuilder) -> 
 
     if let Some(problem_id) = req.path.strip_prefix("/api/solution_list/") {
         assert_eq!(req.method, "GET");
+        let client = &mut (*state.lock().unwrap()).client;
         let problem_id: i32 = problem_id.parse().unwrap();
         let v = crate::db::get_solutions_stats_by_problem(client, problem_id).unwrap();
         return resp.code("200 OK").body(serde_json::to_string(&v).unwrap());
@@ -128,6 +129,7 @@ fn handler(state: &Mutex<ServerState>, req: &Request, resp: ResponseBuilder) -> 
 
     if let Some(solution_id) = req.path.strip_prefix("/api/get_pose/") {
         assert_eq!(req.method, "GET");
+        let client = &mut (*state.lock().unwrap()).client;
         let solution_id: i32 = solution_id.parse().unwrap();
         return match crate::db::get_solution_by_id(client, solution_id).unwrap() {
             None => resp.code("400 Bad Request").body(format!("Wrong solution id {}", solution_id)),
@@ -137,6 +139,7 @@ fn handler(state: &Mutex<ServerState>, req: &Request, resp: ResponseBuilder) -> 
 
     if let Some(problem_id) = req.path.strip_prefix("/api/tgt_bonuses/") {
         assert_eq!(req.method, "GET");
+        let client = &mut (*state.lock().unwrap()).client;
         let problem_id: i32 = problem_id.parse().unwrap();
         let tgts = crate::db::get_target_bonuses_by_problem(client, problem_id).unwrap();
         dbg!(&tgts);
