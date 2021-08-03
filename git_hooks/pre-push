@@ -1,5 +1,8 @@
 #!/bin/sh
 
-# copy this to .git/hooks/
+# Copy this to .git/hooks/
+# If you want to be extra strict, also copy to .git/hooks/pre-commit
 
-cargo test
+cargo test && cargo clippy
+# Clippy lints won't block pushes,
+# but hopefully will annoy people into fixing them.
