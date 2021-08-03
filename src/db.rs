@@ -126,7 +126,7 @@ pub fn from_cache() {
                     problem_id,
                     pose,
                     r.dislikes,
-                    &"cached",
+                    "cached",
                     &std::time::SystemTime::from(chrono::DateTime::<chrono::Utc>::from(
                         chrono::DateTime::parse_from_rfc3339("2021-07-12T12:00:00Z").unwrap()))
                 ).unwrap();

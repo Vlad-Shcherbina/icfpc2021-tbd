@@ -45,10 +45,6 @@ pub fn diagonal_encode(x: &str) -> u32 {
     res
 }
 
-pub fn stov(s: &str) -> Vec<u8> {
-    s.as_bytes().to_vec()
-}
-
 pub fn qstom(query_string: &str) -> HashMap<String, String> {
     let kvs = query_string.split('&');
     let mut res = HashMap::new();
