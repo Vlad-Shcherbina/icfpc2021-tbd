@@ -1,14 +1,14 @@
 crate::entry_point!("manpages/http", http);
 
 use chrono::prelude::*;
-use http::header;
-use simple_server::{Method, Server, StatusCode};
 use std::collections::BTreeMap;
 use std::collections::HashMap;
 use std::convert::TryFrom;
 use std::iter::FromIterator;
 use std::sync::Arc;
 use std::sync::Mutex;
+use std::net::TcpListener;
+use crate::dev_server::serve_forever;
 
 #[allow(dead_code)]
 pub fn int_div_round_up_i128(dividend: i128, divisor: i128) -> i128 {
@@ -122,95 +122,100 @@ pub fn state0() -> State {
 fn http() {
     eprintln!("Hello from scratch");
 
+    let host = "127.0.0.1";
+    let port = diagonal_encode("icfp");
+    let listener = TcpListener::bind(format!("{}:{}", host, port)).unwrap();
+    eprintln!("Serving at http://{}:{} ...", host, port);
+
     let state = Arc::new(Mutex::new(state0()));
-    let mut server = Server::new(move |req, mut resp| {
-        //resp.header(header::CONTENT_TYPE, "application/json".as_bytes());
-        resp.header(header::CONTENT_TYPE, "text/html; charset=utf8".as_bytes());
-        {
-            let state_ref = state.clone();
-            let state_contents = state_ref.lock().unwrap();
-            eprintln!(
-                "Req {} {} {} {:#?}",
-                req.method(),
-                req.uri().path(),
-                req.uri(),
-                *state_contents
-            );
-        }
-        match (req.method(), req.uri().path()) {
-            (&Method::POST, "/rotate") => {
-                let data = String::from_utf8_lossy(req.body()).into_owned();
-                let body = format!("The data you posted was '{}'", data);
-                Ok(resp.body(body.into_bytes())?)
-            }
-            // Observe how we aren't locked into this pattern of just matching the whole path.
-            // We can achieve greater flexibility here by splitting, parsing prefix ["dashboard", "timer"] and then matching over the verb!
-            // I can't be bothered now, too much stuff to figure out, sorry.
-            (&Method::GET, "/dashboard/timer") => {
-                let state_ref = state.clone();
-                let state_contents = &*state_ref.lock().unwrap();
-                if let Ok(serialized) = serde_json::to_string(&state_contents) {
-                    resp.header(header::CONTENT_TYPE, "application/json".as_bytes());
-                    Ok(resp.body(stov(&serialized))?)
-                } else {
-                    resp.header(header::CONTENT_TYPE, "text/html; charset=utf8".as_bytes());
-                    resp.status(StatusCode::INTERNAL_SERVER_ERROR);
-                    Ok(resp.body(stov("<h1>🤷 502</h1><p>D̾ͮ̎ͪ͏̰͖̳̣ą͙̖̘̩̱͙͂t̻̩͙̹̳̳̼̂ͭͧ̈́͡aͫ͏̯͇̠̲͔ ̧̗̳̜̥͌ͩ͗i̙̮͗͑́s̐̑̀̈́͏̬̙̪͍̭̱̙ ̰͇̦̗͂ͮ̍͡ͅc̛̫̪͙̣͔̙͉̣̓ǒ̄҉̥̙̟͕̝r̛̙̫̹͕͒r͕̻̫̼̘̻̂͌ͤ̎͜u̢̞͙͕͐̚ṕ̷̩͕̗̗̞̠̒̌̋t̲̜̺̭͖̝̅ͥ͘ͅe̵̮͖͈̝͔̥͎̎͆ͦ̒ͅd̷͉̙̰͖͉͙̐ͫ</p>"))?)
+    serve_forever(listener, || {
+        let state = Arc::clone(&state);
+        move |req, resp| {
+            match (req.method, req.path) {
+                ("POST", "/rotate") => {
+                    let data = String::from_utf8_lossy(req.body).into_owned();
+                    let body = format!("The data you posted was '{}'", data);
+                    resp.code("200 OK")
+                        .header("Content-Type", "text/html; charset=utf8")
+                        .body(body)
                 }
-            }
-            (&Method::GET, "/dashboard/timer/insert") => {
-                if let Some(qs) = req.uri().query() {
-                    let q_map = qstom(qs);
-                    let target = with_q_map_mk_naivedatetime(q_map.clone());
-                    let label = q_map.get("label").unwrap_or(&"a timer".to_string()).clone();
-                    {
-                        let state_ref = state.clone();
-                        let mut state_contents = state_ref.lock().unwrap();
-                        state_contents.insert(target, label);
-                        eprintln!("State1 {:#?}", *state_contents);
+                ("GET", "/dashboard/timer") => {
+                    let state_contents = &*state.lock().unwrap();
+                    if let Ok(serialized) = serde_json::to_string(state_contents) {
+                        resp.code("200 OK")
+                            .header("Content-Type", "application/json")
+                            .body(serialized)
+                    } else {
+                        resp.code("500 Internal Server Error")
+                            .header("Content-Type", "text/html; charset=utf8")
+                            .body("<h1>🤷 502</h1><p>D̾ͮ̎ͪ͏̰͖̳̣ą͙̖̘̩̱͙͂t̻̩͙̹̳̳̼̂ͭͧ̈́͡aͫ͏̯͇̠̲͔ ̧̗̳̜̥͌ͩ͗i̙̮͗͑́s̐̑̀̈́͏̬̙̪͍̭̱̙ ̰͇̦̗͂ͮ̍͡ͅc̛̫̪͙̣͔̙͉̣̓ǒ̄҉̥̙̟͕̝r̛̙̫̹͕͒r͕̻̫̼̘̻̂͌ͤ̎͜u̢̞͙͕͐̚ṕ̷̩͕̗̗̞̠̒̌̋t̲̜̺̭͖̝̅ͥ͘ͅe̵̮͖͈̝͔̥͎̎͆ͦ̒ͅd̷͉̙̰͖͉͙̐ͫ</p>")
                     }
-                    Ok(resp.body(stov(format!(r##"Inserting {:#?}"##, target).as_str()))?)
-                } else {
-                    resp.header(header::CONTENT_TYPE, "text/html; charset=utf8".as_bytes());
-                    resp.status(StatusCode::UNPROCESSABLE_ENTITY);
-                    Ok(resp.body(stov("<h1>🤷 Ч22</h1><p>Query string is missing.</p>"))?)
                 }
-            }
-            (&Method::GET, "/dashboard/timer/remove") => {
-                if let Some(qs) = req.uri().query() {
-                    let q_map = qstom(qs);
-                    let target = with_q_map_mk_naivedatetime(q_map);
-                    {
-                        let state_ref = state.clone();
-                        let mut state_contents = state_ref.lock().unwrap();
-                        state_contents.remove(&target);
-                        eprintln!("State1 {:#?}", *state_contents);
+                ("GET", "/dashboard/timer/insert") => {
+                    let uri: http::Uri = req.path.parse().unwrap();
+                    if let Some(qs) = uri.query() {
+                        let q_map = qstom(qs);
+                        let target = with_q_map_mk_naivedatetime(q_map.clone());
+                        let label = q_map.get("label").unwrap_or(&"a timer".to_string()).clone();
+                        {
+                            let mut state_contents = state.lock().unwrap();
+                            state_contents.insert(target, label);
+                            eprintln!("State1 {:#?}", *state_contents);
+                        }
+                        resp.code("200 OK")
+                            .header("Content-Type", "text/html; charset=utf8")
+                            .body(format!(r##"Inserting {:#?}"##, target))
+                    } else {
+                        resp.code("422 Unprocessable Entity")
+                            .header("Content-Type", "text/html; charset=utf8")
+                            .body("<h1>🤷 Ч22</h1><p>Query string is missing.</p>")
                     }
-                    Ok(resp.body(stov(format!(r##"Removing {:#?}"##, target).as_str()))?)
-                } else {
-                    resp.header(header::CONTENT_TYPE, "text/html; charset=utf8".as_bytes());
-                    resp.status(StatusCode::UNPROCESSABLE_ENTITY);
-                    Ok(resp.body(stov("<h1>🤷 Ч22</h1><p>Query string is missing.</p>"))?)
                 }
-            }
-            (&Method::GET, "/hello") => Ok(resp.body(stov(r#"{"greeting": "добрый вечер!"}"#))?),
-            (_, _) => {
-                resp.header(header::CONTENT_TYPE, "text/html; charset=utf8".as_bytes());
-                resp.status(StatusCode::NOT_FOUND);
-                Ok(resp.body(stov(
-                    "<h1>🤷 ЧОЧ</h1><p>Unicode (UTF-8, really) is fine.</p>
-                    <a href='/dashboard.html'>countdown</a>",
-                ))?)
+                ("GET", "/dashboard/timer/remove") => {
+                    let uri: http::Uri = req.path.parse().unwrap();
+                    if let Some(qs) = uri.query() {
+                        let q_map = qstom(qs);
+                        let target = with_q_map_mk_naivedatetime(q_map);
+                        {
+                            let state_ref = state.clone();
+                            let mut state_contents = state_ref.lock().unwrap();
+                            state_contents.remove(&target);
+                            eprintln!("State1 {:#?}", *state_contents);
+                        }
+                        resp.code("200 OK")
+                            .header("Content-Type", "text/html; charset=utf8")
+                            .body(format!(r##"Removing {:#?}"##, target))
+                    } else {
+                        resp.code("422 Unprocessable Entity")
+                            .header("Content-Type", "text/html; charset=utf8")
+                            .body("<h1>🤷 Ч22</h1><p>Query string is missing.</p>")
+                    }
+                }
+                (_, _) => {
+                    let pth = crate::util::project_path(format!("public{}", req.path));
+                    match std::fs::read(&pth) {
+                        Ok(a) if req.method == "GET" => {
+                            let typ = match pth.extension().unwrap().to_str().unwrap() {
+                                "html" => "text/html; charset=utf8",
+                                "css" => "text/css",
+                                "ico" => "image/x-icon",
+                                _ => panic!("{:?}", pth),
+                            };
+                            resp.code("200 OK")
+                                .header("Content-Type", typ)
+                                .body(a)
+                        }
+                        _ => {
+                            resp.code("404 Not Found")
+                                .header("Content-Type", "text/html; charset=utf8")
+                                .body("<h1>🤷 ЧОЧ</h1><p>Unicode (UTF-8, really) is fine.</p>
+                                      <a href='/dashboard.html'>countdown</a>")
+                        }
+                    }
+                }
             }
         }
     });
-
-    server.set_static_directory(".");
-    let host = "127.0.0.1";
-    let port_string = format!("{}", diagonal_encode("icfp"));
-    let port = port_string.as_str();
-    eprintln!("Serving at http://{}:{} ...", host, port);
-    server.listen(host, port);
 }
 
 #[cfg(test)]

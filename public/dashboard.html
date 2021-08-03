@@ -61,7 +61,7 @@
                         root.querySelectorAll(".hours")[0].innerText = (hours + "").padStart(2, '0') + ":";
                         root.querySelectorAll(".minutes")[0].innerText = (minutes + "").padStart(2, '0') + ":";
                         root.querySelectorAll(".seconds")[0].innerText = (seconds + "").padStart(2, '0');
-                        if (delta >= 0) {
+                        if (true || delta >= 0) {
                             acc.push(pair);
                             return acc;
                         } else {
