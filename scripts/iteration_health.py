@@ -39,7 +39,7 @@ def main():
     for _ in range(REPEAT):
         for p in random.sample(src_paths, k=len(src_paths)):
             Path(p).touch()
-            for mode in random.sample(MODES.keys(), k=len(MODES)):
+            for mode in random.sample(list(MODES), k=len(MODES)):
                 start = time.time()
                 subprocess.run(MODES[mode], check=True, capture_output=True)
                 timings[p][mode].append(time.time() - start)
