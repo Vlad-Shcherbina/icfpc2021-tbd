@@ -4,11 +4,14 @@ You need relatively recent Rust nightly toolchain.
 
 On any Linux:
 
-```
-curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs > rustup.sh
-sh rustup.sh --default-toolchain nightly --profile minimal -y
-rm rustup.sh
-```
+1. ```
+   curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs > rustup.sh
+   sh rustup.sh --default-toolchain nightly --profile minimal -y
+   rm rustup.sh
+   ```
+2. ```
+   sudo apt install -y lld
+   ```
 
 On Windows:
 
