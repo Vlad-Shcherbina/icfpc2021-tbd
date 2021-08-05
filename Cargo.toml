@@ -22,3 +22,6 @@ postgres-types = { version = "*", features = ["derive"] }
 [profile.dev.package."*"]
 opt-level = "s"
 debug = false
+
+[profile.release]
+incremental = true
