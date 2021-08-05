@@ -117,7 +117,7 @@ fn resubmit_best() {
     for problem_id in all_problem_ids() {
         let pi = data.problems.get(&problem_id).unwrap();
 
-        let hs = pi.bonusless_highscore();
+        let hs = bonusless_highscore(pi);
         let lt = pi.latest();
 
         if hs != lt {
@@ -133,6 +133,23 @@ fn resubmit_best() {
 
     // update the cache right away since all of it has changed
     scrape_cache();
+}
+
+pub fn bonusless_highscore(pi: &ProblemInfo) -> Option<&PoseInfo> {
+    let data = read_cache();
+    pi.poses.iter()
+    .filter_map(|pi| match pi.er {
+        EvaluationResult::Valid { dislikes } =>
+            if data.poses.get(&pi.id).unwrap().bonuses.is_empty() {
+                Some((dislikes, pi))
+            } else {
+                None
+            },
+        EvaluationResult::Invalid => None,
+        EvaluationResult::Pending => None,
+    })
+    .min_by_key(|q| q.0)
+    .map(|q| q.1)
 }
 
 pub struct Scraper {
@@ -184,23 +201,6 @@ impl ProblemInfo {
         self.poses.iter()
         .filter_map(|pi| match pi.er {
             EvaluationResult::Valid { dislikes } => Some((dislikes, pi)),
-            EvaluationResult::Invalid => None,
-            EvaluationResult::Pending => None,
-        })
-        .min_by_key(|q| q.0)
-        .map(|q| q.1)
-    }
-
-    pub fn bonusless_highscore(&self) -> Option<&PoseInfo> {
-        let data = read_cache();
-        self.poses.iter()
-        .filter_map(|pi| match pi.er {
-            EvaluationResult::Valid { dislikes } =>
-                if data.poses.get(&pi.id).unwrap().bonuses.is_empty() {
-                    Some((dislikes, pi))
-                } else {
-                    None
-                },
             EvaluationResult::Invalid => None,
             EvaluationResult::Pending => None,
         })
