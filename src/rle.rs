@@ -296,150 +296,155 @@ impl Set2D {
 	}
 }
 
-fn check_union_1_d(a: &[(i64, i64)], b: &[(i64, i64)], expected: &[(i64, i64)]) {
-	let a = Set1D::from_pairs(a);
-	let b = Set1D::from_pairs(b);
-	let expected = Set1D::from_pairs(expected);
-	assert_eq!(a.union(&b), expected);
-	assert_eq!(b.union(&a), expected);
-	assert_eq!(a.alternative_union(&b), expected);
-	assert_eq!(b.alternative_union(&a), expected);
-}
+#[cfg(test)]
+mod tests {
+    use super::*;
 
-#[test]
-fn test_union_1_d() {
-	let b = [(0, 10), (11, 20), (30, 40)];
-	let c = [(5, 12), (35, 37), (45, 47), (50, 55)];
-
-	check_union_1_d(&[], &[], &[]);
-	check_union_1_d(&b, &b, &b);
-	check_union_1_d(&c, &c, &c);
-	check_union_1_d(&[], &b, &b);
-	check_union_1_d(&b, &c,
-		&[(0, 20), (30, 40), (45, 47), (50, 55)]);
-
-	check_union_1_d(&[(10, 20)], &[(20, 30)], &[(10, 30)]);
-
-	check_union_1_d(
-		&[(10, 100)],
-		&[(5, 20), (30, 40), (90, 110)],
-		&[(5, 110)]);
-}
-
-fn check_intersection_1_d(a: &[(i64, i64)], b: &[(i64, i64)], expected: &[(i64, i64)]) {
-	let a = Set1D::from_pairs(a);
-	let b = Set1D::from_pairs(b);
-	let expected = Set1D::from_pairs(expected);
-	assert_eq!(a.intersection(&b), expected);
-	assert_eq!(b.intersection(&a), expected);
-	assert_eq!(a.alternative_intersection(&b), expected);
-	assert_eq!(b.alternative_intersection(&a), expected);
-}
-
-#[test]
-fn test_intersection_1_d() {
-	let b = [(0, 10), (11, 20), (30, 40), (48, 50), (50, 52), (54, 56), (65, 70)];
-	let c = [(5, 12), (35, 37), (45, 47), (50, 60)];
-
-	check_intersection_1_d(&[], &[], &[]);
-	check_intersection_1_d(&[], &b, &[]);
-	check_intersection_1_d(&b, &b, &b);
-	check_intersection_1_d(&c, &c, &c);
-	check_intersection_1_d(&b, &c,
-		&[(5, 10), (11, 12), (35, 37), (50, 52), (54, 56)]);
-
-	check_intersection_1_d(&[(10, 20)], &[(20, 30)], &[]);
-
-	check_intersection_1_d(
-		&[(10, 100)],
-		&[(5, 20), (30, 40), (90, 110)],
-		&[(10, 20), (30, 40), (90, 100)]);
-}
-
-// picked up from rail.rs (deltas()) for testing
-// actually does too much work (ranges should be ~ -sqrt(max_d)..sqrt(max_d))
-#[allow(dead_code)]
-fn ring(x_center: i64, y_center: i64, min_d: i64, max_d: i64) -> Vec<Pt> {
-    let mut result = vec![];
-    for y in -max_d..=max_d {
-        for x in -max_d..=max_d {
-            let d = Pt { x, y }.len2();
-            if min_d <= d && d <= max_d {
-                result.push(Pt {x: x_center + x, y: y_center + y});
-            }
-        }
-    }
-    result
-}
-
-#[test]
-fn test_ring() {
-	fn check_eq(x: i64, y: i64, min_d: i64, max_d: i64) {
-		// NB: assumes same ordering
-		assert_eq!(Set2D::ring(x, y, min_d, max_d).as_points(),
-				   ring(x, y, min_d, max_d));
-	}
-	check_eq(1, 2, 0, 0);
-	check_eq(1, 2, 1, 10);
-	check_eq(0, 0, 10, 100);
-	check_eq(0, 0, 80, 81);
-	// A tricky case which goes staight to 2-run lines.
-	check_eq(0, 0, 79, 80);
-}
-
-#[test]
-fn test_union_2d() {
-	let empty = Set2D::empty();
-	let a = Set2D::ring(0, 0, 10, 100);
-	assert_eq!(a.union(&empty), a);
-	assert_eq!(empty.union(&a), a);
-	assert_eq!(a.union(&a), a);
-	
-	fn check_eq(x1: i64, y1: i64, min_d1: i64, max_d1: i64,
-				x2: i64, y2: i64, min_d2: i64, max_d2: i64) {
-		let set_rle: HashSet<Pt> = Set2D::ring(x1, y1, min_d1, max_d1)
-			.union(&Set2D::ring(x2, y2, min_d2, max_d2))
-			.as_points().iter().cloned().collect();
-		let ring1: HashSet<Pt> = ring(x1, y1, min_d1, max_d2).iter().cloned().collect();
-		let ring2: HashSet<Pt> = ring(x2, y2, min_d2, max_d2).iter().cloned().collect();
-		let set_hash: HashSet<Pt> = ring1.union(&ring2).cloned().collect();
-		assert_eq!(set_rle, set_hash);
+	fn check_union_1_d(a: &[(i64, i64)], b: &[(i64, i64)], expected: &[(i64, i64)]) {
+		let a = Set1D::from_pairs(a);
+		let b = Set1D::from_pairs(b);
+		let expected = Set1D::from_pairs(expected);
+		assert_eq!(a.union(&b), expected);
+		assert_eq!(b.union(&a), expected);
+		assert_eq!(a.alternative_union(&b), expected);
+		assert_eq!(b.alternative_union(&a), expected);
 	}
 
-	check_eq(0, 0, 10, 100, 0, 0, 10, 100);
-	check_eq(10, 0, 10, 100, 0, 0, 10, 100);
-	check_eq(10, 10, 10, 100, 0, 0, 10, 100);
-	check_eq(0, 0, 10, 100, 30, 0, 10, 100);
-	check_eq(0, 0, 10, 100, 0, 30, 10, 100);
-	check_eq(30, 0, 10, 100, 0, 0, 10, 100);
-	check_eq(0, 30, 10, 100, 0, 0, 10, 100);	
-}
+	#[test]
+	fn test_union_1_d() {
+		let b = [(0, 10), (11, 20), (30, 40)];
+		let c = [(5, 12), (35, 37), (45, 47), (50, 55)];
 
-#[test]
-fn test_intersect_2d() {
-	let empty = Set2D::empty();
-	let a = Set2D::ring(0, 0, 1, 10);
-	assert_eq!(a.intersection(&empty), empty);
-	assert_eq!(empty.intersection(&a), empty);
-	assert_eq!(a.intersection(&a), a);
-	
-	fn check_eq(x1: i64, y1: i64, min_d1: i64, max_d1: i64,
-				x2: i64, y2: i64, min_d2: i64, max_d2: i64) {
-		let set_rle: HashSet<Pt> = Set2D::ring(x1, y1, min_d1, max_d1)
-			.intersection(&Set2D::ring(x2, y2, min_d2, max_d2))
-			.as_points().iter().cloned().collect();
-		let ring1: HashSet<Pt> = ring(x1, y1, min_d1, max_d2).iter().cloned().collect();
-		let ring2: HashSet<Pt> = ring(x2, y2, min_d2, max_d2).iter().cloned().collect();
-		let set_hash: HashSet<Pt> = ring1.intersection(&ring2).cloned().collect();
-		assert_eq!(set_rle, set_hash);
+		check_union_1_d(&[], &[], &[]);
+		check_union_1_d(&b, &b, &b);
+		check_union_1_d(&c, &c, &c);
+		check_union_1_d(&[], &b, &b);
+		check_union_1_d(&b, &c,
+			&[(0, 20), (30, 40), (45, 47), (50, 55)]);
+
+		check_union_1_d(&[(10, 20)], &[(20, 30)], &[(10, 30)]);
+
+		check_union_1_d(
+			&[(10, 100)],
+			&[(5, 20), (30, 40), (90, 110)],
+			&[(5, 110)]);
 	}
 
-	check_eq(0, 0, 10, 100, 0, 0, 10, 100);
-	check_eq(10, 0, 10, 100, 0, 0, 10, 100);
-	check_eq(10, 0, 10, 15, 0, 0, 10, 15);
-	check_eq(10, 10, 10, 100, 0, 0, 10, 100);
-	check_eq(0, 0, 10, 100, 30, 0, 10, 100);
-	check_eq(0, 0, 10, 100, 0, 30, 10, 100);
-	check_eq(30, 0, 10, 100, 0, 0, 10, 100);
-	check_eq(0, 30, 10, 100, 0, 0, 10, 100);	
+	fn check_intersection_1_d(a: &[(i64, i64)], b: &[(i64, i64)], expected: &[(i64, i64)]) {
+		let a = Set1D::from_pairs(a);
+		let b = Set1D::from_pairs(b);
+		let expected = Set1D::from_pairs(expected);
+		assert_eq!(a.intersection(&b), expected);
+		assert_eq!(b.intersection(&a), expected);
+		assert_eq!(a.alternative_intersection(&b), expected);
+		assert_eq!(b.alternative_intersection(&a), expected);
+	}
+
+	#[test]
+	fn test_intersection_1_d() {
+		let b = [(0, 10), (11, 20), (30, 40), (48, 50), (50, 52), (54, 56), (65, 70)];
+		let c = [(5, 12), (35, 37), (45, 47), (50, 60)];
+
+		check_intersection_1_d(&[], &[], &[]);
+		check_intersection_1_d(&[], &b, &[]);
+		check_intersection_1_d(&b, &b, &b);
+		check_intersection_1_d(&c, &c, &c);
+		check_intersection_1_d(&b, &c,
+			&[(5, 10), (11, 12), (35, 37), (50, 52), (54, 56)]);
+
+		check_intersection_1_d(&[(10, 20)], &[(20, 30)], &[]);
+
+		check_intersection_1_d(
+			&[(10, 100)],
+			&[(5, 20), (30, 40), (90, 110)],
+			&[(10, 20), (30, 40), (90, 100)]);
+	}
+
+	// picked up from rail.rs (deltas()) for testing
+	// actually does too much work (ranges should be ~ -sqrt(max_d)..sqrt(max_d))
+	#[allow(dead_code)]
+	fn ring(x_center: i64, y_center: i64, min_d: i64, max_d: i64) -> Vec<Pt> {
+	    let mut result = vec![];
+	    for y in -max_d..=max_d {
+	        for x in -max_d..=max_d {
+	            let d = Pt { x, y }.len2();
+	            if min_d <= d && d <= max_d {
+	                result.push(Pt {x: x_center + x, y: y_center + y});
+	            }
+	        }
+	    }
+	    result
+	}
+
+	#[test]
+	fn test_ring() {
+		fn check_eq(x: i64, y: i64, min_d: i64, max_d: i64) {
+			// NB: assumes same ordering
+			assert_eq!(Set2D::ring(x, y, min_d, max_d).as_points(),
+					   ring(x, y, min_d, max_d));
+		}
+		check_eq(1, 2, 0, 0);
+		check_eq(1, 2, 1, 10);
+		check_eq(0, 0, 10, 100);
+		check_eq(0, 0, 80, 81);
+		// A tricky case which goes staight to 2-run lines.
+		check_eq(0, 0, 79, 80);
+	}
+
+	#[test]
+	fn test_union_2d() {
+		let empty = Set2D::empty();
+		let a = Set2D::ring(0, 0, 10, 100);
+		assert_eq!(a.union(&empty), a);
+		assert_eq!(empty.union(&a), a);
+		assert_eq!(a.union(&a), a);
+		
+		fn check_eq(x1: i64, y1: i64, min_d1: i64, max_d1: i64,
+					x2: i64, y2: i64, min_d2: i64, max_d2: i64) {
+			let set_rle: HashSet<Pt> = Set2D::ring(x1, y1, min_d1, max_d1)
+				.union(&Set2D::ring(x2, y2, min_d2, max_d2))
+				.as_points().iter().cloned().collect();
+			let ring1: HashSet<Pt> = ring(x1, y1, min_d1, max_d2).iter().cloned().collect();
+			let ring2: HashSet<Pt> = ring(x2, y2, min_d2, max_d2).iter().cloned().collect();
+			let set_hash: HashSet<Pt> = ring1.union(&ring2).cloned().collect();
+			assert_eq!(set_rle, set_hash);
+		}
+
+		check_eq(0, 0, 10, 100, 0, 0, 10, 100);
+		check_eq(10, 0, 10, 100, 0, 0, 10, 100);
+		check_eq(10, 10, 10, 100, 0, 0, 10, 100);
+		check_eq(0, 0, 10, 100, 30, 0, 10, 100);
+		check_eq(0, 0, 10, 100, 0, 30, 10, 100);
+		check_eq(30, 0, 10, 100, 0, 0, 10, 100);
+		check_eq(0, 30, 10, 100, 0, 0, 10, 100);	
+	}
+
+	#[test]
+	fn test_intersect_2d() {
+		let empty = Set2D::empty();
+		let a = Set2D::ring(0, 0, 1, 10);
+		assert_eq!(a.intersection(&empty), empty);
+		assert_eq!(empty.intersection(&a), empty);
+		assert_eq!(a.intersection(&a), a);
+		
+		fn check_eq(x1: i64, y1: i64, min_d1: i64, max_d1: i64,
+					x2: i64, y2: i64, min_d2: i64, max_d2: i64) {
+			let set_rle: HashSet<Pt> = Set2D::ring(x1, y1, min_d1, max_d1)
+				.intersection(&Set2D::ring(x2, y2, min_d2, max_d2))
+				.as_points().iter().cloned().collect();
+			let ring1: HashSet<Pt> = ring(x1, y1, min_d1, max_d2).iter().cloned().collect();
+			let ring2: HashSet<Pt> = ring(x2, y2, min_d2, max_d2).iter().cloned().collect();
+			let set_hash: HashSet<Pt> = ring1.intersection(&ring2).cloned().collect();
+			assert_eq!(set_rle, set_hash);
+		}
+
+		check_eq(0, 0, 10, 100, 0, 0, 10, 100);
+		check_eq(10, 0, 10, 100, 0, 0, 10, 100);
+		check_eq(10, 0, 10, 15, 0, 0, 10, 15);
+		check_eq(10, 10, 10, 100, 0, 0, 10, 100);
+		check_eq(0, 0, 10, 100, 30, 0, 10, 100);
+		check_eq(0, 0, 10, 100, 0, 30, 10, 100);
+		check_eq(30, 0, 10, 100, 0, 0, 10, 100);
+		check_eq(0, 30, 10, 100, 0, 0, 10, 100);	
+	}
 }

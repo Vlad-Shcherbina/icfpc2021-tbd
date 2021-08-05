@@ -126,6 +126,7 @@ pub fn segment_intersection((pt1, pt2): (Pt, Pt), (pt3, pt4): (Pt, Pt)) -> Inter
     }
 }
 
+#[cfg(test)]
 fn check_intersection(mut seg1: (Pt, Pt), mut seg2: (Pt, Pt), expected: Intersection) {
     for _ in 0..2 {
         assert_eq!(segment_intersection(seg1, seg2), expected);
@@ -133,6 +134,7 @@ fn check_intersection(mut seg1: (Pt, Pt), mut seg2: (Pt, Pt), expected: Intersec
     }
 }
 
+#[cfg(test)]
 #[test]
 fn test_intersection() {
     check_intersection(
@@ -199,6 +201,7 @@ pub fn pt_in_poly(pt: Pt, poly: &[Pt]) -> bool {
     odd
 }
 
+#[cfg(test)]
 fn check_pt_in_poly(pt: Pt, poly: &[Pt], expected: bool) {
     let mut poly = poly.to_owned();
     for _ in 0..2 {
@@ -210,6 +213,7 @@ fn check_pt_in_poly(pt: Pt, poly: &[Pt], expected: bool) {
     }
 }
 
+#[cfg(test)]
 #[test]
 fn test_pt_in_poly() {
     let quad = &[
@@ -368,6 +372,7 @@ fn qqqqqq(v1: Pt, v2: Pt, v3: Pt) -> i64 {
     res
 }
 
+#[cfg(test)]
 fn check_segment_in_poly(mut seg: (Pt, Pt), poly: &[Pt], expected: bool) {
     let mut poly = poly.to_owned();
     for _ in 0..2 {
@@ -382,6 +387,7 @@ fn check_segment_in_poly(mut seg: (Pt, Pt), poly: &[Pt], expected: bool) {
     }
 }
 
+#[cfg(test)]
 #[test]
 fn test_segment_in_poly_bug() {
     let poly = vec![
@@ -494,6 +500,7 @@ impl BBox {
     }
 }
 
+#[cfg(test)]
 #[test]
 fn test_rotate_point() {
     assert_eq!(rotate_point(Pt::new(10,10), Pt::new(10,11), 180), Pt::new(10, 12));
@@ -501,6 +508,7 @@ fn test_rotate_point() {
     assert_eq!(rotate_point(Pt::new(0,0), Pt::new(10,10), 90), Pt::new(20, 0));
 }
 
+#[cfg(test)]
 #[test]
 fn test_rotate_poly() {
     let quad = &[
@@ -519,6 +527,7 @@ fn test_rotate_poly() {
     assert_eq!(rotate_poly(quad, Pt::new(10,10), 180), expected);
 }
 
+#[cfg(test)]
 #[test]
 fn test_bounding_box() {
     assert_eq!(bounding_box(&vec!{}), None);

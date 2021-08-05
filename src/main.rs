@@ -71,6 +71,7 @@ fn ensure_entry_points_unique() {
     }
 }
 
+#[cfg(test)]
 #[test]
 fn entry_points_unique() {
     ensure_entry_points_unique();

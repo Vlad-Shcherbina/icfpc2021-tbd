@@ -22,6 +22,7 @@ pub fn project_path(rel: impl AsRef<Path>) -> PathBuf {
     result
 }
 
+#[cfg(test)]
 #[test]
 fn project_path_test() {
     assert!(project_path("src/util.rs").exists());

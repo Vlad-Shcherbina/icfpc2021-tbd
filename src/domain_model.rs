@@ -98,6 +98,7 @@ impl std::fmt::Debug for UnlockedBonus {
     }
 }
 
+#[cfg(test)]
 #[test]
 fn test_problem_parsing() {
     let path = project_path("data/problems/1.problem");

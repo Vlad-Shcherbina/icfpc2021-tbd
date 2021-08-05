@@ -283,6 +283,7 @@ pub fn check_pose(problem: &Problem, pose: &Pose) -> CheckPoseResponse {
     }
 }
 
+#[cfg(test)]
 #[test]
 fn test_check_pose() {
     let p = crate::util::load_problem(1);
