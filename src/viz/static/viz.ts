@@ -6,7 +6,8 @@ import {
     Pt, Pair, Figure, Problem, Frame, Foci, Pose,
     Actions, CheckPoseRequest, CheckPoseResponse, RotateRequest,
     ShakeRequest,
-    ProblemTgtBonus
+    ProblemTgtBonus,
+    SolutionStats
 } from "./types.js"
 
 // hole, grid, bonus area, draw only on load
@@ -85,21 +86,48 @@ async function show_solution_list(problem_no: number) {
     assert(sl.ok);
     let list_json = await sl.text();
 
-    let list: [number, number][] = JSON.parse(list_json);
-    list.sort((a, b) => a[1] - b[1]);
+    let list: SolutionStats[] = JSON.parse(list_json);
+    list.sort((a, b) => a.dislikes - b.dislikes);
     let solution_div = document.getElementById('solution-cell')!;
     
-    solution_div.innerHTML = "";
+    let text = "";
     if (list.length == 0) {
-        solution_div.innerHTML = "no previous solutions";
+        text = "no solutions in db";
     }
     else {
+        text = `<table style="border-spacing: 15px 0;"><tr>
+            <th align="left">link</th>
+            <th align="right">dislikes</th>
+            <th align="left">solver</th>
+            <th>used</th>
+            <th align="left">unlocked</th>
+        <tr>`;
         for (let s of list) {
-            solution_div.innerHTML += `<a class="solution_ref" href="#${problem_no}@${s[0]}">`
-                + `Solution ${s[0]}`
-                + `</a> got ${s[1]} dislikes<br>`
+            text += `<tr><td>`
+                + `<a class="solution_ref" href="#${problem_no}@${s.id}">`
+                + `Solution ${s.id}`
+                + `</a></td>`;
+            
+            text += `<td align="right">${s.dislikes}</td>`;
+
+            text += `<td>
+                ${s.solver != null ? s.solver : ""}
+            </td>`;
+
+            text += `<td align="center">
+                ${s.bonus_used != null ? s.bonus_used[0] : ""}
+            </td>`;
+
+            let unlocked = s.bonuses_unlocked.map(
+                x => `${x[0][0]} for ${x[1]}`
+            );
+            text += `<td>` + unlocked.join(', ') + `</td>`;
+
+            text += '</tr>';
         }
+        text += `</table>`;
     }
+    solution_div.innerHTML = text;
 
     // for (let x of document.getElementsByClassName("solution_ref")) {
     //     let a = x as HTMLAnchorElement;

@@ -142,7 +142,6 @@ fn handler(state: &Mutex<ServerState>, req: &Request, resp: ResponseBuilder) -> 
         let client = &mut (*state.lock().unwrap()).client;
         let problem_id: i32 = problem_id.parse().unwrap();
         let tgts = crate::db::get_target_bonuses_by_problem(client, problem_id).unwrap();
-        dbg!(&tgts);
         return resp.code ("200 OK")
             .body(serde_json::to_vec(&tgts).unwrap());
     }

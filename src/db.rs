@@ -4,6 +4,14 @@ use crate::checker::check_pose;
 use crate::util::{project_path, load_problem, all_problem_ids};
 use crate::domain_model::{BonusName, Pose, ProblemTgtBonus};
 
+#[derive(serde::Serialize)]
+pub struct SolutionStats {
+    pub id: i32,
+    pub solver: Option<String>,
+    pub dislikes: i64,
+    pub bonus_used: Option<BonusName>,
+    pub bonuses_unlocked: Vec<(BonusName, i32)>,
+}
 
 pub fn connect() -> Result<postgres::Client, postgres::Error> {
     let content = std::fs::read_to_string(project_path("data/db_pwd.txt")).unwrap();
@@ -221,9 +229,37 @@ pub fn write_valid_solution_to_db(
 
 
 pub fn get_solutions_stats_by_problem(client: &mut postgres::Client, problem_id: i32) 
-                -> Result<Vec<(i32, i64)>, postgres::Error> {
-    let res = client.query("SELECT id, dislikes FROM solutions WHERE (problem = $1)", &[&problem_id])?;
-    Ok(res.iter().map(|r| (r.get("id"), r.get("dislikes"))).collect())
+                -> Result<Vec<SolutionStats>, postgres::Error> {
+    let res = client.query("
+            SELECT id, solver, dislikes, bonus 
+            FROM solutions WHERE (problem = $1);
+        ", &[&problem_id])?;
+    let used = client.query("
+            SELECT solution, dest, type 
+            FROM bonuses_unlocked
+            INNER JOIN solutions ON bonuses_unlocked.solution = solutions.id
+            WHERE solutions.problem = $1;
+        ", &[&problem_id])?;
+
+    let mut used_by_solution: HashMap<i32, Vec<(BonusName, i32)>> = HashMap::new();
+    for u in used {
+        used_by_solution
+            .entry(u.get("solution"))
+            .or_default()
+            .push((u.get("type"), u.get("dest"))
+        );
+    };
+
+    res.iter().map(|r| {
+        let id: i32 = r.get("id");
+        Ok(SolutionStats { 
+            id,
+            solver: r.get("solver"),
+            dislikes: r.get("dislikes"),
+            bonus_used: r.get("bonus"),
+            bonuses_unlocked: used_by_solution.remove(&id).unwrap_or_default()
+        })
+    }).collect()
 }
 
 

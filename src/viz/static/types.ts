@@ -118,3 +118,12 @@ export interface Foci {
 export enum Actions {
     Rotate = 1,
 }
+
+
+export interface SolutionStats {
+    id: number,
+    solver: string | null,
+    dislikes: number,
+    bonus_used: string | null,
+    bonuses_unlocked: [string, number][]
+}
