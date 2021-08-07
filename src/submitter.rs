@@ -104,7 +104,7 @@ impl Submitter {
             problem_id,
             db_client,
             front,
-            solver: solver,
+            solver,
         }
     }
 

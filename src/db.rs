@@ -15,8 +15,16 @@ pub struct SolutionStats {
 }
 
 pub fn connect() -> Result<postgres::Client, postgres::Error> {
-    let content = std::fs::read_to_string(project_path("data/db_pwd.txt")).unwrap();
-    let client = postgres::Client::connect(&content, postgres::NoTls)?;
+    let content = match std::fs::read_to_string(project_path("data/db_pwd.txt")) {
+        Ok(c) => c,
+        Err(e) => {
+            eprintln!("WARNING! Put database connection credentials");
+            eprintln!("    from Zulip | icfpc-2021 | db credentials");
+            eprintln!("    to data/db_pwd.txt");
+            panic!("{}", e);
+        },
+    };
+    let client = postgres::Client::connect(content.trim(), postgres::NoTls)?;
     Ok(client)
 }
 

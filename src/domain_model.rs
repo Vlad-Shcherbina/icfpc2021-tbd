@@ -1,5 +1,8 @@
 // Things that are defined in the problem statement.
 
+// https://github.com/sfackler/rust-postgres/issues/815
+#![allow(clippy::nonstandard_macro_braces)]
+
 use crate::prelude::*;
 
 pub const EPS_BASE: i64 = 1_000_000;
