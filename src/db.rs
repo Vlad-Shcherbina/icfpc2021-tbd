@@ -2,7 +2,8 @@ use std::collections::HashMap;
 
 use crate::checker::check_pose;
 use crate::util::{project_path, load_problem, all_problem_ids};
-use crate::domain_model::{BonusName, Pose, ProblemTgtBonus};
+use crate::domain_model::{BonusName, Pose, ProblemTgtBonus,
+    UnlockedBonus};
 
 #[derive(serde::Serialize)]
 pub struct SolutionStats {
@@ -10,7 +11,7 @@ pub struct SolutionStats {
     pub solver: Option<String>,
     pub dislikes: i64,
     pub bonus_used: Option<BonusName>,
-    pub bonuses_unlocked: Vec<(BonusName, i32)>,
+    pub bonuses_unlocked: Vec<UnlockedBonus>,
 }
 
 pub fn connect() -> Result<postgres::Client, postgres::Error> {
@@ -241,13 +242,12 @@ pub fn get_solutions_stats_by_problem(client: &mut postgres::Client, problem_id:
             WHERE solutions.problem = $1;
         ", &[&problem_id])?;
 
-    let mut used_by_solution: HashMap<i32, Vec<(BonusName, i32)>> = HashMap::new();
+    let mut used_by_solution: HashMap<i32, Vec<UnlockedBonus>> = HashMap::new();
     for u in used {
         used_by_solution
             .entry(u.get("solution"))
             .or_default()
-            .push((u.get("type"), u.get("dest"))
-        );
+            .push(UnlockedBonus { name: u.get("type"), problem_id: u.get("dest") });
     };
 
     res.iter().map(|r| {

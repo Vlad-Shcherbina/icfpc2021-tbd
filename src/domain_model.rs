@@ -87,6 +87,7 @@ pub struct Pose {
 }
 
 #[derive(Clone, Copy, PartialEq)]
+#[derive(serde::Serialize)]
 pub struct UnlockedBonus {
     pub name: BonusName,
     pub problem_id: i32,

@@ -119,7 +119,7 @@ async function show_solution_list(problem_no: number) {
             </td>`;
 
             let unlocked = s.bonuses_unlocked.map(
-                x => `${x[0][0]} for ${x[1]}`
+                x => `${x.name[0]} for ${x.problem_id}`
             );
             text += `<td>` + unlocked.join(', ') + `</td>`;
 

@@ -43,6 +43,11 @@ export interface ProblemTgtBonus {
     from_problem: number,
 }
 
+export interface UnlockedBonus {
+    name: string,
+    problem_id: number,
+}
+
 export interface ProblemBonus {
     bonus: string,
     problem: number,
@@ -125,5 +130,5 @@ export interface SolutionStats {
     solver: string | null,
     dislikes: number,
     bonus_used: string | null,
-    bonuses_unlocked: [string, number][]
+    bonuses_unlocked: UnlockedBonus[]
 }
