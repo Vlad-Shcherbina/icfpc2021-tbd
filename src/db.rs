@@ -182,7 +182,7 @@ pub fn write_timestamped_valid_solution_to_db(
                 dislikes: i64,
                 solver: &str,
                 time: &std::time::SystemTime)
-                -> Result<(), postgres::Error> {
+                -> Result<i32, postgres::Error> {
 
     let bonus = match pose.bonuses.len() {
         0 => None,
@@ -211,7 +211,7 @@ pub fn write_timestamped_valid_solution_to_db(
     }
     transaction.commit()?;
 
-    Ok(())
+    Ok(solution_id)
 }
 
 // Function assumes that solution has already been validated.
@@ -221,7 +221,7 @@ pub fn write_valid_solution_to_db(
                 pose: &Pose, 
                 dislikes: i64,
                 solver: &str)
-                -> Result<(), postgres::Error> {
+                -> Result<i32, postgres::Error> {
     
     write_timestamped_valid_solution_to_db(
         client, problem_id, pose, dislikes, solver, &std::time::SystemTime::now()
@@ -233,7 +233,7 @@ pub fn get_solutions_stats_by_problem(client: &mut postgres::Client, problem_id:
                 -> Result<Vec<SolutionStats>, postgres::Error> {
     let res = client.query("
             SELECT id, solver, dislikes, bonus 
-            FROM solutions WHERE (problem = $1);
+            FROM solutions WHERE problem = $1;
         ", &[&problem_id])?;
     let used = client.query("
             SELECT solution, dest, type 

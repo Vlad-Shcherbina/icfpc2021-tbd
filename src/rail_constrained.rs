@@ -21,7 +21,7 @@ crate::entry_point!("rail_constrained", rail_constrained);
 fn rail_constrained() {
     let problem_id: i32 = std::env::args().nth(2).unwrap().parse().unwrap();
 
-    let mut submitter = Submitter::new(problem_id);
+    let mut submitter = Submitter::new(problem_id, "rail_constrained".to_string());
 
     
     let p = load_problem(problem_id);
@@ -43,12 +43,6 @@ fn rail_constrained() {
         .collect();
 
     'outer: loop {
-        // Try submitting whatever solution we have (if any).
-
-        if submitter.try_submit() {
-            // Submitted best possible solution. Nothing to do.
-            return;
-        }
         //eprintln!("------");
         let mut pts: Vec<Option<Pt>> = vec![None; p.figure.vertices.len()];
         let mut placements: Vec<Vec<Pt>> = vec![vec![]; p.figure.vertices.len()];

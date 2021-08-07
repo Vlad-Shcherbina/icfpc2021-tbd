@@ -72,7 +72,7 @@ fn multishaker() {
         eprintln!("Applying aggressive transformations");
     }
 
-    let mut submitter = Submitter::new(problem_id);
+    let mut submitter = Submitter::new(problem_id, "multishaker".to_string());
 
     
     let p = load_problem(problem_id);
@@ -116,12 +116,6 @@ fn multishaker() {
     }
 
     loop {
-        if submitter.try_submit() {
-            // Submitted best possible solution. Nothing to do.
-            return;
-        }
-
-
         // Use greedy shaker.
         eprintln!("Greedy...");
         let request = ShakeRequest {

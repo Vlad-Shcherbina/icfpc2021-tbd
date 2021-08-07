@@ -29,7 +29,7 @@ fn rail() {
         _ => panic!()
     };
 
-    let mut submitter = Submitter::new(problem_id);
+    let mut submitter = Submitter::new(problem_id, "rail".to_string());
 
     let p = load_problem(problem_id);
     let mut bonuses = vec![];
@@ -68,9 +68,6 @@ fn rail() {
         .collect();
 
     'outer: loop {
-        if submitter.try_submit() {
-            return;
-        }
 
         // eprintln!("------");
         let mut pts: Vec<Option<Pt>> = vec![None; p.figure.vertices.len()];
